@@ -95,7 +95,8 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
       case "landing":
         return (
           <HackathonLanding
-            navigateTo={navigateToView}
+            navigateTo={navigateTo}
+            setHackathonView={navigateToView}
             goBackToMenu={goBackToMenu}
             currentUser={currentUser}
           />
@@ -144,3 +145,4 @@ const HackathonContainer: React.FC<HackathonContainerProps> = (props) => {
 };
 
 export default HackathonContainer;
+
