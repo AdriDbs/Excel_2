@@ -57,97 +57,85 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
 
     const success = await progressManager.updateHackathonProgress({
       currentLevel: Math.max(level + 1, currentProgress.currentLevel),
-      levelsCompleted: [
-        ...new Set([...currentProgress.levelsCompleted, level]),
-      ],
+      levelsCompleted: Array.from(new Set([...currentProgress.levelsCompleted, level])),
       totalScore: currentProgress.totalScore + score,
       individualContributions: {
         ...currentProgress.individualContributions,
-        [level]: {
-          score: score,
-          timeSpent: timeSpent,
-          completedAt: new Date().toISOString(),
-        },
+        [level]: score,
       },
     });
 
     if (success && onProgressUpdate) {
-      onProgressUpdate("hackathon", progressManager.hackathonProgress);
+      onProgressUpdate({
+        type: "hackathon",
+        level,
+        score,
+        timeSpent,
+      });
     }
   };
 
-  // Fonction pour définir la vue courante du hackathon
-  const setHackathonView = (view: string) => {
-    if (view === "student" || view === "global") {
-      setCurrentView(view as HackathonViewType);
-    } else {
-      setCurrentView("landing");
-    }
+  // Fonction pour naviguer vers différentes vues du hackathon
+  const navigateToView = (view: HackathonViewType) => {
+    setCurrentView(view);
   };
 
-  // Fonction pour revenir à la landing page
+  // Fonction pour revenir au menu principal
+  const goBackToMenu = () => {
+    navigateTo("menu");
+  };
+
+  // Fonction pour revenir au landing du hackathon
   const goBackToLanding = () => {
     setCurrentView("landing");
   };
 
-  // Écouter les événements de fin de session pour revenir à la landing page
-  useEffect(() => {
-    const handleSessionEnd = () => {
-      if (currentView !== "landing") {
-        setCurrentView("landing");
-      }
-    };
+  // Rendu conditionnel selon la vue actuelle
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case "landing":
+        return (
+          <HackathonLanding
+            navigateTo={navigateToView}
+            goBackToMenu={goBackToMenu}
+            currentUser={currentUser}
+          />
+        );
 
-    window.addEventListener("hackathon_session_ended", handleSessionEnd);
+      case "student":
+        return (
+          <StudentInterface
+            navigateTo={navigateToView}
+            goBackToLanding={goBackToLanding}
+            currentUser={currentUser}
+            onLevelComplete={handleLevelComplete}
+          />
+        );
 
-    return () => {
-      window.removeEventListener("hackathon_session_ended", handleSessionEnd);
-    };
-  }, [currentView]);
+      case "scoreboard":
+        return (
+          <ScoreboardApp
+            navigateTo={navigateToView}
+            goBackToLanding={goBackToLanding}
+          />
+        );
 
-  // Contenu à afficher selon la vue actuelle
-  const renderContent = () => {
-    if (currentView === "landing") {
-      return (
-        <HackathonLanding
-          navigateTo={navigateTo}
-          setHackathonView={setHackathonView}
-          currentUser={currentUser}
-        />
-      );
-    } else if (currentView === "student") {
-      return (
-        <StudentInterface
-          navigateTo={navigateTo}
-          goBackToLanding={goBackToLanding}
-          currentUser={currentUser}
-          onLevelComplete={handleLevelComplete}
-        />
-      );
-    } else if (currentView === "global") {
-      return (
-        <ScoreboardApp
-          navigateTo={navigateTo}
-          goBackToLanding={goBackToLanding}
-          currentUser={currentUser}
-        />
-      );
+      case "workInProgress":
+      default:
+        return (
+          <WorkInProgressSection
+            navigateTo={goBackToLanding}
+            title="Hackathon Excel"
+            message="Cette fonctionnalité est en cours de développement."
+          />
+        );
     }
-
-    // Fallback vers la landing page
-    return (
-      <HackathonLanding
-        navigateTo={navigateTo}
-        setHackathonView={setHackathonView}
-        currentUser={currentUser}
-      />
-    );
   };
 
-  return renderContent();
+  return <div className="hackathon-container">{renderCurrentView()}</div>;
 };
 
-// Composant principal qui encapsule tout dans le provider
+// Composant principal avec Provider
 const HackathonContainer: React.FC<HackathonContainerProps> = (props) => {
   return (
     <HackathonProvider>
