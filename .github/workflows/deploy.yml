@@ -26,11 +26,15 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build
+    - name: Install CRACO globally
+      run: npm install -g @craco/craco
+
+    - name: Build with CRACO
       run: npm run build
       env:
         CI: false
         PUBLIC_URL: /Excel_2
+        GENERATE_SOURCEMAP: false
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
