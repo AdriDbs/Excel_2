@@ -70,7 +70,7 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
     });
 
     if (success && onProgressUpdate) {
-  onProgressUpdate("hackathon", progressManager.hackathonProgress);
+      onProgressUpdate("hackathon", progressManager.hackathonProgress);
     }
   };
 
@@ -144,4 +144,3 @@ const HackathonContainer: React.FC<HackathonContainerProps> = (props) => {
 };
 
 export default HackathonContainer;
-
