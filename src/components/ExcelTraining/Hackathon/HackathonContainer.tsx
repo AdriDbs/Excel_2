@@ -79,6 +79,15 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
     setCurrentView(view);
   };
 
+  // Fonction wrapper pour convertir string vers HackathonViewType
+  const handleSetHackathonView = (view: string) => {
+    if (view === "student" || view === "global" || view === "landing") {
+      navigateToView(view as HackathonViewType);
+    } else {
+      navigateToView("landing");
+    }
+  };
+
   // Fonction pour revenir au menu principal
   const goBackToMenu = () => {
     navigateTo("menu");
@@ -96,8 +105,7 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
         return (
           <HackathonLanding
             navigateTo={navigateTo}
-            setHackathonView={navigateToView}
-            goBackToMenu={goBackToMenu}
+            setHackathonView={handleSetHackathonView}
             currentUser={currentUser}
           />
         );
@@ -105,7 +113,7 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
       case "student":
         return (
           <StudentInterface
-            navigateTo={navigateToView}
+            navigateTo={navigateTo}
             goBackToLanding={goBackToLanding}
             currentUser={currentUser}
             onLevelComplete={handleLevelComplete}
@@ -115,18 +123,24 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
       case "scoreboard":
         return (
           <ScoreboardApp
-            navigateTo={navigateToView}
+            navigateTo={navigateTo}
             goBackToLanding={goBackToLanding}
           />
         );
 
-      case "workInProgress":
+      case "global":
+        return (
+          <ScoreboardApp
+            navigateTo={navigateTo}
+            goBackToLanding={goBackToLanding}
+          />
+        );
+
       default:
         return (
           <WorkInProgressSection
-            navigateTo={goBackToLanding}
+            navigateTo={navigateTo}
             title="Hackathon Excel"
-            message="Cette fonctionnalité est en cours de développement."
           />
         );
     }
@@ -145,4 +159,3 @@ const HackathonContainer: React.FC<HackathonContainerProps> = (props) => {
 };
 
 export default HackathonContainer;
-
