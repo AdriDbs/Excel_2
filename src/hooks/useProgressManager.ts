@@ -1,0 +1,294 @@
+import { useState, useEffect, useCallback } from "react";
+import { databaseService } from "../services/databaseService";
+import {
+  Student,
+  SpeedDatingProgress,
+  HackathonProgress,
+} from "../types/database";
+
+interface UseProgressManagerProps {
+  userId: string;
+}
+
+interface UseProgressManagerReturn {
+  speedDatingProgress: SpeedDatingProgress;
+  hackathonProgress: HackathonProgress;
+  updateSpeedDatingProgress: (
+    functionId: number,
+    progress: Partial<SpeedDatingProgress[number]>
+  ) => Promise<boolean>;
+  updateHackathonProgress: (
+    progress: Partial<HackathonProgress>
+  ) => Promise<boolean>;
+  getTotalScore: () => number;
+  getSpeedDatingCompletion: () => {
+    completed: number;
+    total: number;
+    percentage: number;
+  };
+  getHackathonCompletion: () => {
+    currentLevel: number;
+    maxLevel: number;
+    percentage: number;
+  };
+  refreshProgress: () => void;
+}
+
+export const useProgressManager = ({
+  userId,
+}: UseProgressManagerProps): UseProgressManagerReturn => {
+  const [speedDatingProgress, setSpeedDatingProgress] =
+    useState<SpeedDatingProgress>({});
+  const [hackathonProgress, setHackathonProgress] = useState<HackathonProgress>(
+    {
+      currentLevel: 0,
+      levelsCompleted: [],
+      totalScore: 0,
+      individualContributions: {},
+    }
+  );
+
+  const refreshProgress = useCallback(() => {
+    const user = databaseService.getUserById(userId);
+    if (user && user.role === "student") {
+      const student = user as Student;
+      setSpeedDatingProgress(student.speedDatingProgress);
+      setHackathonProgress(student.hackathonProgress);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refreshProgress();
+  }, [refreshProgress]);
+
+  const updateSpeedDatingProgress = useCallback(
+    async (
+      functionId: number,
+      progress: Partial<SpeedDatingProgress[number]>
+    ): Promise<boolean> => {
+      try {
+        // Préparer la mise à jour
+        const updatedProgress = {
+          ...speedDatingProgress,
+          [functionId]: {
+            ...speedDatingProgress[functionId],
+            ...progress,
+            attempts: (speedDatingProgress[functionId]?.attempts || 0) + 1,
+          },
+        };
+
+        // Mettre à jour en base
+        const success = databaseService.updateUserProgress(
+          userId,
+          "speedDating",
+          updatedProgress
+        );
+
+        if (success) {
+          setSpeedDatingProgress(updatedProgress);
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error("Error updating speed dating progress:", error);
+        return false;
+      }
+    },
+    [userId, speedDatingProgress]
+  );
+
+  const updateHackathonProgress = useCallback(
+    async (progress: Partial<HackathonProgress>): Promise<boolean> => {
+      try {
+        const updatedProgress = {
+          ...hackathonProgress,
+          ...progress,
+        };
+
+        const success = databaseService.updateUserProgress(
+          userId,
+          "hackathon",
+          updatedProgress
+        );
+
+        if (success) {
+          setHackathonProgress(updatedProgress);
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error("Error updating hackathon progress:", error);
+        return false;
+      }
+    },
+    [userId, hackathonProgress]
+  );
+
+  const getTotalScore = useCallback((): number => {
+    const speedDatingScore = Object.values(speedDatingProgress).reduce(
+      (sum, p) => sum + p.score,
+      0
+    );
+    return speedDatingScore + hackathonProgress.totalScore;
+  }, [speedDatingProgress, hackathonProgress]);
+
+  const getSpeedDatingCompletion = useCallback((): {
+    completed: number;
+    total: number;
+    percentage: number;
+  } => {
+    const progressArray = Object.values(speedDatingProgress);
+    const completed = progressArray.filter((p) => p.completed).length;
+    const total = 12; // Nombre total de fonctions Excel
+
+    return {
+      completed,
+      total,
+      percentage: total > 0 ? (completed / total) * 100 : 0,
+    };
+  }, [speedDatingProgress]);
+
+  const getHackathonCompletion = useCallback((): {
+    currentLevel: number;
+    maxLevel: number;
+    percentage: number;
+  } => {
+    const maxLevel = 7; // Nombre total de niveaux du hackathon
+    const currentLevel = hackathonProgress.currentLevel;
+
+    return {
+      currentLevel,
+      maxLevel,
+      percentage: maxLevel > 0 ? (currentLevel / maxLevel) * 100 : 0,
+    };
+  }, [hackathonProgress]);
+
+  return {
+    speedDatingProgress,
+    hackathonProgress,
+    updateSpeedDatingProgress,
+    updateHackathonProgress,
+    getTotalScore,
+    getSpeedDatingCompletion,
+    getHackathonCompletion,
+    refreshProgress,
+  };
+};
+
+// Hook pour les leaderboards et statistiques
+export const useLeaderboard = () => {
+  const [leaderboard, setLeaderboard] = useState<
+    Array<{
+      name: string;
+      totalScore: number;
+      speedDatingCompleted: number;
+      hackathonLevel: number;
+      lastActivity: string;
+    }>
+  >([]);
+
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    averageSpeedDatingCompletion: 0,
+    averageHackathonLevel: 0,
+    topScore: 0,
+  });
+
+  const refreshLeaderboard = useCallback(() => {
+    const leaderboardData = databaseService.getLeaderboard();
+    setLeaderboard(leaderboardData);
+
+    // Calculer des statistiques
+    if (leaderboardData.length > 0) {
+      const avgSpeedDating =
+        leaderboardData.reduce(
+          (sum, student) => sum + student.speedDatingCompleted,
+          0
+        ) / leaderboardData.length;
+      const avgHackathon =
+        leaderboardData.reduce(
+          (sum, student) => sum + student.hackathonLevel,
+          0
+        ) / leaderboardData.length;
+      const topScore = Math.max(
+        ...leaderboardData.map((student) => student.totalScore)
+      );
+
+      setStats({
+        totalStudents: leaderboardData.length,
+        averageSpeedDatingCompletion: avgSpeedDating,
+        averageHackathonLevel: avgHackathon,
+        topScore,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshLeaderboard();
+
+    // Rafraîchir toutes les 30 secondes
+    const interval = setInterval(refreshLeaderboard, 30000);
+    return () => clearInterval(interval);
+  }, [refreshLeaderboard]);
+
+  return {
+    leaderboard,
+    stats,
+    refreshLeaderboard,
+  };
+};
+
+// Hook pour les notifications de progression
+export const useProgressNotifications = () => {
+  const [notifications, setNotifications] = useState<
+    Array<{
+      id: string;
+      message: string;
+      type: "success" | "achievement" | "milestone";
+      timestamp: Date;
+    }>
+  >([]);
+
+  const addNotification = useCallback(
+    (
+      message: string,
+      type: "success" | "achievement" | "milestone" = "success"
+    ) => {
+      const notification = {
+        id: `notification_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+        message,
+        type,
+        timestamp: new Date(),
+      };
+
+      setNotifications((prev) => [...prev, notification].slice(-5)); // Garder seulement les 5 dernières
+
+      // Auto-suppression après 5 secondes
+      setTimeout(() => {
+        setNotifications((prev) =>
+          prev.filter((n) => n.id !== notification.id)
+        );
+      }, 5000);
+    },
+    []
+  );
+
+  const removeNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  const clearAllNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
+  return {
+    notifications,
+    addNotification,
+    removeNotification,
+    clearAllNotifications,
+  };
+};
