@@ -61,7 +61,11 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
       totalScore: currentProgress.totalScore + score,
       individualContributions: {
         ...currentProgress.individualContributions,
-        [level]: score,
+        [level]: {
+          score,
+          timeSpent,
+          completedAt: new Date().toISOString(),
+        },
       },
     });
 
