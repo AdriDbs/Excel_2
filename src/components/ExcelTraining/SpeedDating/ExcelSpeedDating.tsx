@@ -129,9 +129,9 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   ) => {
     if (!progressManager) {
       // Mode invité - juste marquer comme complété localement
-      setCompletedFunctions((prev) => [
-        ...new Set([...prev, currentFunctionIndex]),
-      ]);
+      setCompletedFunctions((prev) =>
+        Array.from(new Set([...prev, currentFunctionIndex]))
+      );
       return;
     }
 
@@ -148,9 +148,9 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
     if (success) {
       // Ajouter aux fonctions complétées
-      setCompletedFunctions((prev) => [
-        ...new Set([...prev, currentFunctionIndex]),
-      ]);
+      setCompletedFunctions((prev) =>
+        Array.from(new Set([...prev, currentFunctionIndex]))
+      );
 
       // Notification de réussite
       addNotification(
