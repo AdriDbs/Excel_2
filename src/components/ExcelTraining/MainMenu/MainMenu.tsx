@@ -11,7 +11,7 @@ import {
   Target,
 } from "lucide-react";
 import { NavigationProps } from "../types";
-import { Student, Instructor } from "../../types/database";
+import { Student, Instructor } from "../../../types/database";
 import InstructorDashboard from "../InstructorDashboard";
 
 // Interface pour les props étendues du menu principal
