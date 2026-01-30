@@ -51,14 +51,14 @@ const MenuCard: React.FC<MenuCardProps> = ({
   progressGradient,
   onClick,
 }) => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 hover:bg-white/20 transition-all duration-300 hover:shadow-bearing-lg transform hover:scale-[1.02] border border-white/20">
+  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 hover:bg-white/20 transition-all duration-300 hover:shadow-bp-lg transform hover:scale-[1.02] border border-white/20">
     <div className="flex items-center mb-6">
       <div className={`${buttonGradient} p-3 rounded-full mr-4`}>
         {icon}
       </div>
       <div>
         <h3 className="text-2xl font-bold mb-2">
-          {title} <span className="text-bearing-red">{highlight}</span>
+          {title} <span className="text-bp-red-400">{highlight}</span>
         </h3>
         <p className={descriptionColor}>{description}</p>
       </div>
@@ -67,7 +67,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
       {content}
       {progress && (
         <>
-          <div className="w-full bg-bearing-gray-60/50 rounded-full h-2 mt-2">
+          <div className="w-full bg-bp-gray-500/50 rounded-full h-2 mt-2">
             <div
               className={`${progressGradient} h-2 rounded-full transition-all duration-500`}
               style={{ width: `${(progress.current / progress.total) * 100}%` }}
@@ -79,7 +79,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
     </div>
     <button
       onClick={onClick}
-      className={`w-full ${buttonGradient} text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-bearing hover:brightness-110`}
+      className={`w-full ${buttonGradient} text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-bp hover:brightness-110`}
     >
       {buttonText}
     </button>
@@ -129,11 +129,11 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       title: "Speed Dating",
       highlight: "Excel",
       description: "Découvrez 12 fonctions Excel avancées en format rapide et interactif",
-      descriptionColor: "text-bearing-red-30",
+      descriptionColor: "text-bp-red-200",
       content: (
         <div className="flex items-center justify-between text-sm mb-2">
           <span>XLOOKUP • FILTER • UNIQUE • SEQUENCE • SORT • LET</span>
-          <span className="text-bearing-red-30">⚡ 3 min / fonction</span>
+          <span className="text-bp-red-200">⚡ 3 min / fonction</span>
         </div>
       ),
       progress: progressStats ? {
@@ -142,8 +142,8 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
         label: `${progressStats.speedDatingCompleted}/12 fonctions complétées`,
       } : undefined,
       buttonText: "Commencer le Speed Dating",
-      buttonGradient: "bg-gradient-to-r from-bearing-red-60 to-bearing-red",
-      progressGradient: "bg-gradient-to-r from-bearing-red-60 to-bearing-red",
+      buttonGradient: "bg-gradient-to-r from-bp-red-500 to-bp-red-400",
+      progressGradient: "bg-gradient-to-r from-bp-red-500 to-bp-red-400",
       section: "functions",
     },
     {
@@ -152,11 +152,11 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       title: "Hackathon:",
       highlight: "Le Dossier Perdu",
       description: "Résolvez un cas d'usage complexe BearingPoint en équipe (2h)",
-      descriptionColor: "text-bearing-red-20",
+      descriptionColor: "text-bp-red-100",
       content: (
         <div className="flex items-center justify-between text-sm mb-2">
           <span>7 niveaux • Analyse de données • Dashboard final</span>
-          <span className="text-bearing-red-30">🏆 2000 pts max</span>
+          <span className="text-bp-red-200">🏆 2000 pts max</span>
         </div>
       ),
       progress: progressStats ? {
@@ -165,8 +165,8 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
         label: `Niveau ${progressStats.hackathonLevel}/7 atteint`,
       } : undefined,
       buttonText: "Rejoindre le Hackathon",
-      buttonGradient: "bg-gradient-to-r from-bearing-red-70 to-bearing-red-60",
-      progressGradient: "bg-gradient-to-r from-bearing-red-70 to-bearing-red-60",
+      buttonGradient: "bg-gradient-to-r from-bp-red-600 to-bp-red-500",
+      progressGradient: "bg-gradient-to-r from-bp-red-600 to-bp-red-500",
       section: "hackathonLanding",
     },
     {
@@ -175,9 +175,9 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       title: "Cas d'Usage",
       highlight: "BearingPoint",
       description: "Explorez 5 cas d'usage métier issus de missions réelles",
-      descriptionColor: "text-bearing-gray-30",
+      descriptionColor: "text-bp-gray-200",
       content: (
-        <div className="space-y-1 text-sm text-bearing-gray-30">
+        <div className="space-y-1 text-sm text-bp-gray-200">
           <p>• Optimisation de portefeuille clients</p>
           <p>• Allocation stratégique des ressources</p>
           <p>• Détection d'anomalies financières</p>
@@ -185,8 +185,8 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
         </div>
       ),
       buttonText: "Explorer les Cas d'Usage",
-      buttonGradient: "bg-gradient-to-r from-bearing-gray-60 to-bearing-gray-50",
-      progressGradient: "bg-gradient-to-r from-bearing-gray-60 to-bearing-gray-50",
+      buttonGradient: "bg-gradient-to-r from-bp-gray-500 to-bp-gray-400",
+      progressGradient: "bg-gradient-to-r from-bp-gray-500 to-bp-gray-400",
       section: "useCases",
     },
     {
@@ -195,9 +195,9 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       title: "Bonnes",
       highlight: "Pratiques",
       description: "Maîtrisez l'art de créer des fichiers Excel professionnels",
-      descriptionColor: "text-bearing-red-40",
+      descriptionColor: "text-bp-red-300",
       content: (
-        <div className="space-y-1 text-sm text-bearing-red-40">
+        <div className="space-y-1 text-sm text-bp-red-300">
           <p>• Organisation et structure des fichiers</p>
           <p>• Optimisation des performances</p>
           <p>• Standards de mise en forme</p>
@@ -205,14 +205,14 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
         </div>
       ),
       buttonText: "Découvrir les Bonnes Pratiques",
-      buttonGradient: "bg-gradient-to-r from-bearing-red to-bearing-red-40",
-      progressGradient: "bg-gradient-to-r from-bearing-red to-bearing-red-40",
+      buttonGradient: "bg-gradient-to-r from-bp-red-400 to-bp-red-300",
+      progressGradient: "bg-gradient-to-r from-bp-red-400 to-bp-red-300",
       section: "bestPractices",
     },
   ], [progressStats]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 via-bearing-red-70 to-bearing-red-80 text-white p-4">
+    <div className="min-h-screen bg-bp-gradient text-white p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header avec informations utilisateur */}
         <div className="flex justify-between items-start mb-8 pt-8">
@@ -228,25 +228,25 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
                 Formation Excel Avancé
               </h1>
             </div>
-            <p className="text-xl text-bearing-red-20 mb-4">{welcomeMessage}</p>
+            <p className="text-xl text-bp-red-100 mb-4">{welcomeMessage}</p>
 
             {/* Statistiques de progression pour les étudiants */}
             {progressStats && (
               <div className="flex gap-4 mb-4 flex-wrap">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                  <Trophy className="text-bearing-red" size={20} />
+                  <Trophy className="text-bp-red-400" size={20} />
                   <span className="text-sm">
                     Score total: <strong>{progressStats.totalScore}</strong>
                   </span>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                  <Target className="text-bearing-red-30" size={20} />
+                  <Target className="text-bp-red-200" size={20} />
                   <span className="text-sm">
                     Fonctions: <strong>{progressStats.speedDatingCompleted}</strong>
                   </span>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                  <Code className="text-bearing-red-40" size={20} />
+                  <Code className="text-bp-red-300" size={20} />
                   <span className="text-sm">
                     Hackathon: <strong>Niveau {progressStats.hackathonLevel}</strong>
                   </span>
@@ -261,7 +261,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
               {currentUser.role === "instructor" && (
                 <button
                   onClick={() => setShowInstructorDashboard(true)}
-                  className="bg-bearing-red-60 hover:bg-bearing-red-70 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bearing"
+                  className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bp"
                 >
                   <Settings size={20} />
                   Réglages
@@ -269,10 +269,10 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
               )}
 
               <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                <User className="text-bearing-red-30" size={20} />
+                <User className="text-bp-red-200" size={20} />
                 <div className="text-right">
                   <p className="font-medium text-sm">{currentUser.name}</p>
-                  <p className="text-xs text-bearing-red-20">
+                  <p className="text-xs text-bp-red-100">
                     {currentUser.role === "instructor" ? "Instructeur" : "Étudiant"}
                   </p>
                 </div>
@@ -281,7 +281,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
               {onLogout && (
                 <button
                   onClick={onLogout}
-                  className="bg-bearing-red hover:bg-bearing-red-60 text-white p-2 rounded-full transition-all duration-300 hover:shadow-bearing"
+                  className="bg-bp-red-400 hover:bg-bp-red-500 text-white p-2 rounded-full transition-all duration-300 hover:shadow-bp"
                   title="Se déconnecter"
                 >
                   <LogOut size={20} />
@@ -293,7 +293,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
 
         {/* Objectifs de formation */}
         <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-10">
-          <h2 className="text-2xl font-bold mb-4 text-bearing-red">
+          <h2 className="text-2xl font-bold mb-4 text-bp-red-400">
             Objectifs de la formation
           </h2>
           <p className="text-white mb-4">
@@ -309,7 +309,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
               "Résoudre des cas d'usage complexes BearingPoint dans un environnement de hackathon stimulant",
             ].map((objective, index) => (
               <div key={index} className="flex items-start gap-2">
-                <div className="text-bearing-red mt-1">✓</div>
+                <div className="text-bp-red-400 mt-1">✓</div>
                 <p>{objective}</p>
               </div>
             ))}
@@ -337,7 +337,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
         </div>
 
         {/* Footer */}
-        <footer className="text-center text-bearing-red-30 text-sm">
+        <footer className="text-center text-bp-red-200 text-sm">
           <p>© 2024 BearingPoint - Formation Excel Avancé - Version interactive</p>
           {currentUser && (
             <p className="mt-2 text-xs">

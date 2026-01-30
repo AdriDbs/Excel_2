@@ -230,7 +230,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   }, [phase]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 via-bearing-red-70 to-bearing-red-80 text-white p-4">
+    <div className="min-h-screen bg-bp-gradient text-white p-4">
       <div className="max-w-6xl mx-auto">
         {/* Notifications */}
         {notifications.length > 0 && (
@@ -238,14 +238,14 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`px-4 py-3 rounded-lg shadow-bearing backdrop-blur-md transition-all duration-300 animate-fade-in ${
+                className={`px-4 py-3 rounded-lg shadow-bp backdrop-blur-md transition-all duration-300 animate-fade-in ${
                   notification.type === "achievement"
-                    ? "bg-bearing-red/90 border-l-4 border-bearing-red-30"
+                    ? "bg-bp-red-400/90 border-l-4 border-bp-red-200"
                     : notification.type === "milestone"
-                    ? "bg-bearing-red-60/90 border-l-4 border-bearing-red-40"
+                    ? "bg-bp-red-500/90 border-l-4 border-bp-red-300"
                     : notification.type === "warning"
-                    ? "bg-bearing-gray-60/90 border-l-4 border-bearing-gray-40"
-                    : "bg-bearing-red-70/90 border-l-4 border-bearing-red-50"
+                    ? "bg-bp-gray-500/90 border-l-4 border-bp-gray-300"
+                    : "bg-bp-red-600/90 border-l-4 border-bp-red-400"
                 }`}
               >
                 <p className="text-white font-medium text-sm">{notification.message}</p>
@@ -255,7 +255,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         )}
 
         {/* Global Timer */}
-        <div className="absolute top-4 right-4 bg-bearing-red-70 rounded-full px-4 py-2 flex items-center gap-2 shadow-bearing">
+        <div className="absolute top-4 right-4 bg-bp-red-600 rounded-full px-4 py-2 flex items-center gap-2 shadow-bp">
           <Clock size={20} />
           <span className="font-mono text-lg">
             {sessionStarted ? formatGlobalTime(globalTimer) : "00:00"}
@@ -266,7 +266,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateTo("menu")}
-              className="bg-bearing-red-60 hover:bg-bearing-red-70 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bearing"
+              className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bp"
             >
               <Home size={20} />
               Menu
@@ -274,10 +274,10 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
             <div>
               <h1 className="text-3xl font-bold mb-2">
-                Excel Avance <span className="text-bearing-red">Speed Dating</span>
+                Excel Avance <span className="text-bp-red-400">Speed Dating</span>
               </h1>
               {currentUser && (
-                <p className="text-bearing-red-20">
+                <p className="text-bp-red-100">
                   Bienvenue {currentUser.name} ! Maitrisez les fonctions Excel avancees.
                 </p>
               )}
@@ -287,7 +287,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           <div className="flex gap-2 mt-4 md:mt-0 flex-wrap">
             <button
               onClick={() => setShowLeaderboard(true)}
-              className="bg-bearing-red-60 hover:bg-bearing-red-70 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bearing"
+              className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bp"
             >
               <Award size={20} />
               Leaderboard
@@ -295,7 +295,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
             <button
               onClick={() => setShowPassport(true)}
-              className="bg-bearing-red hover:bg-bearing-red-60 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bearing"
+              className="bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bp"
             >
               <Award size={20} />
               Passeport
@@ -304,11 +304,11 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
             {currentUser && (
               <div className="flex gap-2">
                 <div className="bg-white/10 backdrop-blur-sm rounded-full px-3 py-2 flex items-center gap-2">
-                  <Trophy className="text-bearing-red" size={16} />
+                  <Trophy className="text-bp-red-400" size={16} />
                   <span className="text-sm font-medium">{progressStats.totalScore}</span>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-full px-3 py-2 flex items-center gap-2">
-                  <Target className="text-bearing-red-30" size={16} />
+                  <Target className="text-bp-red-200" size={16} />
                   <span className="text-sm font-medium">
                     {progressStats.completed}/{progressStats.total}
                   </span>
@@ -323,17 +323,17 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Progression globale</span>
-              <span className="text-sm text-bearing-red-30">
+              <span className="text-sm text-bp-red-200">
                 {progressStats.percentage.toFixed(1)}%
               </span>
             </div>
-            <div className="w-full bg-bearing-gray-60/50 rounded-full h-2">
+            <div className="w-full bg-bp-gray-500/50 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-bearing-red-60 to-bearing-red h-2 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-bp-red-500 to-bp-red-400 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${progressStats.percentage}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-bearing-red-20 mt-1">
+            <div className="flex justify-between text-xs text-bp-red-100 mt-1">
               <span>Score: {progressStats.totalScore} pts</span>
               <span>{progressStats.completed} fonctions maitrisees</span>
             </div>
@@ -341,16 +341,16 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         )}
 
         {/* Main Content */}
-        <div className="bg-white text-gray-900 rounded-xl shadow-bearing-lg overflow-hidden">
+        <div className="bg-white text-gray-900 rounded-xl shadow-bp-lg overflow-hidden">
           {/* Function Navigation */}
-          <div className="bg-bearing-gray-10 p-4 flex justify-between items-center">
+          <div className="bg-bp-gray-50 p-4 flex justify-between items-center">
             <button
               onClick={() => navigateFunction(-1)}
               disabled={currentFunctionIndex === 0}
               className={`flex items-center gap-1 px-3 py-1 rounded transition-all ${
                 currentFunctionIndex === 0
-                  ? "bg-bearing-gray-20 text-bearing-gray-50 cursor-not-allowed"
-                  : "bg-bearing-red-10 text-bearing-red-60 hover:bg-bearing-red-20"
+                  ? "bg-bp-gray-100 text-bp-gray-400 cursor-not-allowed"
+                  : "bg-bp-red-50 text-bp-red-500 hover:bg-bp-red-100"
               }`}
             >
               <ChevronLeft size={20} />
@@ -363,10 +363,10 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
                   key={index}
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     index === currentFunctionIndex
-                      ? "bg-bearing-red scale-125"
+                      ? "bg-bp-red-400 scale-125"
                       : completedFunctions.includes(index)
-                      ? "bg-bearing-red-60"
-                      : "bg-bearing-gray-30"
+                      ? "bg-bp-red-500"
+                      : "bg-bp-gray-200"
                   }`}
                   title={`Fonction ${index + 1}: ${excelFunctions[index].name} ${
                     completedFunctions.includes(index) ? "✓" : ""
@@ -380,8 +380,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               disabled={currentFunctionIndex === excelFunctions.length - 1}
               className={`flex items-center gap-1 px-3 py-1 rounded transition-all ${
                 currentFunctionIndex === excelFunctions.length - 1
-                  ? "bg-bearing-gray-20 text-bearing-gray-50 cursor-not-allowed"
-                  : "bg-bearing-red-10 text-bearing-red-60 hover:bg-bearing-red-20"
+                  ? "bg-bp-gray-100 text-bp-gray-400 cursor-not-allowed"
+                  : "bg-bp-red-50 text-bp-red-500 hover:bg-bp-red-100"
               }`}
             >
               Suivant
@@ -396,11 +396,11 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
                 <div className="text-6xl">{currentFunction.avatar}</div>
                 <div>
                   <h2 className="text-3xl font-bold">{currentFunction.name}</h2>
-                  <p className="text-xl text-bearing-red font-medium">
+                  <p className="text-xl text-bp-red-400 font-medium">
                     {currentFunction.superpower}
                   </p>
                   {completedFunctions.includes(currentFunctionIndex) && (
-                    <div className="flex items-center gap-1 text-bearing-red-60 mt-1">
+                    <div className="flex items-center gap-1 text-bp-red-500 mt-1">
                       <CheckCircle size={16} />
                       <span className="text-sm font-medium">Maitrisee</span>
                     </div>
@@ -432,9 +432,9 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               togglePassport={() => setShowPassport(true)}
             />
 
-            <div className="h-2 bg-bearing-gray-20 rounded-full">
+            <div className="h-2 bg-bp-gray-100 rounded-full">
               <div
-                className="h-2 bg-bearing-red rounded-full transition-all duration-500 ease-out"
+                className="h-2 bg-bp-red-400 rounded-full transition-all duration-500 ease-out"
                 style={{ width: phaseProgress }}
               />
             </div>
