@@ -16,7 +16,7 @@ interface FunctionCardProps {
   answers: { [key: string]: string };
   validated: { [key: string]: boolean };
   handleAnswerChange: (field: string, value: string) => void;
-  validateAnswer: (field: string) => void;
+  validateAnswer: (field: string, isCorrect: boolean) => void;
   startSession: () => void;
   skipVideo: () => void;
   nextFunction: () => void;
@@ -149,7 +149,7 @@ const FunctionCard = ({
                     </div>
                   ) : (
                     <button
-                      onClick={() => validateAnswer("answer1")}
+                      onClick={() => validateAnswer("answer1", answers.answer1.toLowerCase() === "bearingpoint")}
                       className="bg-blue-600 text-white rounded-lg px-3 py-2"
                     >
                       Valider
@@ -181,7 +181,7 @@ const FunctionCard = ({
                     </div>
                   ) : (
                     <button
-                      onClick={() => validateAnswer("answer2")}
+                      onClick={() => validateAnswer("answer2", answers.answer2.toLowerCase() === "bearingpoint")}
                       className="bg-blue-600 text-white rounded-lg px-3 py-2"
                     >
                       Valider
