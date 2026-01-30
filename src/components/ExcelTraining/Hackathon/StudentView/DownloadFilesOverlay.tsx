@@ -135,7 +135,7 @@ const DownloadFilesOverlay: React.FC<DownloadFilesOverlayProps> = ({ onClose }) 
                           <span className="text-gray-500 text-xs">{file.size}</span>
                           <button 
                             onClick={() => handleDownload(file.id)}
-                            className="bg-bearing-red hover:bg-bearing-red-60 text-white text-sm py-1 px-3 rounded flex items-center gap-1 transition-colors"
+                            className="bg-bp-red-400 hover:bg-bp-red-500 text-white text-sm py-1 px-3 rounded flex items-center gap-1 transition-colors"
                           >
                             <Download size={14} />
                             Télécharger

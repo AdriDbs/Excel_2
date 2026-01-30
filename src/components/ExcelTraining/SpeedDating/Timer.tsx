@@ -26,7 +26,7 @@ const Timer: React.FC<TimerProps> = memo(({
     <div className="flex flex-col items-center">
       <div
         className={`text-3xl font-mono font-bold mb-2 transition-colors ${
-          isLowTime ? "text-bearing-red animate-pulse" : "text-bearing-red-60"
+          isLowTime ? "text-bp-red-400 animate-pulse" : "text-bp-red-500"
         }`}
       >
         {formattedTime}
@@ -34,14 +34,14 @@ const Timer: React.FC<TimerProps> = memo(({
       <div className="flex gap-2">
         <button
           onClick={toggleTimer}
-          className="bg-bearing-gray-20 hover:bg-bearing-gray-30 text-bearing-gray-60 rounded-full p-2 transition-colors"
+          className="bg-bp-gray-100 hover:bg-bp-gray-200 text-bp-gray-500 rounded-full p-2 transition-colors"
           aria-label={timerRunning ? "Pause" : "Play"}
         >
           {timerRunning ? <Pause size={20} /> : <Play size={20} />}
         </button>
         <button
           onClick={resetTimer}
-          className="bg-bearing-gray-20 hover:bg-bearing-gray-30 text-bearing-gray-60 rounded-full p-2 transition-colors"
+          className="bg-bp-gray-100 hover:bg-bp-gray-200 text-bp-gray-500 rounded-full p-2 transition-colors"
           aria-label="Reset"
         >
           <RotateCcw size={20} />

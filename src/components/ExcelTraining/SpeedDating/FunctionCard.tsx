@@ -47,7 +47,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         <p className="font-medium">Pret a decouvrir cette fonction ?</p>
         <button
           onClick={startSession}
-          className="bg-bearing-red hover:bg-bearing-red-60 text-white font-bold py-3 px-8 rounded-full text-lg flex items-center gap-2 shadow-bearing transition-all duration-300"
+          className="bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-3 px-8 rounded-full text-lg flex items-center gap-2 shadow-bp transition-all duration-300"
         >
           <Play size={24} />
           Commencer la session
@@ -60,19 +60,19 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold flex items-center gap-2">
-          <div className="bg-bearing-red text-white rounded-full w-8 h-8 flex items-center justify-center">
+          <div className="bg-bp-red-400 text-white rounded-full w-8 h-8 flex items-center justify-center">
             1
           </div>
           Video de presentation
         </h3>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 text-bearing-red-60">
+          <div className="flex items-center gap-2 text-bp-red-500">
             <Clock size={20} />
             <span>1 minute</span>
           </div>
           <button
             onClick={skipVideo}
-            className="bg-bearing-red-10 text-bearing-red-60 px-3 py-1 rounded-lg flex items-center gap-1 hover:bg-bearing-red-20 transition-colors"
+            className="bg-bp-red-50 text-bp-red-500 px-3 py-1 rounded-lg flex items-center gap-1 hover:bg-bp-red-100 transition-colors"
           >
             <SkipForward size={16} />
             Passer
@@ -80,11 +80,11 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         </div>
       </div>
 
-      <div className="aspect-video bg-bearing-red-80 rounded-lg flex items-center justify-center">
+      <div className="aspect-video bg-bp-red-700 rounded-lg flex items-center justify-center">
         <div className="text-white text-center p-4">
           <p className="mb-2">Video de presentation pour</p>
           <p className="text-2xl font-bold">{currentFunction.name}</p>
-          <p className="mt-4 text-bearing-red-30 text-sm">
+          <p className="mt-4 text-bp-red-200 text-sm">
             (Interface de demonstration uniquement - video a implementer)
           </p>
         </div>
@@ -96,30 +96,30 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold flex items-center gap-2">
-          <div className="bg-bearing-red-60 text-white rounded-full w-8 h-8 flex items-center justify-center">
+          <div className="bg-bp-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center">
             2
           </div>
           Exercice pratique
         </h3>
-        <div className="flex items-center gap-2 text-bearing-red-60">
+        <div className="flex items-center gap-2 text-bp-red-500">
           <Clock size={20} />
           <span>3 minutes</span>
         </div>
       </div>
 
-      <div className="bg-white border-2 border-bearing-red-20 rounded-lg p-6">
+      <div className="bg-white border-2 border-bp-red-100 rounded-lg p-6">
         <div className="mb-6">
-          <div className="bg-bearing-red-10 p-4 rounded-lg border border-bearing-red-20 mb-4">
+          <div className="bg-bp-red-50 p-4 rounded-lg border border-bp-red-100 mb-4">
             <p className="text-lg font-medium">{currentFunction.exercise}</p>
           </div>
-          <div className="text-sm text-bearing-gray-50 mb-2">
+          <div className="text-sm text-bp-gray-400 mb-2">
             Completez les exercices dans Excel puis entrez vos reponses ci-dessous:
           </div>
         </div>
 
         <div className="space-y-4">
           {["answer1", "answer2"].map((field, index) => (
-            <div key={field} className="border border-bearing-gray-30 rounded-lg p-4 bg-bearing-gray-10">
+            <div key={field} className="border border-bp-gray-200 rounded-lg p-4 bg-bp-gray-50">
               <label className="block font-medium mb-2">
                 {index === 0 ? currentFunction.exercisePrompt1 : currentFunction.exercisePrompt2}
               </label>
@@ -132,18 +132,18 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
                   placeholder="Votre reponse..."
                   className={`flex-1 border rounded-lg px-3 py-2 transition-colors ${
                     validated[field]
-                      ? "bg-bearing-red-10 border-bearing-red-60"
-                      : "border-bearing-gray-30 focus:border-bearing-red focus:ring-1 focus:ring-bearing-red"
+                      ? "bg-bp-red-50 border-bp-red-500"
+                      : "border-bp-gray-200 focus:border-bp-red-400 focus:ring-1 focus:ring-bp-red-400"
                   }`}
                 />
                 {validated[field] ? (
-                  <div className="bg-bearing-red-60 text-white rounded-lg px-3 py-2 flex items-center">
+                  <div className="bg-bp-red-500 text-white rounded-lg px-3 py-2 flex items-center">
                     <Check size={20} />
                   </div>
                 ) : (
                   <button
                     onClick={() => validateAnswer(field, answers[field].toLowerCase() === "bearingpoint")}
-                    className="bg-bearing-red hover:bg-bearing-red-60 text-white rounded-lg px-3 py-2 transition-colors"
+                    className="bg-bp-red-400 hover:bg-bp-red-500 text-white rounded-lg px-3 py-2 transition-colors"
                   >
                     Valider
                   </button>
@@ -155,11 +155,11 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
 
         <div className="mt-4 text-center">
           {validated.answer1 && validated.answer2 ? (
-            <div className="text-bearing-red-60 font-medium">
+            <div className="text-bp-red-500 font-medium">
               Excellent ! Vous allez passer a l'astuce bonus...
             </div>
           ) : (
-            <div className="text-bearing-gray-50 text-sm">
+            <div className="text-bp-gray-400 text-sm">
               Pour cette version d'essai, entrez "BearingPoint" comme reponse
             </div>
           )}
@@ -172,18 +172,18 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold flex items-center gap-2">
-          <div className="bg-bearing-red-70 text-white rounded-full w-8 h-8 flex items-center justify-center">
+          <div className="bg-bp-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center">
             3
           </div>
           Astuce bonus
         </h3>
-        <div className="flex items-center gap-2 text-bearing-red-70">
+        <div className="flex items-center gap-2 text-bp-red-600">
           <Clock size={20} />
           <span>1 minute</span>
         </div>
       </div>
 
-      <div className="bg-bearing-red-10 border-2 border-bearing-red-20 rounded-lg p-6">
+      <div className="bg-bp-red-50 border-2 border-bp-red-100 rounded-lg p-6">
         <div className="flex items-start gap-4">
           <div className="text-4xl">💡</div>
           <div className="w-full">
@@ -191,7 +191,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
             <div className="mt-6 flex justify-center">
               <button
                 onClick={completeFunction}
-                className="bg-bearing-red-70 hover:bg-bearing-red-80 text-white font-bold py-3 px-6 rounded-lg shadow-bearing transition-all duration-300"
+                className="bg-bp-red-600 hover:bg-bp-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-bp transition-all duration-300"
               >
                 J'ai compris l'astuce
               </button>
@@ -214,7 +214,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         {currentFunctionIndex < functionsLength - 1 ? (
           <button
             onClick={nextFunction}
-            className="bg-bearing-red hover:bg-bearing-red-60 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bearing transition-all duration-300"
+            className="bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
           >
             Fonction suivante
             <ChevronRight size={20} />
@@ -222,7 +222,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         ) : (
           <button
             onClick={togglePassport}
-            className="bg-bearing-red-60 hover:bg-bearing-red-70 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bearing transition-all duration-300"
+            className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
           >
             Voir mon passeport
             <Award size={20} />
@@ -233,7 +233,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   );
 
   return (
-    <div className="bg-bearing-gray-10 rounded-xl p-6 mb-6 min-h-64">
+    <div className="bg-bp-gray-50 rounded-xl p-6 mb-6 min-h-64">
       {phase === "intro" && renderIntroPhase()}
       {phase === "video" && renderVideoPhase()}
       {phase === "exercise" && renderExercisePhase()}

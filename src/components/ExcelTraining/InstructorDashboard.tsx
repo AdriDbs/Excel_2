@@ -161,12 +161,12 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-bearing-red-70 to-bearing-red text-white p-6 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-bp-red-600 to-bp-red-400 text-white p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Settings size={28} />
             <div>
               <h2 className="text-2xl font-bold">Dashboard Instructeur</h2>
-              <p className="text-bearing-red-20">Bienvenue, {currentUser.name}</p>
+              <p className="text-bp-red-100">Bienvenue, {currentUser.name}</p>
             </div>
           </div>
           <button
@@ -182,7 +182,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
           <div
             className={`px-6 py-3 ${
               notification.type === "success"
-                ? "bg-bearing-red-10 text-bearing-red-70 border-l-4 border-green-500"
+                ? "bg-bp-red-50 text-bp-red-600 border-l-4 border-green-500"
                 : notification.type === "error"
                 ? "bg-red-100 text-red-800 border-l-4 border-red-500"
                 : "bg-blue-100 text-blue-800 border-l-4 border-blue-500"
@@ -217,7 +217,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? "text-bearing-red-60 border-b-2 border-bearing-red-60 bg-bearing-red-10"
+                    ? "text-bp-red-500 border-b-2 border-bp-red-500 bg-bp-red-50"
                     : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
               >
@@ -247,36 +247,36 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                   </p>
                 </div>
 
-                <div className="bg-bearing-red-10 p-4 rounded-lg border border-green-200">
+                <div className="bg-bp-red-50 p-4 rounded-lg border border-green-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target className="text-bearing-red-60" size={20} />
-                    <h3 className="font-semibold text-bearing-red-70">Étudiants</h3>
+                    <Target className="text-bp-red-500" size={20} />
+                    <h3 className="font-semibold text-bp-red-600">Étudiants</h3>
                   </div>
                   <p className="text-2xl font-bold text-green-900">
                     {stats.totalStudents}
                   </p>
                 </div>
 
-                <div className="bg-bearing-red-10 p-4 rounded-lg border border-bearing-red-20">
+                <div className="bg-bp-red-50 p-4 rounded-lg border border-bp-red-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <Clock className="text-bearing-red-60" size={20} />
-                    <h3 className="font-semibold text-bearing-red-70">
+                    <Clock className="text-bp-red-500" size={20} />
+                    <h3 className="font-semibold text-bp-red-600">
                       Actifs Aujourd'hui
                     </h3>
                   </div>
-                  <p className="text-2xl font-bold text-bearing-red-80">
+                  <p className="text-2xl font-bold text-bp-red-700">
                     {stats.activeToday}
                   </p>
                 </div>
 
-                <div className="bg-bearing-gray-10 p-4 rounded-lg border border-bearing-gray-30">
+                <div className="bg-bp-gray-50 p-4 rounded-lg border border-bp-gray-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <Trophy className="text-bearing-red" size={20} />
-                    <h3 className="font-semibold text-bearing-red-70">
+                    <Trophy className="text-bp-red-400" size={20} />
+                    <h3 className="font-semibold text-bp-red-600">
                       Speed Dating
                     </h3>
                   </div>
-                  <p className="text-2xl font-bold text-bearing-red-80">
+                  <p className="text-2xl font-bold text-bp-red-700">
                     {stats.completionRates.speedDating.toFixed(1)}%
                   </p>
                 </div>
@@ -298,7 +298,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                           key={student.name}
                           className={`flex items-center justify-between p-3 rounded-lg ${
                             index === 0
-                              ? "bg-bearing-gray-10 border border-bearing-gray-30"
+                              ? "bg-bp-gray-50 border border-bp-gray-200"
                               : index === 1
                               ? "bg-gray-50 border border-gray-200"
                               : index === 2
@@ -310,7 +310,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                             <span
                               className={`font-bold text-lg ${
                                 index === 0
-                                  ? "text-bearing-red"
+                                  ? "text-bp-red-400"
                                   : index === 1
                                   ? "text-gray-600"
                                   : index === 2
@@ -357,14 +357,14 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                 <div className="flex items-center gap-4">
                   <div className="text-sm text-gray-600">
                     <span className="inline-flex items-center gap-1">
-                      <div className="w-2 h-2 bg-bearing-red-100 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-bp-red-500 rounded-full animate-pulse"></div>
                       Synchronisation automatique
                     </span>
                   </div>
                   <button
                     onClick={refreshData}
                     disabled={isLoading}
-                    className="flex items-center gap-2 bg-bearing-red hover:bg-bearing-red-60 text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                    className="flex items-center gap-2 bg-bp-red-400 hover:bg-bp-red-500 text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50"
                   >
                     <RefreshCw
                       size={16}
@@ -404,16 +404,16 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                             <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 {user.role === "instructor" ? (
-                                  <div className="w-2 h-2 bg-bearing-red-100 rounded-full"></div>
+                                  <div className="w-2 h-2 bg-bp-red-500 rounded-full"></div>
                                 ) : (
                                   <div
                                     className={`w-2 h-2 rounded-full ${
                                       new Date(user.lastActivity) >
                                       new Date(Date.now() - 5 * 60 * 1000)
-                                        ? "bg-bearing-red-100 animate-pulse"
+                                        ? "bg-bp-red-500 animate-pulse"
                                         : new Date(user.lastActivity) >
                                           new Date(Date.now() - 30 * 60 * 1000)
-                                        ? "bg-bearing-gray-100"
+                                        ? "bg-bp-gray-500"
                                         : "bg-gray-400"
                                     }`}
                                   ></div>
@@ -421,7 +421,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                                 <span className="font-medium">{user.name}</span>
                                 {new Date(user.lastActivity) >
                                   new Date(Date.now() - 2 * 60 * 1000) && (
-                                  <span className="text-xs bg-bearing-red-10 text-bearing-red-70 px-2 py-1 rounded-full">
+                                  <span className="text-xs bg-bp-red-50 text-bp-red-600 px-2 py-1 rounded-full">
                                     En ligne
                                   </span>
                                 )}
@@ -431,7 +431,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                               <span
                                 className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                   user.role === "instructor"
-                                    ? "bg-bearing-red-10 text-bearing-red-70"
+                                    ? "bg-bp-red-50 text-bp-red-600"
                                     : "bg-blue-100 text-blue-800"
                                 }`}
                               >
@@ -511,13 +511,13 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                   <div className="space-y-3">
                     <button
                       onClick={handleExportData}
-                      className="w-full bg-bearing-red hover:bg-bearing-red-60 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
+                      className="w-full bg-bp-red-400 hover:bg-bp-red-500 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
                     >
                       <Download size={16} />
                       Exporter les données
                     </button>
 
-                    <label className="w-full bg-bearing-red-60 hover:bg-bearing-red-70 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 cursor-pointer">
+                    <label className="w-full bg-bp-red-500 hover:bg-bp-red-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 cursor-pointer">
                       <Upload size={16} />
                       Importer les données
                       <input

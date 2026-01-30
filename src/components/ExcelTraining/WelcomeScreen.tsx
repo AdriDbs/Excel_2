@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { databaseService } from "../../services/databaseService";
 import { Student, Instructor } from "../../types/database";
-import { BRAND } from "../../constants/brand";
 
 interface WelcomeScreenProps {
   onUserSelected: (user: Student | Instructor) => void;
@@ -106,45 +105,40 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       icon: UserCheck,
       title: "Instructeur",
       description: "Accès aux outils de gestion, statistiques et contrôles de session",
-      bgClass: "bg-bearing-red-60 hover:bg-bearing-red-70",
+      bgClass: "bg-bp-red-600 hover:bg-bp-red-700",
     },
     {
       role: "student" as const,
       icon: User,
       title: "Étudiant",
       description: "Accès aux exercices, speed dating Excel et hackathons",
-      bgClass: "bg-bearing-red hover:bg-bearing-red-60",
+      bgClass: "bg-bp-red-400 hover:bg-bp-red-500",
     },
     {
       role: "guest" as const,
       icon: BookOpen,
       title: "Visiteur",
       description: "Consulter le contenu sans enregistrer de progression",
-      bgClass: "bg-bearing-gray-60 hover:bg-bearing-gray-50",
+      bgClass: "bg-bp-gray-500 hover:bg-bp-gray-400",
     },
   ], []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 via-bearing-red-70 to-bearing-red-80 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bp-gradient flex items-center justify-center p-4">
       <div className="max-w-4xl w-full animate-fade-in">
-        {/* Logo et En-tête */}
+        {/* En-tête */}
         <div className="text-center mb-12">
-          <img
-            src={BRAND.logos.full}
-            alt={BRAND.name}
-            className="h-12 mx-auto mb-6 text-white"
-            style={{ filter: 'brightness(0) invert(1)' }}
-          />
           <h1 className="text-5xl font-bold text-white mb-4">
             Formation Excel Avancé
           </h1>
-          <p className="text-xl text-bearing-red-20 max-w-2xl mx-auto">
+          <h2 className="text-2xl text-bp-red-400 mb-2">BearingPoint</h2>
+          <p className="text-xl text-bp-gray-200 max-w-2xl mx-auto">
             Plateforme interactive de formation aux fonctionnalités avancées d'Excel
           </p>
         </div>
 
         {/* Choix de mode de connexion */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8 shadow-bearing-lg">
+        <div className="bg-black/30 backdrop-blur-md rounded-xl p-8 mb-8 shadow-bp-lg">
           <h3 className="text-2xl font-bold text-white text-center mb-6">
             Comment souhaitez-vous accéder à la formation ?
           </h3>
@@ -156,7 +150,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   key={role}
                   onClick={() => role === "guest" ? onViewAsGuest() : handleRoleSelection(role)}
                   disabled={isLoading}
-                  className={`${bgClass} text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bearing transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`${bgClass} text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bp transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Icon size={48} className="mx-auto mb-4" />
                   <h4 className="text-xl font-bold mb-2">{title}</h4>
@@ -182,7 +176,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value)}
                   placeholder="Ex: Jean Dupont"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-bearing-red-40 focus:ring-2 focus:ring-bearing-red focus:border-transparent text-gray-900 text-lg bg-white"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-bp-red-300 focus:ring-2 focus:ring-bp-red-400 focus:border-transparent text-gray-900 text-lg bg-white"
                   disabled={isLoading}
                   maxLength={50}
                   autoFocus
@@ -190,7 +184,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               </div>
 
               {error && (
-                <div className="bg-bearing-red/20 border border-bearing-red text-bearing-red-10 px-4 py-3 rounded-lg mb-4">
+                <div className="bg-bp-red-400/20 border border-bp-red-400 text-white px-4 py-3 rounded-lg mb-4">
                   {error}
                 </div>
               )}
@@ -200,7 +194,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   type="button"
                   onClick={() => setSelectedRole(null)}
                   disabled={isLoading}
-                  className="flex-1 bg-bearing-gray-60 hover:bg-bearing-gray-50 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+                  className="flex-1 bg-bp-gray-500 hover:bg-bp-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
                 >
                   Retour
                 </button>
@@ -208,7 +202,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || studentName.trim().length < 2}
-                  className="flex-1 bg-bearing-red hover:bg-bearing-red-60 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-bearing"
+                  className="flex-1 bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-bp"
                 >
                   {isLoading ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -226,10 +220,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
         {/* Section utilisateurs existants */}
         {existingUsers.length > 0 && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6">
+          <div className="bg-black/30 backdrop-blur-md rounded-xl p-6">
             <button
               onClick={() => setShowExistingUsers(!showExistingUsers)}
-              className="w-full flex items-center justify-between text-white hover:text-bearing-red-30 transition-colors duration-300 mb-4"
+              className="w-full flex items-center justify-between text-white hover:text-bp-red-300 transition-colors duration-300 mb-4"
             >
               <div className="flex items-center gap-2">
                 <Users size={24} />
@@ -251,13 +245,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   <button
                     key={user.id}
                     onClick={() => handleExistingUserSelection(user)}
-                    className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg transition-all duration-300 text-left hover:shadow-bearing"
+                    className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg transition-all duration-300 text-left hover:shadow-bp"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {user.role === "instructor" ? (
-                        <UserCheck size={16} className="text-bearing-red-30" />
+                        <UserCheck size={16} className="text-bp-red-300" />
                       ) : (
-                        <User size={16} className="text-bearing-red-40" />
+                        <User size={16} className="text-bp-red-200" />
                       )}
                       <span className="font-medium">{user.name}</span>
                     </div>

@@ -159,7 +159,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
 
           <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-8">
             <h1 className="text-3xl font-bold mb-6 text-center">
-              Rejoindre le <span className="text-bearing-red">Hackathon</span>
+              Rejoindre le <span className="text-bp-red-400">Hackathon</span>
             </h1>
 
             {/* Saisie du nom (seulement si pas d'utilisateur connecté) */}
@@ -260,9 +260,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
               key={notification.id}
               className={`px-4 py-3 rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 animate-slide-in-right ${
                 notification.type === 'achievement' ? 'bg-green-500 bg-opacity-90 border-l-4 border-green-300' :
-                notification.type === 'milestone' ? 'bg-bearing-red bg-opacity-90 border-l-4 border-bearing-red-30' :
+                notification.type === 'milestone' ? 'bg-bp-red-400 bg-opacity-90 border-l-4 border-bp-red-200' :
                 notification.type === 'warning' ? 'bg-yellow-500 bg-opacity-90 border-l-4 border-yellow-300' :
-                'bg-bearing-red bg-opacity-90 border-l-4 border-blue-300'
+                'bg-bp-red-400 bg-opacity-90 border-l-4 border-blue-300'
               }`}
             >
               <p className="text-white font-medium text-sm">{notification.message}</p>
@@ -285,7 +285,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
 
       {/* En-tête et chronomètre */}
       <div className="text-center mb-6 relative z-10 pt-12">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-bearing-red bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-bp-red-400 bg-clip-text text-transparent mb-2">
           Escape Excel: Le Dossier Perdu 2.0
         </h1>
         <h2 className="text-xl text-gray-300 mb-4">
@@ -311,9 +311,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
           {/* Statistiques de progression */}
           {progressStats && (
             <div className="flex gap-4">
-              <div className="bg-gray-800 rounded-lg px-4 py-2 border border-bearing-red">
+              <div className="bg-gray-800 rounded-lg px-4 py-2 border border-bp-red-400">
                 <div className="flex items-center gap-2">
-                  <Trophy className="text-bearing-red" size={20} />
+                  <Trophy className="text-bp-red-400" size={20} />
                   <div>
                     <div className="text-lg font-bold">{progressStats.totalScore}</div>
                     <div className="text-xs text-gray-400">Points</div>
@@ -425,7 +425,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
             <div className="space-y-2">
               <button
                 onClick={() => setShowDownloadOverlay(true)}
-                className="w-full bg-bearing-red hover:bg-bearing-red-60 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                className="w-full bg-bp-red-400 hover:bg-bp-red-500 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 📁 Télécharger les fichiers
               </button>
