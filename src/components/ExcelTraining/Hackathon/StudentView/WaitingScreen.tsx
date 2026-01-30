@@ -47,8 +47,8 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
           </h2>
           <div className="flex justify-center mb-4">
             <div className="bg-gray-800 rounded-lg px-4 py-2 inline-flex items-center">
-              <Clock className="text-yellow-400 mr-2" size={20} />
-              <span className="text-yellow-400">
+              <Clock className="text-bearing-red mr-2" size={20} />
+              <span className="text-bearing-red">
                 Session en attente de démarrage par le formateur
               </span>
             </div>
@@ -74,12 +74,12 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
         </div>
 
         <div className="bg-gray-800 rounded-xl p-6 shadow-xl">
-          <h2 className="text-2xl font-bold mb-4 text-center text-purple-400">
+          <h2 className="text-2xl font-bold mb-4 text-center text-bearing-red-40">
             Scénario du Hackathon: Le Dossier Perdu 2.0
           </h2>
 
-          <div className="bg-purple-900/20 border border-purple-800/50 rounded-lg p-6 mb-6">
-            <h3 className="text-xl font-semibold mb-3 text-purple-300">
+          <div className="bg-bearing-red-80/20 border border-bearing-red-70/50 rounded-lg p-6 mb-6">
+            <h3 className="text-xl font-semibold mb-3 text-bearing-red-30">
               Mise en situation
             </h3>
             <p className="mb-4">
@@ -94,22 +94,22 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
               basé sur les fonctions avancées d'Excel. De plus, les données
               brutes qu'il a collectées sont désorganisées et incomplètes.
             </p>
-            <p className="text-lg font-medium text-purple-300">
+            <p className="text-lg font-medium text-bearing-red-30">
               Votre mission comporte trois grands défis :
             </p>
             <ol className="list-decimal pl-6 space-y-2 mt-2">
               <li>
-                <strong className="text-purple-300">Data Cleaning :</strong>{" "}
+                <strong className="text-bearing-red-30">Data Cleaning :</strong>{" "}
                 Nettoyer et préparer les données brutes dispersées et
                 incohérentes
               </li>
               <li>
-                <strong className="text-purple-300">Data Analysis :</strong>{" "}
+                <strong className="text-bearing-red-30">Data Analysis :</strong>{" "}
                 Résoudre les énigmes analytiques pour reconstituer l'analyse
                 complète
               </li>
               <li>
-                <strong className="text-purple-300">
+                <strong className="text-bearing-red-30">
                   Data Visualization :
                 </strong>{" "}
                 Créer un tableau de bord percutant pour la présentation client
@@ -151,8 +151,8 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
 
             <div className="bg-gray-700/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Award className="text-yellow-400" size={20} />
-                <h3 className="text-lg font-semibold text-yellow-400">
+                <Award className="text-bearing-red" size={20} />
+                <h3 className="text-lg font-semibold text-bearing-red">
                   Phase 3: Visualisation
                 </h3>
               </div>
@@ -165,7 +165,7 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
             </div>
           </div>
 
-          <div className="bg-indigo-900/30 border border-indigo-700 rounded-lg p-4">
+          <div className="bg-bearing-red-70/30 border border-indigo-700 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <User className="text-indigo-400" size={20} />
               <h3 className="text-lg font-semibold text-indigo-400">
@@ -180,7 +180,7 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
             </p>
 
             <div className="flex items-center gap-2">
-              <Users className="text-purple-400" size={20} />
+              <Users className="text-bearing-red-40" size={20} />
               <p className="text-gray-300 text-sm italic">
                 N'oubliez pas : la communication et la collaboration sont
                 essentielles pour réussir ce hackathon !

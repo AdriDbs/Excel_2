@@ -99,8 +99,8 @@ const ExcelTraining: React.FC = () => {
   // Afficher l'écran de bienvenue si pas d'utilisateur connecté
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white"></div>
+      <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 via-bearing-red-70 to-bearing-red-80 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-bearing-red"></div>
       </div>
     );
   }

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- BearingPoint Bear Symbol -->
+  <g fill="currentColor">
+    <!-- Main bear head shape -->
+    <ellipse cx="50" cy="55" rx="35" ry="30"/>
+    <!-- Ears -->
+    <circle cx="22" cy="25" r="12"/>
+    <circle cx="78" cy="25" r="12"/>
+    <!-- Face details - lighter area -->
+    <ellipse cx="50" cy="65" rx="18" ry="14" fill-opacity="0.3"/>
+    <!-- Eyes -->
+    <circle cx="35" cy="48" r="5"/>
+    <circle cx="65" cy="48" r="5"/>
+    <!-- Nose -->
+    <ellipse cx="50" cy="62" rx="8" ry="5"/>
+  </g>
+</svg>

@@ -94,15 +94,15 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
     switch (category) {
       case "Conseil en Stratégie":
       case "Stratégie & Transformation":
-        return <TrendingUp size={18} className="text-yellow-400" />;
+        return <TrendingUp size={18} className="text-bearing-red" />;
       case "Conseil en Management":
-        return <BarChart2 size={18} className="text-yellow-400" />;
+        return <BarChart2 size={18} className="text-bearing-red" />;
       case "Conseil en Transformation":
-        return <Database size={18} className="text-yellow-400" />;
+        return <Database size={18} className="text-bearing-red" />;
       case "Conseil IT":
-        return <FileText size={18} className="text-yellow-400" />;
+        return <FileText size={18} className="text-bearing-red" />;
       default:
-        return <FileText size={18} className="text-yellow-400" />;
+        return <FileText size={18} className="text-bearing-red" />;
     }
   };
 
@@ -151,11 +151,11 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
+    <div className="min-h-screen bg-bearing-red-80 text-white p-4">
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigateTo("menu")}
-          className="mb-8 bg-yellow-800 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md"
+          className="mb-8 bg-bearing-red-60 hover:bg-bearing-red text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md"
         >
           <ArrowLeft size={20} />
           Retour au menu
@@ -163,25 +163,25 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
 
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-4">
-            Fiches Mémo <span className="text-yellow-400">Cas d'Usage</span>
+            Fiches Mémo <span className="text-bearing-red">Cas d'Usage</span>
           </h1>
-          <p className="text-xl text-yellow-300/80 max-w-3xl mx-auto">
+          <p className="text-xl text-bearing-red-30/80 max-w-3xl mx-auto">
             Des exemples concrets d'utilisation des fonctions Excel avancées
             dans des contextes professionnels de conseil
           </p>
         </div>
 
         {/* Search and filters */}
-        <div className="bg-gray-800/80 backdrop-filter backdrop-blur-sm rounded-xl p-6 mb-8 border border-yellow-900/50">
+        <div className="bg-bearing-red-70/80 backdrop-filter backdrop-blur-sm rounded-xl p-6 mb-8 border border-bearing-red-70/50">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-yellow-400" />
+                <Search className="h-5 w-5 text-bearing-red" />
               </div>
               <input
                 type="text"
-                className="bg-gray-700/80 border border-yellow-800/70 text-yellow-100 placeholder-yellow-300/60 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="bg-gray-700/80 border border-bearing-red-60/70 text-bearing-red-20 placeholder-bearing-red-30/60 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 placeholder="Rechercher partout dans les cas d'usage..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -190,7 +190,7 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                   <button
                     onClick={() => setSearchTerm("")}
-                    className="text-yellow-400 hover:text-yellow-300 p-1"
+                    className="text-bearing-red hover:text-bearing-red-30 p-1"
                     title="Effacer la recherche"
                   >
                     <svg
@@ -215,7 +215,7 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
             {/* Category filter */}
             <div>
               <select
-                className="bg-gray-700/80 border border-yellow-800/70 text-yellow-100 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="bg-gray-700/80 border border-bearing-red-60/70 text-bearing-red-20 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 value={selectedCategory || ""}
                 onChange={(e) =>
                   setSelectedCategory(
@@ -235,7 +235,7 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
             {/* Function filter */}
             <div>
               <select
-                className="bg-gray-700/80 border border-yellow-800/70 text-yellow-100 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="bg-gray-700/80 border border-bearing-red-60/70 text-bearing-red-20 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 value={selectedFunction || ""}
                 onChange={(e) =>
                   setSelectedFunction(
@@ -255,7 +255,7 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
 
           {/* Filter information */}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <div className="text-yellow-400 flex items-center">
+            <div className="text-bearing-red flex items-center">
               <Filter size={16} className="mr-1" />
               <span>Filtres actifs:</span>
             </div>
@@ -263,20 +263,20 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
             {selectedCategory || selectedFunction || searchTerm ? (
               <>
                 {selectedCategory && (
-                  <span className="bg-yellow-900/70 text-yellow-300 px-3 py-1 rounded-full text-sm flex items-center">
+                  <span className="bg-yellow-900/70 text-bearing-red-30 px-3 py-1 rounded-full text-sm flex items-center">
                     {getCategoryIcon(selectedCategory)}
                     <span className="ml-1">{selectedCategory}</span>
                   </span>
                 )}
 
                 {selectedFunction && (
-                  <span className="bg-yellow-900/70 text-yellow-300 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-yellow-900/70 text-bearing-red-30 px-3 py-1 rounded-full text-sm">
                     {selectedFunction}
                   </span>
                 )}
 
                 {searchTerm && (
-                  <span className="bg-yellow-900/70 text-yellow-300 px-3 py-1 rounded-full text-sm flex items-center">
+                  <span className="bg-yellow-900/70 text-bearing-red-30 px-3 py-1 rounded-full text-sm flex items-center">
                     <Search size={14} className="mr-1" />
                     {searchTerm}
                   </span>
@@ -288,22 +288,22 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
                     setSelectedCategory(null);
                     setSelectedFunction(null);
                   }}
-                  className="bg-yellow-800 hover:bg-yellow-700 text-yellow-300 px-3 py-1 rounded-full text-sm flex items-center"
+                  className="bg-bearing-red-60 hover:bg-bearing-red text-bearing-red-30 px-3 py-1 rounded-full text-sm flex items-center"
                 >
                   <RefreshCw size={14} className="mr-1" />
                   Réinitialiser
                 </button>
               </>
             ) : (
-              <span className="text-yellow-300/70 text-sm">Aucun</span>
+              <span className="text-bearing-red-30/70 text-sm">Aucun</span>
             )}
 
-            <div className="ml-auto text-yellow-300/70 text-sm">
+            <div className="ml-auto text-bearing-red-30/70 text-sm">
               {filteredUseCases.length} résultat
               {filteredUseCases.length !== 1 ? "s" : ""}
               {searchTerm && filteredUseCases.length > 0 && (
                 <span className="ml-1">
-                  pour "<span className="text-yellow-300">{searchTerm}</span>"
+                  pour "<span className="text-bearing-red-30">{searchTerm}</span>"
                 </span>
               )}
             </div>
@@ -317,7 +317,7 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
             return (
               <div key={useCase.id} className="flex flex-col">
                 {searchTerm && matchInfo && (
-                  <div className="bg-yellow-900/40 rounded-t-lg px-3 py-1 text-xs text-yellow-300/80 border-t border-l border-r border-yellow-800/40">
+                  <div className="bg-yellow-900/40 rounded-t-lg px-3 py-1 text-xs text-bearing-red-30/80 border-t border-l border-r border-bearing-red-60/40">
                     Correspondance trouvée dans: {matchInfo}
                   </div>
                 )}
@@ -335,10 +335,10 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
 
         {/* No results */}
         {filteredUseCases.length === 0 && (
-          <div className="bg-gray-800/80 backdrop-filter backdrop-blur-sm rounded-xl p-8 text-center border border-yellow-900/50">
-            <div className="text-yellow-400 text-6xl mb-4">🔍</div>
+          <div className="bg-bearing-red-70/80 backdrop-filter backdrop-blur-sm rounded-xl p-8 text-center border border-bearing-red-70/50">
+            <div className="text-bearing-red text-6xl mb-4">🔍</div>
             <h2 className="text-2xl font-bold mb-2">Aucun résultat trouvé</h2>
-            <p className="text-yellow-300/70 mb-4">
+            <p className="text-bearing-red-30/70 mb-4">
               Aucun cas d'usage ne correspond à votre recherche "{searchTerm}"
               {selectedCategory && (
                 <span> dans la catégorie "{selectedCategory}"</span>
@@ -354,7 +354,7 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
                 setSelectedCategory(null);
                 setSelectedFunction(null);
               }}
-              className="bg-yellow-800 hover:bg-yellow-700 text-yellow-300 px-4 py-2 rounded-lg text-sm flex items-center mx-auto"
+              className="bg-bearing-red-60 hover:bg-bearing-red text-bearing-red-30 px-4 py-2 rounded-lg text-sm flex items-center mx-auto"
             >
               <RefreshCw size={14} className="mr-2" />
               Réinitialiser tous les filtres

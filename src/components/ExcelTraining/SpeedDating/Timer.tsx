@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 
 interface TimerProps {
@@ -8,44 +8,49 @@ interface TimerProps {
   resetTimer: () => void;
 }
 
-const Timer = ({
+const Timer: React.FC<TimerProps> = memo(({
   timeLeft,
   timerRunning,
   toggleTimer,
   resetTimer,
-}: TimerProps) => {
-  // Formater le temps en minutes:secondes
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+}) => {
+  const formattedTime = useMemo(() => {
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
+  }, [timeLeft]);
+
+  const isLowTime = timeLeft < 10;
 
   return (
     <div className="flex flex-col items-center">
       <div
-        className={`text-3xl font-mono font-bold mb-2 ${
-          timeLeft < 10 ? "text-red-600 animate-pulse" : ""
+        className={`text-3xl font-mono font-bold mb-2 transition-colors ${
+          isLowTime ? "text-bearing-red animate-pulse" : "text-bearing-red-60"
         }`}
       >
-        {formatTime(timeLeft)}
+        {formattedTime}
       </div>
       <div className="flex gap-2">
         <button
           onClick={toggleTimer}
-          className="bg-gray-200 hover:bg-gray-300 rounded-full p-2"
+          className="bg-bearing-gray-20 hover:bg-bearing-gray-30 text-bearing-gray-60 rounded-full p-2 transition-colors"
+          aria-label={timerRunning ? "Pause" : "Play"}
         >
           {timerRunning ? <Pause size={20} /> : <Play size={20} />}
         </button>
         <button
           onClick={resetTimer}
-          className="bg-gray-200 hover:bg-gray-300 rounded-full p-2"
+          className="bg-bearing-gray-20 hover:bg-bearing-gray-30 text-bearing-gray-60 rounded-full p-2 transition-colors"
+          aria-label="Reset"
         >
           <RotateCcw size={20} />
         </button>
       </div>
     </div>
   );
-};
+});
+
+Timer.displayName = "Timer";
 
 export default Timer;
