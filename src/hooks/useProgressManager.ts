@@ -246,7 +246,7 @@ export const useProgressNotifications = () => {
     Array<{
       id: string;
       message: string;
-      type: "success" | "achievement" | "milestone";
+      type: "success" | "achievement" | "milestone" | "warning";
       timestamp: Date;
     }>
   >([]);
@@ -254,7 +254,7 @@ export const useProgressNotifications = () => {
   const addNotification = useCallback(
     (
       message: string,
-      type: "success" | "achievement" | "milestone" = "success"
+      type: "success" | "achievement" | "milestone" | "warning" = "success"
     ) => {
       const notification = {
         id: `notification_${Date.now()}_${Math.random()
