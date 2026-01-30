@@ -81,7 +81,7 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
 
   // Fonction wrapper pour convertir string vers HackathonViewType
   const handleSetHackathonView = (view: string) => {
-    if (view === "student" || view === "global" || view === "landing") {
+    if (view === "student" || view === "global" || view === "landing" || view === "scoreboard") {
       navigateToView(view as HackathonViewType);
     } else {
       navigateToView("landing");

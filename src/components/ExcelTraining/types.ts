@@ -11,7 +11,7 @@ export type SectionType =
   | "useCases";
 
 // Type pour les vues du hackathon
-export type HackathonViewType = "landing" | "student" | "global";
+export type HackathonViewType = "landing" | "student" | "global" | "scoreboard";
 
 // Interface pour les props de navigation
 export interface NavigationProps {
