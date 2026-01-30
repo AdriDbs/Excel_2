@@ -394,51 +394,39 @@ export const isSessionActive = (sessionId: string): boolean => {
   }
 };
 
-// Créer une nouvelle session
-export const createNewSession = async (): Promise<string> => {
+// Noms d'équipes par défaut
+const defaultTeamNames = [
+  "Équipe Alpha",
+  "Équipe Beta",
+  "Équipe Gamma",
+  "Équipe Delta",
+  "Équipe Epsilon",
+  "Équipe Zeta",
+  "Équipe Eta",
+  "Équipe Theta",
+  "Équipe Iota",
+  "Équipe Kappa",
+];
+
+// Créer une nouvelle session avec un nombre d'équipes configurable
+export const createNewSession = async (teamCount: number = 4): Promise<string> => {
   const sessionId = generateSessionId();
 
   // Initialiser le progress object pour toutes les équipes
   const initialProgress = initializeProgressObject();
 
-  const teams: Team[] = [
-    {
-      id: 1,
-      name: "Équipe Alpha",
-      score: 0,
-      currentLevel: 0,
-      progress: { ...initialProgress },
-      completedLevels: [],
-      studentIds: [],
-    },
-    {
-      id: 2,
-      name: "Équipe Beta",
-      score: 0,
-      currentLevel: 0,
-      progress: { ...initialProgress },
-      completedLevels: [],
-      studentIds: [],
-    },
-    {
-      id: 3,
-      name: "Équipe Gamma",
-      score: 0,
-      currentLevel: 0,
-      progress: { ...initialProgress },
-      completedLevels: [],
-      studentIds: [],
-    },
-    {
-      id: 4,
-      name: "Équipe Delta",
-      score: 0,
-      currentLevel: 0,
-      progress: { ...initialProgress },
-      completedLevels: [],
-      studentIds: [],
-    },
-  ];
+  // Créer le nombre d'équipes demandé (min 2, max 10)
+  const actualTeamCount = Math.max(2, Math.min(10, teamCount));
+
+  const teams: Team[] = Array.from({ length: actualTeamCount }, (_, index) => ({
+    id: index + 1,
+    name: defaultTeamNames[index] || `Équipe ${index + 1}`,
+    score: 0,
+    currentLevel: 0,
+    progress: { ...initialProgress },
+    completedLevels: [],
+    studentIds: [],
+  }));
 
   // Modifier ici: ne pas définir startTime lors de la création
   // mais seulement sessionCreationTime pour tracking
