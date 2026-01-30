@@ -157,7 +157,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     return (
       <div className="bg-gray-900 min-h-screen text-white p-6 flex items-center justify-center">
         <div className="bg-gray-800 max-w-md p-8 rounded-xl text-center">
-          <AlertCircle size={48} className="mx-auto mb-4 text-yellow-400" />
+          <AlertCircle size={48} className="mx-auto mb-4 text-bearing-red" />
           <h2 className="text-2xl font-bold mb-4">Aucune session active</h2>
           <p className="mb-6">
             Veuillez créer ou rejoindre une session depuis la page d'accueil du
@@ -165,7 +165,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           </p>
           <button
             onClick={goBackToLanding}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+            className="px-4 py-2 bg-bearing-red hover:bg-bearing-red-60 rounded-lg"
           >
             Retourner à l'accueil
           </button>
@@ -190,7 +190,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
       {/* En-tête et chronomètre */}
       <div className="text-center mb-6 relative z-10 pt-12">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-bearing-red bg-clip-text text-transparent mb-2">
           Escape Excel: Le Dossier Perdu 2.0
         </h1>
 
@@ -240,7 +240,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         <button
           onClick={refreshData}
           disabled={isRefreshing}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center gap-2"
+          className="bg-bearing-red hover:bg-bearing-red-60 text-white py-2 px-4 rounded-lg flex items-center gap-2"
         >
           <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
           {isRefreshing ? "Rafraîchissement..." : "Rafraîchir les données"}
@@ -250,7 +250,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
       {/* Classement simplifié - DÉPLACÉ EN HAUT */}
       <div className="mb-8 bg-gray-800 rounded-xl p-4 relative z-10">
         <div className="flex items-center mb-4">
-          <Trophy className="text-yellow-400 mr-2" size={24} />
+          <Trophy className="text-bearing-red mr-2" size={24} />
           <h2 className="text-xl font-bold">Classement</h2>
         </div>
 
@@ -379,7 +379,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
                 <div className="h-4 w-full bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-cyan-500 to-bearing-red rounded-full"
                     style={{
                       width: `${team.progress[team.currentLevel] || 0}%`,
                     }}
@@ -429,7 +429,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           ))
         ) : (
           <div className="lg:col-span-2 text-center p-8 bg-gray-800 rounded-xl">
-            <AlertCircle size={48} className="mx-auto mb-4 text-yellow-400" />
+            <AlertCircle size={48} className="mx-auto mb-4 text-bearing-red" />
             <h3 className="text-xl font-bold mb-2">Aucune équipe disponible</h3>
             <p className="text-gray-400 mb-4">
               Utilisez le bouton "Rafraîchir les données" ci-dessus pour mettre
@@ -443,7 +443,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
       <div className="mt-10 text-center relative z-10 flex flex-wrap justify-center gap-4">
         <button
           onClick={() => setShowControlOverlay(true)}
-          className="bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg border border-blue-600 transition-colors shadow-lg flex items-center gap-2"
+          className="bg-bearing-red-60 hover:bg-bearing-red text-white font-bold py-2 px-6 rounded-lg border border-blue-600 transition-colors shadow-lg flex items-center gap-2"
         >
           <Settings size={20} />
           Contrôle de session

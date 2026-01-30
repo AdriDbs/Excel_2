@@ -144,11 +144,11 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white p-4">
+    <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 via-bearing-red-70 to-bearing-red-80 text-white p-4">
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigateTo("menu")}
-          className="mb-8 bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md"
+          className="mb-8 bg-bearing-red-60 hover:bg-bearing-red-70 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bearing"
         >
           <ArrowLeft size={20} />
           Retour au menu
@@ -157,9 +157,9 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">
             Hackathon Excel:{" "}
-            <span className="text-yellow-400">Le Dossier Perdu 2.0</span>
+            <span className="text-bearing-red">Le Dossier Perdu 2.0</span>
           </h1>
-          <p className="text-xl text-purple-200 max-w-3xl mx-auto">
+          <p className="text-xl text-bearing-red-20 max-w-3xl mx-auto">
             Bienvenue dans notre défi Excel. Utilisez vos compétences avancées
             pour résoudre l'énigme du dossier perdu et découvrez les secrets
             qu'il contient !
@@ -170,7 +170,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
             <div className="flex items-center justify-center gap-4 mt-6">
               <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
                 {currentUser.role === "instructor" ? (
-                  <Crown size={18} className="text-yellow-400" />
+                  <Crown size={18} className="text-bearing-red" />
                 ) : (
                   <User size={18} className="text-blue-400" />
                 )}
@@ -185,7 +185,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
               {/* Statistiques de progression pour étudiants */}
               {progressStats && (
                 <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                  <Star size={18} className="text-yellow-400" />
+                  <Star size={18} className="text-bearing-red" />
                   <span>
                     Niveau {progressStats.currentLevel} •{" "}
                     {progressStats.totalScore} pts
@@ -220,7 +220,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
 
           {sessionId && (
             <div className="mt-4 flex items-center justify-center gap-4">
-              <div className="bg-purple-800 inline-block px-4 py-2 rounded-lg flex items-center gap-2">
+              <div className="bg-bearing-red-70 inline-block px-4 py-2 rounded-lg flex items-center gap-2">
                 <span
                   className={sessionActive ? "text-green-400" : "text-red-400"}
                 >
@@ -238,10 +238,10 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
           {progressStats && (
             <div className="mt-6 max-w-md mx-auto">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-purple-200">
+                <span className="text-sm text-bearing-red-20">
                   Progression globale
                 </span>
-                <div className="bg-purple-600 rounded-lg p-3 text-center">
+                <div className="bg-bearing-red-60 rounded-lg p-3 text-center">
                   <div className="text-xl font-bold">
                     {progressStats.percentage.toFixed(0)}%
                   </div>
@@ -264,9 +264,9 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
           <div className="text-6xl mb-6">🔍</div>
           <h1 className="text-5xl font-bold mb-4">
             Escape Excel:{" "}
-            <span className="text-yellow-400">Le Dossier Perdu 2.0</span>
+            <span className="text-bearing-red">Le Dossier Perdu 2.0</span>
           </h1>
-          <p className="text-xl text-purple-200 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-bearing-red-20 max-w-3xl mx-auto mb-8">
             Un hackathon Excel immersif de 2h où vous devez résoudre 7 défis
             analytiques pour reconstituer l'analyse critique d'un client
             important. Travaillez en équipe et maîtrisez les fonctions avancées
@@ -284,12 +284,12 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
               </div>
               <div>
                 <h2 className="text-2xl font-bold mb-2">Scénario de Crise</h2>
-                <p className="text-purple-200">
+                <p className="text-bearing-red-20">
                   Une situation d'urgence client
                 </p>
               </div>
             </div>
-            <div className="space-y-4 text-purple-100">
+            <div className="space-y-4 text-bearing-red-10">
               <p>
                 🏢 <strong>Client :</strong> Nexus Corporation - Présentation
                 critique demain matin
@@ -304,7 +304,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 en urgence et a sécurisé tous ses fichiers avec un système
                 d'énigmes basé sur Excel.
               </p>
-              <div className="flex items-center gap-3 text-yellow-300 mt-4">
+              <div className="flex items-center gap-3 text-bearing-red-30 mt-4">
                 <Calendar size={20} />
                 <span>Durée totale: {formatTotalDuration()}</span>
               </div>
@@ -335,14 +335,14 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="bg-yellow-500 w-3 h-3 rounded-full"></div>
+                  <div className="bg-bearing-red w-3 h-3 rounded-full"></div>
                   <p>
                     Phase 3: Data Visualization (
                     {hackathonLevels[6].timeAllocation}min)
                   </p>
                 </div>
               </div>
-              <div className="mt-4 text-xs text-purple-300">
+              <div className="mt-4 text-xs text-bearing-red-30">
                 {hackathonLevels.length} niveaux au total à compléter
               </div>
             </div>
@@ -353,20 +353,20 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 <div className="text-4xl">🏆</div>
                 <h2 className="text-xl font-bold">Système de points</h2>
               </div>
-              <ul className="space-y-2 text-purple-200">
+              <ul className="space-y-2 text-bearing-red-20">
                 <li className="flex justify-between">
                   <span>Data Cleaning</span>
-                  <span className="text-yellow-300">
+                  <span className="text-bearing-red-30">
                     {hackathonLevels[0].pointsValue} pts
                   </span>
                 </li>
                 <li className="flex justify-between">
                   <span>Niveaux d'analyse</span>
-                  <span className="text-yellow-300">200 pts/niveau</span>
+                  <span className="text-bearing-red-30">200 pts/niveau</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Tableau de bord final</span>
-                  <span className="text-yellow-300">
+                  <span className="text-bearing-red-30">
                     {hackathonLevels[6].pointsValue} pts
                   </span>
                 </li>
@@ -385,15 +385,15 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 Choisissez votre interface
               </h2>
 
-              <p className="text-center text-purple-200 mb-8 max-w-2xl">
+              <p className="text-center text-bearing-red-20 mb-8 max-w-2xl">
                 Vous pouvez choisir entre l'interface étudiant qui vous guidera
                 étape par étape, ou l'interface globale qui sert d'affichage
                 lors du Hackathon.
               </p>
 
               {!sessionId ? (
-                <div className="bg-yellow-900/30 border border-yellow-600/30 rounded-lg p-4 mb-6 max-w-md">
-                  <div className="flex items-center gap-2 text-yellow-300 mb-2">
+                <div className="bg-bearing-red-80/30 border border-bearing-red-60/30 rounded-lg p-4 mb-6 max-w-md">
+                  <div className="flex items-center gap-2 text-bearing-red-30 mb-2">
                     <AlertTriangle size={20} />
                     <h3 className="font-bold">Aucune session active</h3>
                   </div>
@@ -444,7 +444,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                   disabled={!sessionActive}
                   className={`rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg flex items-center gap-4 ${
                     sessionActive
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                      ? "bg-gradient-to-r from-bearing-red-60 to-pink-600 hover:from-bearing-red-60 hover:to-pink-700 text-white"
                       : "bg-gray-600 text-gray-400 cursor-not-allowed"
                   }`}
                 >
@@ -504,11 +504,11 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 <h4 className="font-bold text-lg mb-2">
                   Niveau {level.id}: {level.name}
                 </h4>
-                <p className="text-sm text-purple-200 mb-2">
+                <p className="text-sm text-bearing-red-20 mb-2">
                   {level.description}
                 </p>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-yellow-300">
+                  <span className="text-bearing-red-30">
                     {level.pointsValue} pts
                   </span>
                   <span className="text-gray-300">
@@ -519,7 +519,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
             ))}
           </div>
           <div className="text-center mt-4">
-            <p className="text-purple-200 text-sm">
+            <p className="text-bearing-red-20 text-sm">
               ... et 4 autres niveaux de difficulté croissante !
             </p>
           </div>

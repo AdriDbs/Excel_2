@@ -341,7 +341,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               </div>
 
               <div className="mt-6 bg-gray-700/50 p-4 rounded-lg">
-                <h3 className="font-medium text-yellow-300 flex items-center gap-2 mb-2">
+                <h3 className="font-medium text-bearing-red-30 flex items-center gap-2 mb-2">
                   <Lightbulb size={18} />
                   Astuce
                 </h3>
@@ -391,7 +391,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
             </div>
 
             <div className="p-6">
-              <div className="bg-indigo-900/30 border border-indigo-800/50 rounded-lg p-4 mb-6">
+              <div className="bg-bearing-red-70/30 border border-indigo-800/50 rounded-lg p-4 mb-6">
                 <p className="text-indigo-100">
                   {currentLevelData.exerciseDescription}
                 </p>
@@ -454,7 +454,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               {/* Section Indice */}
               <div className="mt-6">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-medium text-yellow-400 flex items-center gap-2">
+                  <h3 className="text-lg font-medium text-bearing-red flex items-center gap-2">
                     <Lightbulb size={20} />
                     Indice
                   </h3>
@@ -462,7 +462,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                   {!isHintUsed() && !isLevelCompleted(currentLevel) && (
                     <button
                       onClick={handleRequestHint}
-                      className="px-3 py-1 bg-yellow-700/50 hover:bg-yellow-700 text-yellow-300 rounded-lg text-sm flex items-center gap-1"
+                      className="px-3 py-1 bg-yellow-700/50 hover:bg-yellow-700 text-bearing-red-30 rounded-lg text-sm flex items-center gap-1"
                     >
                       <Lightbulb size={14} />
                       Débloquer (-25 pts)
@@ -480,7 +480,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                   {showHint || isHintUsed() ? (
                     <p className="text-yellow-200">{currentLevelData.hint}</p>
                 ) : (
-                    <div className="flex items-center justify-center gap-2 text-yellow-400/50">
+                    <div className="flex items-center justify-center gap-2 text-bearing-red/50">
                       <Lock size={16} />
                       <span>Indice verrouillé</span>
                     </div>

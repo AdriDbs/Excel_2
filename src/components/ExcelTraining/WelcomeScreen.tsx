@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   User,
   UserCheck,
-  Settings,
   Users,
   LogIn,
   BookOpen,
+  ChevronDown,
 } from "lucide-react";
 import { databaseService } from "../../services/databaseService";
 import { Student, Instructor } from "../../types/database";
+import { BRAND } from "../../constants/brand";
 
 interface WelcomeScreenProps {
   onUserSelected: (user: Student | Instructor) => void;
@@ -19,39 +20,23 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   onUserSelected,
   onViewAsGuest,
 }) => {
-  const [selectedRole, setSelectedRole] = useState<
-    "instructor" | "student" | null
-  >(null);
+  const [selectedRole, setSelectedRole] = useState<"instructor" | "student" | null>(null);
   const [studentName, setStudentName] = useState("");
-  const [existingUsers, setExistingUsers] = useState<(Student | Instructor)[]>(
-    []
-  );
+  const [existingUsers, setExistingUsers] = useState<(Student | Instructor)[]>([]);
   const [showExistingUsers, setShowExistingUsers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Charger la liste des utilisateurs existants
     const users = databaseService.getAllUsers();
     setExistingUsers(users);
 
-    // Initialiser la base de données si ce n'est pas déjà fait
     if (!databaseService.isInitialized()) {
       databaseService.initializeDatabase();
     }
   }, []);
 
-  const handleRoleSelection = (role: "instructor" | "student") => {
-    setSelectedRole(role);
-    setError("");
-
-    if (role === "instructor") {
-      // Pour un instructeur, pas besoin de nom, connexion directe
-      handleUserLogin(role);
-    }
-  };
-
-  const handleUserLogin = async (
+  const handleUserLogin = useCallback(async (
     role: "instructor" | "student",
     name?: string
   ) => {
@@ -62,7 +47,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       let user: Student | Instructor;
 
       if (role === "instructor") {
-        // Chercher un instructeur existant ou en créer un nouveau
         const existingInstructor = databaseService.getInstructors()[0];
         if (existingInstructor) {
           user = existingInstructor;
@@ -71,13 +55,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           user = databaseService.addUser("Instructeur", "instructor");
         }
       } else {
-        // Pour un étudiant, vérifier le nom
         if (!name || name.trim().length < 2) {
           setError("Veuillez saisir un nom valide (au moins 2 caractères)");
+          setIsLoading(false);
           return;
         }
 
-        // Chercher un étudiant existant avec ce nom
         const existingStudent = databaseService.getUserByName(name.trim());
         if (existingStudent && existingStudent.role === "student") {
           user = existingStudent as Student;
@@ -88,94 +71,104 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       }
 
       onUserSelected(user);
-    } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
+    } catch (err) {
+      console.error("Erreur lors de la connexion:", err);
       setError("Une erreur est survenue lors de la connexion");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onUserSelected]);
 
-  const handleExistingUserSelection = (user: Student | Instructor) => {
+  const handleRoleSelection = useCallback((role: "instructor" | "student") => {
+    setSelectedRole(role);
+    setError("");
+
+    if (role === "instructor") {
+      handleUserLogin(role);
+    }
+  }, [handleUserLogin]);
+
+  const handleExistingUserSelection = useCallback((user: Student | Instructor) => {
     databaseService.updateLastActivity(user.id);
     onUserSelected(user);
-  };
+  }, [onUserSelected]);
 
-  const handleStudentSubmit = (e: React.FormEvent) => {
+  const handleStudentSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (selectedRole === "student") {
       handleUserLogin("student", studentName);
     }
-  };
+  }, [selectedRole, studentName, handleUserLogin]);
+
+  const roleButtons = useMemo(() => [
+    {
+      role: "instructor" as const,
+      icon: UserCheck,
+      title: "Instructeur",
+      description: "Accès aux outils de gestion, statistiques et contrôles de session",
+      bgClass: "bg-bearing-red-60 hover:bg-bearing-red-70",
+    },
+    {
+      role: "student" as const,
+      icon: User,
+      title: "Étudiant",
+      description: "Accès aux exercices, speed dating Excel et hackathons",
+      bgClass: "bg-bearing-red hover:bg-bearing-red-60",
+    },
+    {
+      role: "guest" as const,
+      icon: BookOpen,
+      title: "Visiteur",
+      description: "Consulter le contenu sans enregistrer de progression",
+      bgClass: "bg-bearing-gray-60 hover:bg-bearing-gray-50",
+    },
+  ], []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
-        {/* En-tête */}
+    <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 via-bearing-red-70 to-bearing-red-80 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full animate-fade-in">
+        {/* Logo et En-tête */}
         <div className="text-center mb-12">
+          <img
+            src={BRAND.logos.full}
+            alt={BRAND.name}
+            className="h-12 mx-auto mb-6 text-white"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
           <h1 className="text-5xl font-bold text-white mb-4">
             Formation Excel Avancé
           </h1>
-          <h2 className="text-2xl text-yellow-400 mb-2">BearingPoint</h2>
-          <p className="text-xl text-blue-200 max-w-2xl mx-auto">
-            Plateforme interactive de formation aux fonctionnalités avancées
-            d'Excel
+          <p className="text-xl text-bearing-red-20 max-w-2xl mx-auto">
+            Plateforme interactive de formation aux fonctionnalités avancées d'Excel
           </p>
         </div>
 
         {/* Choix de mode de connexion */}
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-8 mb-8">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8 shadow-bearing-lg">
           <h3 className="text-2xl font-bold text-white text-center mb-6">
             Comment souhaitez-vous accéder à la formation ?
           </h3>
 
           {!selectedRole && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Option Instructeur */}
-              <button
-                onClick={() => handleRoleSelection("instructor")}
-                disabled={isLoading}
-                className="bg-green-600 hover:bg-green-700 text-white p-6 rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <UserCheck size={48} className="mx-auto mb-4" />
-                <h4 className="text-xl font-bold mb-2">Instructeur</h4>
-                <p className="text-sm opacity-90">
-                  Accès aux outils de gestion, statistiques et contrôles de
-                  session
-                </p>
-              </button>
-
-              {/* Option Étudiant */}
-              <button
-                onClick={() => handleRoleSelection("student")}
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <User size={48} className="mx-auto mb-4" />
-                <h4 className="text-xl font-bold mb-2">Étudiant</h4>
-                <p className="text-sm opacity-90">
-                  Accès aux exercices, speed dating Excel et hackathons
-                </p>
-              </button>
-
-              {/* Option Invité */}
-              <button
-                onClick={onViewAsGuest}
-                disabled={isLoading}
-                className="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <BookOpen size={48} className="mx-auto mb-4" />
-                <h4 className="text-xl font-bold mb-2">Visiteur</h4>
-                <p className="text-sm opacity-90">
-                  Consulter le contenu sans enregistrer de progression
-                </p>
-              </button>
+              {roleButtons.map(({ role, icon: Icon, title, description, bgClass }) => (
+                <button
+                  key={role}
+                  onClick={() => role === "guest" ? onViewAsGuest() : handleRoleSelection(role)}
+                  disabled={isLoading}
+                  className={`${bgClass} text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bearing transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Icon size={48} className="mx-auto mb-4" />
+                  <h4 className="text-xl font-bold mb-2">{title}</h4>
+                  <p className="text-sm opacity-90">{description}</p>
+                </button>
+              ))}
             </div>
           )}
 
           {/* Formulaire pour étudiant */}
           {selectedRole === "student" && (
-            <form onSubmit={handleStudentSubmit} className="max-w-md mx-auto">
+            <form onSubmit={handleStudentSubmit} className="max-w-md mx-auto animate-slide-up">
               <div className="mb-6">
                 <label
                   htmlFor="studentName"
@@ -189,14 +182,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value)}
                   placeholder="Ex: Jean Dupont"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-lg"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-bearing-red-40 focus:ring-2 focus:ring-bearing-red focus:border-transparent text-gray-900 text-lg bg-white"
                   disabled={isLoading}
                   maxLength={50}
+                  autoFocus
                 />
               </div>
 
               {error && (
-                <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-100 px-4 py-3 rounded-lg mb-4">
+                <div className="bg-bearing-red/20 border border-bearing-red text-bearing-red-10 px-4 py-3 rounded-lg mb-4">
                   {error}
                 </div>
               )}
@@ -206,7 +200,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   type="button"
                   onClick={() => setSelectedRole(null)}
                   disabled={isLoading}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+                  className="flex-1 bg-bearing-gray-60 hover:bg-bearing-gray-50 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
                 >
                   Retour
                 </button>
@@ -214,10 +208,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || studentName.trim().length < 2}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-bearing-red hover:bg-bearing-red-60 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-bearing"
                 >
                   {isLoading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
                   ) : (
                     <>
                       <LogIn size={20} />
@@ -232,10 +226,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
         {/* Section utilisateurs existants */}
         {existingUsers.length > 0 && (
-          <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6">
             <button
               onClick={() => setShowExistingUsers(!showExistingUsers)}
-              className="w-full flex items-center justify-between text-white hover:text-yellow-400 transition-colors duration-300 mb-4"
+              className="w-full flex items-center justify-between text-white hover:text-bearing-red-30 transition-colors duration-300 mb-4"
             >
               <div className="flex items-center gap-2">
                 <Users size={24} />
@@ -243,13 +237,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   Utilisateurs récents ({existingUsers.length})
                 </span>
               </div>
-              <div
+              <ChevronDown
+                size={24}
                 className={`transform transition-transform duration-300 ${
                   showExistingUsers ? "rotate-180" : ""
                 }`}
-              >
-                ▼
-              </div>
+              />
             </button>
 
             {showExistingUsers && (
@@ -258,13 +251,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   <button
                     key={user.id}
                     onClick={() => handleExistingUserSelection(user)}
-                    className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-3 rounded-lg transition-all duration-300 text-left"
+                    className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg transition-all duration-300 text-left hover:shadow-bearing"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {user.role === "instructor" ? (
-                        <UserCheck size={16} className="text-green-400" />
+                        <UserCheck size={16} className="text-bearing-red-30" />
                       ) : (
-                        <User size={16} className="text-blue-400" />
+                        <User size={16} className="text-bearing-red-40" />
                       )}
                       <span className="font-medium">{user.name}</span>
                     </div>
@@ -273,7 +266,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                       <br />
                       <span className="text-xs">
                         Dernière activité:{" "}
-                        {new Date(user.lastActivity).toLocaleDateString()}
+                        {new Date(user.lastActivity).toLocaleDateString("fr-FR")}
                       </span>
                     </div>
                   </button>

@@ -12,11 +12,11 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 to-emerald-900 text-white p-4">
+    <div className="min-h-screen bg-gradient-to-br from-bearing-red-80 to-bearing-red-70 text-white p-4">
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigateTo("menu")}
-          className="mb-8 bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md"
+          className="mb-8 bg-bearing-red-60 hover:bg-bearing-red-70 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md"
         >
           <ArrowLeft size={20} />
           Retour au menu
@@ -24,9 +24,9 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
 
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-4">
-            Bonnes Pratiques <span className="text-yellow-400">Excel</span>
+            Bonnes Pratiques <span className="text-bearing-red">Excel</span>
           </h1>
-          <p className="text-xl text-green-200 max-w-3xl mx-auto">
+          <p className="text-xl text-bearing-red-20 max-w-3xl mx-auto">
             Découvrez les meilleures pratiques pour créer des fichiers Excel
             professionnels, performants et maintenables
           </p>
@@ -34,15 +34,15 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
 
         {/* Tabs navigation */}
         <div className="flex justify-center mb-6">
-          <div className="bg-green-800 p-1 rounded-lg">
+          <div className="bg-bearing-red-70 p-1 rounded-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-5 py-2 rounded-md flex items-center gap-2 transition-all ${
                   activeTab === tab.id
-                    ? "bg-white text-green-900 font-bold"
-                    : "text-white hover:bg-green-700"
+                    ? "bg-white text-bearing-red-80 font-bold"
+                    : "text-white hover:bg-bearing-red-60"
                 }`}
               >
                 {tab.icon}
@@ -56,13 +56,13 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
         <div className="bg-white text-gray-800 rounded-xl p-6 shadow-xl">
           {activeTab === "organization" && (
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-green-800">
+              <h2 className="text-2xl font-bold mb-6 text-bearing-red-70">
                 Organisation Optimale des Fichiers Excel
               </h2>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Code couleur par onglet
                 </h3>
                 <div className="bg-green-50 p-4 rounded-lg mb-4">
@@ -76,7 +76,7 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                       <span>Données brutes et imports</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-green-500 rounded"></div>
+                      <div className="w-6 h-6 bg-bearing-red rounded"></div>
                       <span>Calculs et analyses</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -107,8 +107,8 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
               </div>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Structure standardisée des onglets
                 </h3>
                 <p className="mb-4">
@@ -116,24 +116,24 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                   <div className="border border-green-200 rounded-lg p-4 bg-green-50">
-                    <h4 className="font-bold text-green-800 mb-2">Onglets essentiels</h4>
+                    <h4 className="font-bold text-bearing-red-70 mb-2">Onglets essentiels</h4>
                     <ul className="space-y-2">
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           <span className="font-bold">Menu/Accueil</span> - Point d'entrée
                           avec navigation hyperlinked
                         </div>
                       </li>
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           <span className="font-bold">Paramètres</span> - Variables globales,
                           scénarios, contrôles
                         </div>
                       </li>
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           <span className="font-bold">Documentation</span> - Sources,
                           hypothèses, méthodologie
@@ -188,13 +188,13 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
 
           {activeTab === "performance" && (
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-green-800">
+              <h2 className="text-2xl font-bold mb-6 text-bearing-red-70">
                 Optimisation des Performances
               </h2>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Fonctions à faible impact mémoire
                 </h3>
                 <p className="mb-4">
@@ -225,7 +225,7 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                           </div>
                         </td>
                         <td className="border border-green-300 p-3">
-                          <span className="text-green-600 font-bold">+40-60%</span> sur les grands jeux de données
+                          <span className="text-bearing-red-60 font-bold">+40-60%</span> sur les grands jeux de données
                         </td>
                       </tr>
                       <tr className="bg-gray-50">
@@ -242,7 +242,7 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                           </div>
                         </td>
                         <td className="border border-green-300 p-3">
-                          <span className="text-green-600 font-bold">+70-90%</span> sur les formules multiples
+                          <span className="text-bearing-red-60 font-bold">+70-90%</span> sur les formules multiples
                         </td>
                       </tr>
                       <tr>
@@ -259,7 +259,7 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                           </div>
                         </td>
                         <td className="border border-green-300 p-3">
-                          <span className="text-green-600 font-bold">+20-30%</span> sur les grandes tables
+                          <span className="text-bearing-red-60 font-bold">+20-30%</span> sur les grandes tables
                         </td>
                       </tr>
                     </tbody>
@@ -292,8 +292,8 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
               </div>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Tables vs. Champs dynamiques
                 </h3>
                 <p className="mb-4">
@@ -346,7 +346,7 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h4 className="font-bold text-green-800 mb-2">Approche hybride optimale</h4>
+                  <h4 className="font-bold text-bearing-red-70 mb-2">Approche hybride optimale</h4>
                   <ol className="space-y-2 list-decimal pl-5">
                     <li>
                       <span className="font-medium">Utilisez des Tables Excel</span> pour les données sources de taille modérée (moins de 100 000 lignes)
@@ -368,13 +368,13 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
 
           {activeTab === "formatting" && (
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-green-800">
+              <h2 className="text-2xl font-bold mb-6 text-bearing-red-70">
                 Mise en forme professionnelle
               </h2>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Graphiques professionnels
                 </h3>
 
@@ -383,25 +383,25 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                     <h4 className="font-bold text-gray-700 mb-2">Principes de base</h4>
                     <ul className="space-y-2">
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           Utilisez un <span className="font-medium">onglet dédié</span> pour les données formatées spécifiquement pour les graphiques
                         </div>
                       </li>
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           Limitez-vous à <span className="font-medium">5-7 catégories</span> maximum par graphique pour la lisibilité
                         </div>
                       </li>
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           Choisissez une <span className="font-medium">palette de couleurs cohérente</span> avec votre charte graphique
                         </div>
                       </li>
                       <li className="flex items-start gap-2">
-                        <div className="mt-1 text-green-600">•</div>
+                        <div className="mt-1 text-bearing-red-60">•</div>
                         <div>
                           Intégrez les <span className="font-medium">données directement dans le graphique</span> plutôt que d'utiliser une légende séparée quand c'est possible
                         </div>
@@ -446,8 +446,8 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
               </div>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Helper columns and tables
                 </h3>
                 <p className="mb-4">
@@ -458,23 +458,23 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                   <h4 className="font-bold text-gray-800 mb-2">Bonnes pratiques</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-3">
-                      <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                      <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                       <span>Placez les colonnes d'aide directement à droite de vos données principales pour une meilleure traçabilité</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                      <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                       <span>Colorez le fond des colonnes d'aide (gris clair) pour les distinguer visuellement des données principales</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                      <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                       <span>Nommez clairement les colonnes d'aide avec un préfixe commun (ex: "calc_", "hlp_", "tmp_")</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                      <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                       <span>Documentez l'objectif de chaque colonne d'aide dans un commentaire de cellule ou une feuille de documentation</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                      <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                       <span>Pour les tables d'aide complexes, créez un onglet séparé avec un préfixe de nommage clair (ex: "hlp_LookupValues")</span>
                     </li>
                   </ul>
@@ -504,22 +504,22 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                   </div>
                   
                   <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <h4 className="font-bold text-green-800 mb-2">Avantages métier</h4>
+                    <h4 className="font-bold text-bearing-red-70 mb-2">Avantages métier</h4>
                     <ul className="space-y-2">
                       <li className="flex items-start gap-2">
-                        <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                        <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                         <span>Décomposition de problèmes complexes en étapes compréhensibles</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                        <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                         <span>Meilleure auditabilité des calculs lors des contrôles qualité</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                        <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                         <span>Simplification des dépannages et débogages</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                        <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                         <span>Optimisation des performances en décomposant les calculs lourds</span>
                       </li>
                     </ul>
@@ -528,8 +528,8 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
               </div>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-3 text-green-700 flex items-center gap-2">
-                  <Check className="text-green-600" size={20} />
+                <h3 className="text-xl font-bold mb-3 text-bearing-red-60 flex items-center gap-2">
+                  <Check className="text-bearing-red-60" size={20} />
                   Excel en Anglais
                 </h3>
                 <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-6">
@@ -542,15 +542,15 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                       <h4 className="font-bold text-gray-800 mb-2">Avantages pratiques</h4>
                       <ul className="space-y-2">
                         <li className="flex items-start gap-2">
-                          <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                          <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                           <span>Cohérence des formules entre collaborateurs internationaux</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                          <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                           <span>Documentation et support en ligne majoritairement en anglais</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                          <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                           <span>Évite les problèmes de conversion de formules entre versions linguistiques</span>
                         </li>
                       </ul>
@@ -560,15 +560,15 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                       <h4 className="font-bold text-gray-800 mb-2">Impact client</h4>
                       <ul className="space-y-2">
                         <li className="flex items-start gap-2">
-                          <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                          <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                           <span>Facilite le partage avec les clients internationaux</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                          <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                           <span>Standard dans la plupart des grandes entreprises</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <Check size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                          <Check size={18} className="text-bearing-red-60 mt-1 flex-shrink-0" />
                           <span>Meilleure compatibilité avec les autres outils (VBA, Power BI, etc.)</span>
                         </li>
                       </ul>

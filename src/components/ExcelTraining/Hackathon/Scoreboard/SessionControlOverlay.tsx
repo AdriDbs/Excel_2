@@ -152,7 +152,7 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
                   Status:{" "}
                   <span
                     className={`font-medium ${
-                      isSessionStarted ? "text-green-400" : "text-yellow-400"
+                      isSessionStarted ? "text-green-400" : "text-bearing-red"
                     }`}
                   >
                     {isSessionStarted ? "En cours" : "En attente de démarrage"}
@@ -200,7 +200,7 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
                   className="text-yellow-500 mt-1 flex-shrink-0"
                   size={18}
                 />
-                <p className="text-yellow-300 text-sm">
+                <p className="text-bearing-red-30 text-sm">
                   La session a déjà été démarrée. Le timer est en cours
                   d'exécution.
                 </p>
@@ -243,7 +243,7 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
                       <button
                         onClick={saveTeamChanges}
                         disabled={isSaving}
-                        className="bg-blue-600 text-white px-3 py-1 rounded flex items-center gap-1"
+                        className="bg-bearing-red text-white px-3 py-1 rounded flex items-center gap-1"
                       >
                         {isSaving && (
                           <RefreshCw size={14} className="animate-spin" />
