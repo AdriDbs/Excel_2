@@ -37,28 +37,16 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
 
   const { notifications, addNotification } = useProgressNotifications();
 
-  // Initialiser avec l'utilisateur connecté
+  // Initialiser le nom avec l'utilisateur connecté (mais ne pas auto-enregistrer)
   useEffect(() => {
     if (currentUser && currentUser.role === 'student') {
       setStudentName(currentUser.name);
-      setIsRegistered(true);
-      
-      // Créer l'objet Student pour le hackathon
-      const hackathonStudent = {
-        id: currentUser.id,
-        name: currentUser.name,
-        teamId: selectedTeamId || 0,
-        answers: {},
-        hintsUsed: []
-      };
-      setRegisteredStudent(hackathonStudent);
+      // Ne pas auto-enregistrer - laisser l'étudiant choisir son équipe d'abord
     }
-  }, [currentUser, selectedTeamId, setRegisteredStudent]);
+  }, [currentUser]);
 
   const handleRegisterStudent = () => {
-    if (studentName && selectedTeamId) {
-      setIsRegistered(true);
-      
+    if (studentName && selectedTeamId !== null) {
       const student = {
         id: currentUser?.id || `temp_${Date.now()}`,
         name: studentName,
@@ -66,8 +54,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
         answers: {},
         hintsUsed: []
       };
-      
+
       setRegisteredStudent(student);
+      setIsRegistered(true);
       addNotification(`Bienvenue dans l'équipe ${teams.find(t => t.id === selectedTeamId)?.name} !`, "success");
     }
   };

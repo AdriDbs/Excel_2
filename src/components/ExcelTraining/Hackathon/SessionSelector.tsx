@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Play, History, RefreshCw, ArrowLeft } from "lucide-react";
+import { Play, History, RefreshCw, ArrowLeft, Users } from "lucide-react";
 import { HackathonSession } from "./types";
 import { createNewSession } from "./services/hackathonService";
 import { useHackathon } from "./context/HackathonContext";
@@ -38,6 +38,7 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
   const { setSessionId, setNotification } = useHackathon();
   const [sessions, setSessions] = useState<HackathonSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [teamCount, setTeamCount] = useState(4);
 
   // Charger les sessions existantes
   useEffect(() => {
@@ -68,21 +69,21 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
     };
   }, []);
 
-  // Créer une nouvelle session - version simplifiée
+  // Créer une nouvelle session avec le nombre d'équipes choisi
   const handleCreateNewSession = async () => {
     setIsLoading(true);
     try {
       // Supprimer l'étudiant du localStorage pour assurer un démarrage propre
       localStorage.removeItem("hackathon_registered_student");
 
-      const newSessionId = await createNewSession();
+      const newSessionId = await createNewSession(teamCount);
 
       // Définir l'ID de session
       setSessionId(newSessionId);
 
       // Recharger les sessions
       setSessions(getExistingSessions());
-      setNotification("Nouvelle session créée avec succès", "success");
+      setNotification(`Nouvelle session créée avec ${teamCount} équipes`, "success");
 
       // Revenir à la landing page
       goBackToLanding();
@@ -116,6 +117,30 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
         </p>
       </div>
 
+      {/* Sélecteur du nombre d'équipes */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-purple-200 mb-2">
+          <Users size={16} className="inline mr-2" />
+          Nombre d'équipes
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min="2"
+            max="10"
+            value={teamCount}
+            onChange={(e) => setTeamCount(parseInt(e.target.value))}
+            className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+          />
+          <span className="bg-green-600 text-white font-bold px-3 py-1 rounded-lg min-w-[3rem] text-center">
+            {teamCount}
+          </span>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          Choisissez entre 2 et 10 équipes pour le hackathon
+        </p>
+      </div>
+
       <button
         onClick={handleCreateNewSession}
         disabled={isLoading}
@@ -126,7 +151,7 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
         ) : (
           <Play size={20} />
         )}
-        Créer une nouvelle session
+        Créer une nouvelle session ({teamCount} équipes)
       </button>
 
       {sessions.length > 0 ? (
