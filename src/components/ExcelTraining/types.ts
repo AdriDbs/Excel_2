@@ -1,5 +1,5 @@
 // Types communs pour les composants ExcelTraining
-import { Student, Instructor } from "../types/database";
+import { Student, Instructor } from "../../types/database";
 
 // Type pour les sections
 export type SectionType =

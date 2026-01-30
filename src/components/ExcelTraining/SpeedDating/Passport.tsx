@@ -3,18 +3,20 @@ import { CheckSquare } from "lucide-react";
 import { ExcelFunction } from "../types";
 
 interface PassportProps {
-  functions: ExcelFunction[];
+  excelFunctions: ExcelFunction[];
   completedFunctions: number[];
-  togglePassport: () => void;
+  onClose: () => void;
+  userName: string;
 }
 
 const Passport = ({
-  functions,
+  excelFunctions,
   completedFunctions,
-  togglePassport,
+  onClose,
+  userName,
 }: PassportProps) => {
   const progressPercentage =
-    (completedFunctions.length / functions.length) * 100;
+    (completedFunctions.length / excelFunctions.length) * 100;
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50 p-4">
@@ -24,7 +26,7 @@ const Passport = ({
             Passeport des Fonctions Excel
           </h2>
           <button
-            onClick={togglePassport}
+            onClick={onClose}
             className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full"
           >
             Fermer
@@ -32,7 +34,7 @@ const Passport = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {functions.map((func, index) => (
+          {excelFunctions.map((func, index) => (
             <div
               key={func.name}
               className={`border-2 ${
@@ -61,7 +63,7 @@ const Passport = ({
 
         <div className="mt-6 text-center">
           <p className="text-lg font-bold">
-            Progression: {completedFunctions.length} / {functions.length}{" "}
+            Progression: {completedFunctions.length} / {excelFunctions.length}{" "}
             fonctions
           </p>
           <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
