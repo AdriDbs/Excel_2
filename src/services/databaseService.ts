@@ -5,10 +5,84 @@ import {
   SpeedDatingProgress,
   HackathonProgress,
   UserStats,
+  DeviceInfo,
+  ConnectionLog,
 } from "../types/database";
 
 const DATABASE_KEY = "bearingpoint_excel_training_db";
 const SYNC_INTERVAL = 2000; // Synchronisation toutes les 2 secondes
+const ONLINE_THRESHOLD = 2 * 60 * 1000; // 2 minutes pour considérer comme en ligne
+const RECENT_USERS_KEY = "bearingpoint_recent_users";
+const MAX_RECENT_USERS = 10;
+
+// Fonction utilitaire pour détecter les informations de l'appareil
+export const getDeviceInfo = (): DeviceInfo => {
+  const userAgent = navigator.userAgent;
+
+  // Détection du navigateur
+  let browser = "Unknown";
+  let browserVersion = "";
+  if (userAgent.includes("Firefox")) {
+    browser = "Firefox";
+    browserVersion = userAgent.match(/Firefox\/(\d+)/)?.[1] || "";
+  } else if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) {
+    browser = "Chrome";
+    browserVersion = userAgent.match(/Chrome\/(\d+)/)?.[1] || "";
+  } else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+    browser = "Safari";
+    browserVersion = userAgent.match(/Version\/(\d+)/)?.[1] || "";
+  } else if (userAgent.includes("Edg")) {
+    browser = "Edge";
+    browserVersion = userAgent.match(/Edg\/(\d+)/)?.[1] || "";
+  } else if (userAgent.includes("Opera") || userAgent.includes("OPR")) {
+    browser = "Opera";
+    browserVersion = userAgent.match(/(?:Opera|OPR)\/(\d+)/)?.[1] || "";
+  }
+
+  // Détection de l'OS
+  let os = "Unknown";
+  let osVersion = "";
+  if (userAgent.includes("Windows")) {
+    os = "Windows";
+    if (userAgent.includes("Windows NT 10.0")) osVersion = "10/11";
+    else if (userAgent.includes("Windows NT 6.3")) osVersion = "8.1";
+    else if (userAgent.includes("Windows NT 6.2")) osVersion = "8";
+    else if (userAgent.includes("Windows NT 6.1")) osVersion = "7";
+  } else if (userAgent.includes("Mac OS X")) {
+    os = "macOS";
+    osVersion = userAgent.match(/Mac OS X (\d+[._]\d+)/)?.[1]?.replace("_", ".") || "";
+  } else if (userAgent.includes("Linux")) {
+    os = "Linux";
+  } else if (userAgent.includes("Android")) {
+    os = "Android";
+    osVersion = userAgent.match(/Android (\d+\.?\d*)/)?.[1] || "";
+  } else if (userAgent.includes("iOS") || userAgent.includes("iPhone") || userAgent.includes("iPad")) {
+    os = "iOS";
+    osVersion = userAgent.match(/OS (\d+_\d+)/)?.[1]?.replace("_", ".") || "";
+  }
+
+  // Détection du type d'appareil
+  let deviceType: "desktop" | "mobile" | "tablet" = "desktop";
+  if (/Mobi|Android/i.test(userAgent) && !/iPad/i.test(userAgent)) {
+    deviceType = "mobile";
+  } else if (/iPad|Tablet/i.test(userAgent)) {
+    deviceType = "tablet";
+  }
+
+  // Résolution d'écran
+  const screenResolution = `${window.screen.width}x${window.screen.height}`;
+
+  return {
+    browser,
+    browserVersion,
+    os,
+    osVersion,
+    deviceType,
+    screenResolution,
+    language: navigator.language,
+    userAgent: userAgent.substring(0, 200), // Limiter la taille
+  };
+};
 
 export class DatabaseService {
   private static instance: DatabaseService;
@@ -150,6 +224,13 @@ export class DatabaseService {
       .toString(36)
       .substr(2, 9)}`;
     const now = new Date().toISOString();
+    const deviceInfo = getDeviceInfo();
+
+    const connectionLog: ConnectionLog = {
+      timestamp: now,
+      deviceInfo,
+      action: "login",
+    };
 
     const baseUser = {
       id: userId,
@@ -157,6 +238,10 @@ export class DatabaseService {
       role,
       createdAt: now,
       lastActivity: now,
+      deviceInfo,
+      connectionHistory: [connectionLog],
+      isOnline: true,
+      lastSeenAt: now,
     };
 
     let user: Student | Instructor;
@@ -182,6 +267,11 @@ export class DatabaseService {
 
     this.database.users.push(user);
     this.saveDatabase();
+
+    // Ajouter aux utilisateurs récents si c'est un étudiant
+    if (role === "student") {
+      this.addToRecentUsers(user.id, user.name);
+    }
 
     return user;
   }
@@ -257,7 +347,7 @@ export class DatabaseService {
     return true;
   }
 
-  public updateLastActivity(userId: string): boolean {
+  public updateLastActivity(userId: string, logConnection: boolean = false): boolean {
     // Forcer la synchronisation avant la mise à jour
     this.forcSync();
 
@@ -269,10 +359,124 @@ export class DatabaseService {
       return false;
     }
 
-    this.database.users[userIndex].lastActivity = new Date().toISOString();
+    const now = new Date().toISOString();
+    const user = this.database.users[userIndex];
+
+    user.lastActivity = now;
+    user.lastSeenAt = now;
+    user.isOnline = true;
+
+    // Mettre à jour les informations de l'appareil
+    const deviceInfo = getDeviceInfo();
+    user.deviceInfo = deviceInfo;
+
+    // Ajouter au journal de connexion si demandé (limiter à 50 entrées)
+    if (logConnection) {
+      const connectionLog: ConnectionLog = {
+        timestamp: now,
+        deviceInfo,
+        action: "activity",
+      };
+
+      if (!user.connectionHistory) {
+        user.connectionHistory = [];
+      }
+
+      user.connectionHistory.push(connectionLog);
+
+      // Garder seulement les 50 dernières entrées
+      if (user.connectionHistory.length > 50) {
+        user.connectionHistory = user.connectionHistory.slice(-50);
+      }
+    }
+
+    // Ajouter aux utilisateurs récents
+    if (user.role === "student") {
+      this.addToRecentUsers(user.id, user.name);
+    }
+
     this.saveDatabase();
 
     return true;
+  }
+
+  // Gestion des utilisateurs récents
+  private addToRecentUsers(userId: string, userName: string): void {
+    try {
+      const recentUsers = this.getRecentUsers();
+
+      // Retirer l'utilisateur s'il existe déjà
+      const filteredUsers = recentUsers.filter(u => u.id !== userId);
+
+      // Ajouter l'utilisateur en tête de liste
+      filteredUsers.unshift({ id: userId, name: userName, lastUsed: new Date().toISOString() });
+
+      // Garder seulement les MAX_RECENT_USERS derniers
+      const trimmedUsers = filteredUsers.slice(0, MAX_RECENT_USERS);
+
+      localStorage.setItem(RECENT_USERS_KEY, JSON.stringify(trimmedUsers));
+    } catch (error) {
+      console.error("Error adding to recent users:", error);
+    }
+  }
+
+  public getRecentUsers(): Array<{ id: string; name: string; lastUsed: string }> {
+    try {
+      const stored = localStorage.getItem(RECENT_USERS_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Error getting recent users:", error);
+    }
+    return [];
+  }
+
+  public getRecentStudents(): Student[] {
+    this.forcSync();
+    const recentUsers = this.getRecentUsers();
+    const students: Student[] = [];
+
+    for (const recent of recentUsers) {
+      const user = this.getUserById(recent.id);
+      if (user && user.role === "student") {
+        students.push(user as Student);
+      }
+    }
+
+    return students;
+  }
+
+  // Obtenir les utilisateurs en ligne (actifs dans les 2 dernières minutes)
+  public getOnlineUsers(): (Student | Instructor)[] {
+    this.forcSync();
+    const threshold = Date.now() - ONLINE_THRESHOLD;
+
+    return this.database.users.filter(user => {
+      const lastActivity = new Date(user.lastActivity).getTime();
+      return lastActivity > threshold;
+    });
+  }
+
+  // Mettre à jour le statut en ligne de tous les utilisateurs
+  public updateOnlineStatuses(): void {
+    this.forcSync();
+    const threshold = Date.now() - ONLINE_THRESHOLD;
+    let changed = false;
+
+    this.database.users.forEach(user => {
+      const lastActivity = new Date(user.lastActivity).getTime();
+      const shouldBeOnline = lastActivity > threshold;
+
+      if (user.isOnline !== shouldBeOnline) {
+        user.isOnline = shouldBeOnline;
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      this.saveDatabase();
+    }
   }
 
   public deleteUser(userId: string): boolean {

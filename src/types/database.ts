@@ -1,11 +1,35 @@
 // Types pour la base de données des utilisateurs
 
+// Informations sur l'appareil/connexion d'un utilisateur
+export interface DeviceInfo {
+  browser: string;
+  browserVersion: string;
+  os: string;
+  osVersion: string;
+  deviceType: "desktop" | "mobile" | "tablet";
+  screenResolution: string;
+  language: string;
+  userAgent: string;
+}
+
+// Historique de connexion
+export interface ConnectionLog {
+  timestamp: string;
+  deviceInfo: DeviceInfo;
+  action: "login" | "activity" | "logout";
+}
+
 export interface User {
   id: string;
   name: string;
   role: "instructor" | "student";
   createdAt: string;
   lastActivity: string;
+  // Nouvelles propriétés pour le tracking de connexion
+  deviceInfo?: DeviceInfo;
+  connectionHistory?: ConnectionLog[];
+  isOnline?: boolean;
+  lastSeenAt?: string;
 }
 
 export interface Student extends User {

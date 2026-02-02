@@ -6,6 +6,13 @@ import {
   LogIn,
   BookOpen,
   ChevronDown,
+  Clock,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Trophy,
+  ChevronRight,
+  History,
 } from "lucide-react";
 import { databaseService } from "../../services/databaseService";
 import { Student, Instructor } from "../../types/database";
@@ -21,14 +28,20 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 }) => {
   const [selectedRole, setSelectedRole] = useState<"instructor" | "student" | null>(null);
   const [studentName, setStudentName] = useState("");
+  const [loginMode, setLoginMode] = useState<"new" | "existing" | null>(null);
   const [existingUsers, setExistingUsers] = useState<(Student | Instructor)[]>([]);
-  const [showExistingUsers, setShowExistingUsers] = useState(false);
+  const [recentStudents, setRecentStudents] = useState<Student[]>([]);
+  const [showAllUsers, setShowAllUsers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const users = databaseService.getAllUsers();
     setExistingUsers(users);
+
+    // Charger les étudiants récents
+    const recent = databaseService.getRecentStudents();
+    setRecentStudents(recent);
 
     if (!databaseService.isInitialized()) {
       databaseService.initializeDatabase();
@@ -49,7 +62,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         const existingInstructor = databaseService.getInstructors()[0];
         if (existingInstructor) {
           user = existingInstructor;
-          databaseService.updateLastActivity(existingInstructor.id);
+          databaseService.updateLastActivity(existingInstructor.id, true);
         } else {
           user = databaseService.addUser("Instructeur", "instructor");
         }
@@ -63,7 +76,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         const existingStudent = databaseService.getUserByName(name.trim());
         if (existingStudent && existingStudent.role === "student") {
           user = existingStudent as Student;
-          databaseService.updateLastActivity(existingStudent.id);
+          databaseService.updateLastActivity(existingStudent.id, true);
         } else {
           user = databaseService.addUser(name.trim(), "student");
         }
@@ -81,6 +94,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   const handleRoleSelection = useCallback((role: "instructor" | "student") => {
     setSelectedRole(role);
     setError("");
+    setLoginMode(null);
 
     if (role === "instructor") {
       handleUserLogin(role);
@@ -88,7 +102,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   }, [handleUserLogin]);
 
   const handleExistingUserSelection = useCallback((user: Student | Instructor) => {
-    databaseService.updateLastActivity(user.id);
+    setIsLoading(true);
+    databaseService.updateLastActivity(user.id, true);
     onUserSelected(user);
   }, [onUserSelected]);
 
@@ -98,6 +113,48 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       handleUserLogin("student", studentName);
     }
   }, [selectedRole, studentName, handleUserLogin]);
+
+  const getDeviceIcon = (deviceType?: string) => {
+    switch (deviceType) {
+      case "mobile":
+        return <Smartphone size={14} className="text-bp-red-300" />;
+      case "tablet":
+        return <Tablet size={14} className="text-bp-red-300" />;
+      default:
+        return <Monitor size={14} className="text-bp-red-300" />;
+    }
+  };
+
+  const getProgressSummary = (student: Student) => {
+    const speedDatingCompleted = Object.values(student.speedDatingProgress || {})
+      .filter(p => p.completed).length;
+    const hackathonLevel = student.hackathonProgress?.currentLevel || 0;
+    const totalScore = Object.values(student.speedDatingProgress || {})
+      .reduce((sum, p) => sum + (p.score || 0), 0) + (student.hackathonProgress?.totalScore || 0);
+
+    return { speedDatingCompleted, hackathonLevel, totalScore };
+  };
+
+  const formatLastActivity = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 2) return "En ligne";
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    if (diffDays < 7) return `Il y a ${diffDays}j`;
+    return date.toLocaleDateString("fr-FR");
+  };
+
+  const isOnline = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    return (now.getTime() - date.getTime()) < 2 * 60 * 1000;
+  };
 
   const roleButtons = useMemo(() => [
     {
@@ -122,6 +179,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       bgClass: "bg-bp-gray-500 hover:bg-bp-gray-400",
     },
   ], []);
+
+  const students = existingUsers.filter(u => u.role === "student") as Student[];
 
   return (
     <div className="min-h-screen bg-bp-gradient flex items-center justify-center p-4">
@@ -160,8 +219,54 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             </div>
           )}
 
-          {/* Formulaire pour étudiant */}
-          {selectedRole === "student" && (
+          {/* Options de connexion étudiant */}
+          {selectedRole === "student" && !loginMode && (
+            <div className="max-w-2xl mx-auto animate-slide-up">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Nouveau participant */}
+                <button
+                  onClick={() => setLoginMode("new")}
+                  className="bg-bp-red-500 hover:bg-bp-red-600 text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bp flex flex-col items-center"
+                >
+                  <User size={40} className="mb-3" />
+                  <h4 className="text-lg font-bold mb-2">Nouveau participant</h4>
+                  <p className="text-sm opacity-90 text-center">
+                    Première connexion ? Entrez votre nom pour commencer
+                  </p>
+                </button>
+
+                {/* Utilisateur existant */}
+                <button
+                  onClick={() => setLoginMode("existing")}
+                  disabled={students.length === 0}
+                  className={`${
+                    students.length > 0
+                      ? "bg-bp-gray-600 hover:bg-bp-gray-500"
+                      : "bg-bp-gray-700 cursor-not-allowed opacity-50"
+                  } text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bp flex flex-col items-center`}
+                >
+                  <History size={40} className="mb-3" />
+                  <h4 className="text-lg font-bold mb-2">Reprendre ma session</h4>
+                  <p className="text-sm opacity-90 text-center">
+                    {students.length > 0
+                      ? `${students.length} participant(s) enregistré(s)`
+                      : "Aucun participant enregistré"}
+                  </p>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedRole(null)}
+                className="w-full bg-bp-gray-500 hover:bg-bp-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+              >
+                Retour
+              </button>
+            </div>
+          )}
+
+          {/* Formulaire nouveau participant */}
+          {selectedRole === "student" && loginMode === "new" && (
             <form onSubmit={handleStudentSubmit} className="max-w-md mx-auto animate-slide-up">
               <div className="mb-6">
                 <label
@@ -181,6 +286,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   maxLength={50}
                   autoFocus
                 />
+                <p className="text-bp-gray-300 text-sm mt-2">
+                  Si ce nom existe déjà, vous reprendrez votre progression existante.
+                </p>
               </div>
 
               {error && (
@@ -192,7 +300,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => setSelectedRole(null)}
+                  onClick={() => setLoginMode(null)}
                   disabled={isLoading}
                   className="flex-1 bg-bp-gray-500 hover:bg-bp-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
                 >
@@ -216,13 +324,158 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               </div>
             </form>
           )}
+
+          {/* Sélection utilisateur existant */}
+          {selectedRole === "student" && loginMode === "existing" && (
+            <div className="max-w-2xl mx-auto animate-slide-up">
+              <h4 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+                <Users size={20} />
+                Sélectionnez votre profil
+              </h4>
+
+              {/* Utilisateurs récents en priorité */}
+              {recentStudents.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-bp-red-300 text-sm mb-3 flex items-center gap-2">
+                    <Clock size={16} />
+                    Utilisateurs récents
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {recentStudents.slice(0, 4).map((student) => {
+                      const progress = getProgressSummary(student);
+                      const online = isOnline(student.lastActivity);
+
+                      return (
+                        <button
+                          key={student.id}
+                          onClick={() => handleExistingUserSelection(student)}
+                          disabled={isLoading}
+                          className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-lg transition-all duration-300 text-left hover:shadow-bp border border-white/20 hover:border-bp-red-400 group"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-2 h-2 rounded-full ${online ? "bg-green-400 animate-pulse" : "bg-gray-400"}`} />
+                                <span className="font-bold text-lg">{student.name}</span>
+                                {getDeviceIcon(student.deviceInfo?.deviceType)}
+                              </div>
+
+                              <div className="text-sm text-bp-gray-300 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Clock size={12} />
+                                  <span>{formatLastActivity(student.lastActivity)}</span>
+                                </div>
+
+                                {progress.totalScore > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <Trophy size={12} className="text-bp-red-400" />
+                                    <span>{progress.totalScore} points</span>
+                                    <span className="text-bp-gray-400">•</span>
+                                    <span>SD: {progress.speedDatingCompleted}/12</span>
+                                  </div>
+                                )}
+
+                                {student.deviceInfo && (
+                                  <div className="text-xs text-bp-gray-400">
+                                    {student.deviceInfo.browser} • {student.deviceInfo.os}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronRight size={20} className="text-bp-gray-400 group-hover:text-white transition-colors" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Afficher tous les utilisateurs */}
+              {students.length > recentStudents.length && (
+                <div>
+                  <button
+                    onClick={() => setShowAllUsers(!showAllUsers)}
+                    className="w-full flex items-center justify-between text-white hover:text-bp-red-300 transition-colors duration-300 mb-3 py-2"
+                  >
+                    <span className="text-sm text-bp-gray-300">
+                      Tous les participants ({students.length})
+                    </span>
+                    <ChevronDown
+                      size={20}
+                      className={`transform transition-transform duration-300 ${showAllUsers ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {showAllUsers && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                      {students.map((student) => {
+                        const progress = getProgressSummary(student);
+                        const online = isOnline(student.lastActivity);
+
+                        return (
+                          <button
+                            key={student.id}
+                            onClick={() => handleExistingUserSelection(student)}
+                            disabled={isLoading}
+                            className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-lg transition-all duration-300 text-left hover:shadow-bp"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className={`w-2 h-2 rounded-full ${online ? "bg-green-400 animate-pulse" : "bg-gray-400"}`} />
+                              <span className="font-medium truncate">{student.name}</span>
+                            </div>
+                            <div className="text-xs text-bp-gray-300 space-y-1">
+                              <div>{formatLastActivity(student.lastActivity)}</div>
+                              {progress.totalScore > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Trophy size={10} className="text-bp-red-400" />
+                                  <span>{progress.totalScore} pts</span>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-bp-red-400/20 border border-bp-red-400 text-white px-4 py-3 rounded-lg my-4">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-4 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setLoginMode(null)}
+                  disabled={isLoading}
+                  className="flex-1 bg-bp-gray-500 hover:bg-bp-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+                >
+                  Retour
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLoginMode("new")}
+                  disabled={isLoading}
+                  className="flex-1 bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <User size={20} />
+                  Nouveau profil
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Section utilisateurs existants */}
-        {existingUsers.length > 0 && (
+        {/* Section utilisateurs connectés (instructeurs uniquement dans le menu all users) */}
+        {!selectedRole && existingUsers.length > 0 && (
           <div className="bg-black/30 backdrop-blur-md rounded-xl p-6">
             <button
-              onClick={() => setShowExistingUsers(!showExistingUsers)}
+              onClick={() => setShowAllUsers(!showAllUsers)}
               className="w-full flex items-center justify-between text-white hover:text-bp-red-300 transition-colors duration-300 mb-4"
             >
               <div className="flex items-center gap-2">
@@ -234,12 +487,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               <ChevronDown
                 size={24}
                 className={`transform transition-transform duration-300 ${
-                  showExistingUsers ? "rotate-180" : ""
+                  showAllUsers ? "rotate-180" : ""
                 }`}
               />
             </button>
 
-            {showExistingUsers && (
+            {showAllUsers && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                 {existingUsers.map((user) => (
                   <button
@@ -254,13 +507,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                         <User size={16} className="text-bp-red-200" />
                       )}
                       <span className="font-medium">{user.name}</span>
+                      {isOnline(user.lastActivity) && (
+                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                      )}
                     </div>
                     <div className="text-sm opacity-75">
                       {user.role === "instructor" ? "Instructeur" : "Étudiant"}
                       <br />
                       <span className="text-xs">
-                        Dernière activité:{" "}
-                        {new Date(user.lastActivity).toLocaleDateString("fr-FR")}
+                        {formatLastActivity(user.lastActivity)}
                       </span>
                     </div>
                   </button>
