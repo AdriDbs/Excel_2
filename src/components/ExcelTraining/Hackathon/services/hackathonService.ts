@@ -409,7 +409,7 @@ const defaultTeamNames = [
 ];
 
 // Créer une nouvelle session avec un nombre d'équipes configurable
-export const createNewSession = async (teamCount: number = 4): Promise<string> => {
+export const createNewSession = async (teamCount: number = 4, customTeamNames?: string[]): Promise<string> => {
   const sessionId = generateSessionId();
 
   // Initialiser le progress object pour toutes les équipes
@@ -420,7 +420,7 @@ export const createNewSession = async (teamCount: number = 4): Promise<string> =
 
   const teams: Team[] = Array.from({ length: actualTeamCount }, (_, index) => ({
     id: index + 1,
-    name: defaultTeamNames[index] || `Équipe ${index + 1}`,
+    name: customTeamNames?.[index] || defaultTeamNames[index] || `Équipe ${index + 1}`,
     score: 0,
     currentLevel: 0,
     progress: { ...initialProgress },
