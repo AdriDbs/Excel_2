@@ -1,11 +1,14 @@
 import React from "react";
 import ExcelTraining from "./components/ExcelTraining";
+import { UserProvider } from "./contexts/UserContext";
 
 function App() {
   return (
-    <div className="App">
-      <ExcelTraining />
-    </div>
+    <UserProvider>
+      <div className="App">
+        <ExcelTraining />
+      </div>
+    </UserProvider>
   );
 }
 
