@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { SectionType } from "./types";
 import { Student, Instructor } from "../../types/database";
 import { databaseService } from "../../services/databaseService";
+import { useUser } from "../../contexts/UserContext";
 
 // Composants
 import WelcomeScreen from "./WelcomeScreen";
@@ -15,84 +16,49 @@ import HackathonContainer from "./Hackathon/HackathonContainer";
 // Composant principal qui gère la navigation entre les sections et l'authentification
 const ExcelTraining: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<SectionType>("menu");
-  const [currentUser, setCurrentUser] = useState<Student | Instructor | null>(
-    null
-  );
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    // Vérifier s'il y a un utilisateur connecté dans le localStorage
-    const checkExistingUser = () => {
-      try {
-        const storedUserId = localStorage.getItem(
-          "bearingpoint_current_user_id"
-        );
-        if (storedUserId) {
-          const user = databaseService.getUserById(storedUserId);
-          if (user) {
-            setCurrentUser(user);
-            databaseService.updateLastActivity(user.id);
-          } else {
-            // L'utilisateur n'existe plus dans la base de données
-            localStorage.removeItem("bearingpoint_current_user_id");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking existing user:", error);
-        localStorage.removeItem("bearingpoint_current_user_id");
-      }
-      setIsInitialized(true);
-    };
-
-    checkExistingUser();
-  }, []);
+  // Utiliser le UserContext pour la gestion des utilisateurs avec Firebase
+  const {
+    currentUser,
+    isInitialized,
+    isFirebaseConnected,
+    loginUser,
+    logoutUser,
+    updateUserProgress,
+  } = useUser();
 
   const navigateTo = (section: SectionType) => {
     setCurrentSection(section);
 
-    // Mettre à jour l'activité de l'utilisateur
+    // Mettre à jour l'activité de l'utilisateur (géré par le contexte)
     if (currentUser) {
       databaseService.updateLastActivity(currentUser.id);
     }
   };
 
-  const handleUserSelected = (user: Student | Instructor) => {
-    setCurrentUser(user);
-    localStorage.setItem("bearingpoint_current_user_id", user.id);
+  const handleUserSelected = async (user: Student | Instructor) => {
+    await loginUser(user);
     setCurrentSection("menu");
   };
 
-  const handleViewAsGuest = () => {
-    setCurrentUser(null);
-    localStorage.removeItem("bearingpoint_current_user_id");
+  const handleViewAsGuest = async () => {
+    await logoutUser();
     setCurrentSection("menu");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
-      setCurrentUser(null);
-      localStorage.removeItem("bearingpoint_current_user_id");
+      await logoutUser();
       setCurrentSection("menu");
     }
   };
 
-  const handleProgressUpdate = (
+  const handleProgressUpdate = async (
     progressType: "speedDating" | "hackathon",
     progress: any
   ) => {
     if (currentUser && currentUser.role === "student") {
-      const success = databaseService.updateUserProgress(
-        currentUser.id,
-        progressType,
-        progress
-      );
-      if (success) {
-        // Rafraîchir les données de l'utilisateur
-        const updatedUser = databaseService.getUserById(currentUser.id);
-        if (updatedUser) {
-          setCurrentUser(updatedUser);
-        }
-      }
+      await updateUserProgress(progressType, progress);
     }
   };
 
