@@ -40,10 +40,11 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
 
       const enriched = leaderboardData.map(participant => {
         const student = studentMap.get(participant.name.toLowerCase());
+        const isCurrentUser = userName && participant.name.toLowerCase() === userName.toLowerCase();
 
         if (student) {
           const lastActivity = new Date(student.lastActivity).getTime();
-          const isOnline = Date.now() - lastActivity < 2 * 60 * 1000;
+          const isOnline = isCurrentUser || Date.now() - lastActivity < 2 * 60 * 1000;
 
           const totalScore = Object.values(student.speedDatingProgress || {})
             .reduce((sum, p) => sum + (p.score || 0), 0);
@@ -54,6 +55,14 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
             deviceInfo: student.deviceInfo,
             lastActivity: student.lastActivity,
             totalScore,
+          };
+        }
+
+        // L'utilisateur courant est toujours en ligne
+        if (isCurrentUser) {
+          return {
+            ...participant,
+            isOnline: true,
           };
         }
 

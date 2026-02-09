@@ -6,6 +6,7 @@ import {
   Clock,
   ChevronRight,
   Award,
+  BookOpen,
 } from "lucide-react";
 import { ExcelFunction } from "../types";
 
@@ -18,6 +19,7 @@ interface FunctionCardProps {
   validateAnswer: (field: string, isCorrect: boolean) => void;
   startSession: () => void;
   skipVideo: () => void;
+  goToTrick: () => void;
   nextFunction: () => void;
   completeFunction: () => void;
   functionsLength: number;
@@ -34,6 +36,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   validateAnswer,
   startSession,
   skipVideo,
+  goToTrick,
   nextFunction,
   completeFunction,
   functionsLength,
@@ -63,7 +66,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
           <div className="bg-bp-red-400 text-white rounded-full w-8 h-8 flex items-center justify-center">
             1
           </div>
-          Video de presentation
+          Decouverte de la fonction
         </h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 text-bp-red-500">
@@ -80,13 +83,15 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         </div>
       </div>
 
-      <div className="aspect-video bg-bp-red-700 rounded-lg flex items-center justify-center">
-        <div className="text-white text-center p-4">
-          <p className="mb-2">Video de presentation pour</p>
-          <p className="text-2xl font-bold">{currentFunction.name}</p>
-          <p className="mt-4 text-bp-red-200 text-sm">
-            (Interface de demonstration uniquement - video a implementer)
-          </p>
+      <div className="bg-gradient-to-br from-bp-gray-50 to-white rounded-lg border-2 border-bp-red-100 p-6 max-h-[60vh] overflow-y-auto">
+        <div className="flex items-center gap-3 mb-4">
+          <BookOpen size={24} className="text-bp-red-400" />
+          <h4 className="text-lg font-bold text-bp-red-600">
+            Fiche fonction : {currentFunction.name}
+          </h4>
+        </div>
+        <div className="text-gray-700 leading-relaxed whitespace-pre-line text-sm">
+          {currentFunction.presentation}
         </div>
       </div>
     </div>
@@ -132,12 +137,12 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
                   placeholder="Votre reponse..."
                   className={`flex-1 border rounded-lg px-3 py-2 transition-colors ${
                     validated[field]
-                      ? "bg-bp-red-50 border-bp-red-500"
+                      ? "bg-green-50 border-green-500"
                       : "border-bp-gray-200 focus:border-bp-red-400 focus:ring-1 focus:ring-bp-red-400"
                   }`}
                 />
                 {validated[field] ? (
-                  <div className="bg-bp-red-500 text-white rounded-lg px-3 py-2 flex items-center">
+                  <div className="bg-green-500 text-white rounded-lg px-3 py-2 flex items-center">
                     <Check size={20} />
                   </div>
                 ) : (
@@ -155,8 +160,17 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
 
         <div className="mt-4 text-center">
           {validated.answer1 && validated.answer2 ? (
-            <div className="text-bp-red-500 font-medium">
-              Excellent ! Vous allez passer a l'astuce bonus...
+            <div className="flex flex-col items-center gap-3">
+              <div className="text-green-600 font-medium">
+                Excellent ! Les 2 reponses sont correctes !
+              </div>
+              <button
+                onClick={goToTrick}
+                className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
+              >
+                Decouvrir l'astuce bonus
+                <ChevronRight size={20} />
+              </button>
             </div>
           ) : (
             <div className="text-bp-gray-400 text-sm">
