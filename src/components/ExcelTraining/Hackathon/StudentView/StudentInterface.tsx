@@ -26,8 +26,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
 
   // Context du hackathon
   const {
-    state: { teams, timeLeft, sessionId, isSessionStarted },
-    setRegisteredStudent
+    state: { teams, timeLeftSeconds, sessionId, isSessionStarted },
+    setRegisteredStudent,
+    formatTime: formatHackathonTime
   } = useHackathon();
 
   // Hook de progression pour les étudiants
@@ -112,18 +113,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     return (levelId + 1) * 300; // 5 minutes par niveau en moyenne
   };
 
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${secs}s`;
-    }
-    return `${minutes}m ${secs}s`;
-  };
-
-  const isUrgent = timeLeft < 600; // Urgent si moins de 10 minutes
+  const isUrgent = timeLeftSeconds < 600; // Urgent si moins de 10 minutes
 
   // Trouver les données de l'équipe
   const teamData = teams.find(team => team.id === selectedTeamId);
@@ -302,7 +292,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
             <Clock className={`mr-2 ${isUrgent ? "text-red-500" : "text-cyan-400"}`} size={24} />
             <div>
               <div className={`text-2xl font-bold ${isUrgent ? "text-red-400" : "text-cyan-400"}`}>
-                {formatTime(timeLeft)}
+                {formatHackathonTime(timeLeftSeconds)}
               </div>
               <div className="text-xs text-gray-400">Temps restant</div>
             </div>

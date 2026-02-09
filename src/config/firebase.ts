@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, Auth, User as FirebaseUser } from "firebase/auth";
-import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, Database } from "firebase/database";
+import { getDatabase, ref, set, update, onValue, onDisconnect, serverTimestamp, Database } from "firebase/database";
 
 // Configuration Firebase fournie
 const firebaseConfig = {
@@ -42,6 +42,9 @@ export const getUsersRef = () => ref(database, "users");
 export const getUserRef = (userId: string) => ref(database, `users/${userId}`);
 export const getActiveUsersRef = () => ref(database, "activeUsers");
 export const getActiveUserRef = (sessionId: string) => ref(database, `activeUsers/${sessionId}`);
+export const getHackathonSessionsRef = () => ref(database, "hackathonSessions");
+export const getHackathonSessionRef = (sessionId: string) => ref(database, `hackathonSessions/${sessionId}`);
+export const getSpeedDatingLeaderboardRef = () => ref(database, "speedDatingLeaderboard");
 
 // Fonction pour marquer un utilisateur comme connecté
 export const setUserOnlinePresence = async (
@@ -80,7 +83,7 @@ export const updateUserActivity = async (sessionId: string) => {
   const activeUserRef = getActiveUserRef(sessionId);
 
   try {
-    await set(ref(database, `activeUsers/${sessionId}/lastSeen`), serverTimestamp());
+    await update(activeUserRef, { lastSeen: serverTimestamp() });
     return true;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'activité:", error);
@@ -133,6 +136,71 @@ export const subscribeToUser = (
 ) => {
   const userRef = getUserRef(userId);
   return onValue(userRef, (snapshot) => {
+    const data = snapshot.val();
+    callback(data);
+  });
+};
+
+// Fonctions pour la synchronisation des sessions hackathon via Firebase
+export const saveHackathonSessionToFirebase = async (
+  sessionId: string,
+  sessionData: {
+    teams: any[];
+    isSessionStarted: boolean;
+    timeLeft: number;
+    seconds: number;
+    sessionActive: boolean;
+    startTime?: number | null;
+  }
+) => {
+  const sessionRef = getHackathonSessionRef(sessionId);
+  try {
+    await set(sessionRef, {
+      ...sessionData,
+      lastUpdated: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde session hackathon Firebase:", error);
+    return false;
+  }
+};
+
+// Écouter les changements d'une session hackathon en temps réel
+export const subscribeToHackathonSession = (
+  sessionId: string,
+  callback: (sessionData: any) => void
+) => {
+  const sessionRef = getHackathonSessionRef(sessionId);
+  return onValue(sessionRef, (snapshot) => {
+    const data = snapshot.val();
+    callback(data);
+  });
+};
+
+// Sauvegarder le leaderboard speed dating dans Firebase
+export const saveSpeedDatingLeaderboardToFirebase = async (
+  leaderboardData: any[]
+) => {
+  const leaderboardRef = getSpeedDatingLeaderboardRef();
+  try {
+    await set(leaderboardRef, {
+      participants: leaderboardData,
+      lastUpdated: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde leaderboard Firebase:", error);
+    return false;
+  }
+};
+
+// Écouter les changements du leaderboard speed dating en temps réel
+export const subscribeToSpeedDatingLeaderboard = (
+  callback: (data: any) => void
+) => {
+  const leaderboardRef = getSpeedDatingLeaderboardRef();
+  return onValue(leaderboardRef, (snapshot) => {
     const data = snapshot.val();
     callback(data);
   });

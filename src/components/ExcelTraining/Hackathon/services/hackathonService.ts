@@ -17,6 +17,7 @@ export const hackathonLevels: Level[] = [
     name: "Préparation des données",
     description:
       "Nettoyez et préparez les données brutes dispersées et incohérentes",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "Pour commencer, vous devez fusionner et nettoyer les données provenant de trois sources différentes: un fichier CSV des commandes, un fichier Excel des stocks et un fichier texte des fournisseurs.",
     exerciseQuestion:
@@ -32,6 +33,7 @@ export const hackathonLevels: Level[] = [
     name: "Accès au serveur",
     description:
       "Retrouvez les identifiants de connexion au serveur de l'entreprise",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "Les identifiants pour accéder au serveur sont cachés dans les données. Vous devez identifier les produits en rupture de stock avec une demande élevée, puis extraire les identifiants correspondants.",
     exerciseQuestion:
@@ -47,6 +49,7 @@ export const hackathonLevels: Level[] = [
     name: "Reconstruction des données",
     description:
       "Réorganisez les données client dispersées pour reconstituer la base",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "La base de données clients est fragmentée et désorganisée. Vous devez la reconstruire en réorganisant les informations et en créant une structure cohérente.",
     exerciseQuestion:
@@ -61,6 +64,7 @@ export const hackathonLevels: Level[] = [
     id: 3,
     name: "Analyse des tendances",
     description: "Transformez les données pour faire apparaître les tendances",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "Les données des tendances de vente sont mal orientées et contiennent des informations parasites. Vous devez les transformer pour identifier clairement les tendances par catégorie.",
     exerciseQuestion:
@@ -75,6 +79,7 @@ export const hackathonLevels: Level[] = [
     id: 4,
     name: "Consolidation du rapport",
     description: "Assemblez et consolidez les différentes parties du rapport",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "Vous devez consolider les données des quatre régions en un rapport unifié. Cela implique de fusionner verticalement et horizontalement les données, puis de les pivoter pour une vue synthétique.",
     exerciseQuestion:
@@ -90,6 +95,7 @@ export const hackathonLevels: Level[] = [
     name: "Finalisation de l'analyse",
     description:
       "Finalisez l'analyse et préparez les données pour la visualisation",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "Vous devez finaliser l'analyse avec des calculs de métriques avancées et préparer les projections pour le tableau de bord.",
     exerciseQuestion:
@@ -105,6 +111,7 @@ export const hackathonLevels: Level[] = [
     name: "Création du tableau de bord",
     description:
       "Créez un tableau de bord impactant et interactif pour la présentation",
+    instruction: "Consigne en cours de rédaction",
     exerciseDescription:
       "Vous devez transformer toutes vos analyses en un tableau de bord visuellement impactant et interactif pour la présentation au conseil d'administration de Nexus.",
     exerciseQuestion:
@@ -136,8 +143,16 @@ export const generateSessionId = (): string => {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// Type de retour pour fetchInitialState (timeLeft en minutes, converti en secondes par le consommateur)
+export interface InitialHackathonState {
+  teams?: Team[];
+  timeLeft?: number; // en minutes
+  sessionId?: string;
+  sessionActive?: boolean;
+}
+
 // Récupérer l'état initial
-export const fetchInitialState = async (): Promise<Partial<HackathonState>> => {
+export const fetchInitialState = async (): Promise<InitialHackathonState> => {
   try {
     // Simuler un délai de réseau
     await new Promise((resolve) => setTimeout(resolve, 300));
