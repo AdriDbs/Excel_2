@@ -14,8 +14,16 @@ import WorkInProgressSection from "./WorkInProgress/WorkInProgressSection";
 import HackathonContainer from "./Hackathon/HackathonContainer";
 
 // Composant principal qui gère la navigation entre les sections et l'authentification
+const SECTION_STORAGE_KEY = "bearingpoint_current_section";
+
 const ExcelTraining: React.FC = () => {
-  const [currentSection, setCurrentSection] = useState<SectionType>("menu");
+  const [currentSection, setCurrentSection] = useState<SectionType>(() => {
+    const saved = sessionStorage.getItem(SECTION_STORAGE_KEY);
+    if (saved && ["menu", "functions", "bestPractices", "hackathon", "hackathonLanding", "useCases"].includes(saved)) {
+      return saved as SectionType;
+    }
+    return "menu";
+  });
 
   // Utiliser le UserContext pour la gestion des utilisateurs avec Firebase
   const {
@@ -29,6 +37,7 @@ const ExcelTraining: React.FC = () => {
 
   const navigateTo = (section: SectionType) => {
     setCurrentSection(section);
+    sessionStorage.setItem(SECTION_STORAGE_KEY, section);
 
     // Mettre à jour l'activité de l'utilisateur (géré par le contexte)
     if (currentUser) {
@@ -97,9 +106,7 @@ const ExcelTraining: React.FC = () => {
         <ExcelSpeedDating
           navigateTo={navigateTo}
           currentUser={currentUser}
-          onProgressUpdate={(progress) =>
-            handleProgressUpdate("speedDating", progress)
-          }
+          onProgressUpdate={handleProgressUpdate}
         />
       );
 

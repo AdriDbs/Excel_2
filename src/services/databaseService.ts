@@ -510,11 +510,13 @@ export class DatabaseService {
       .map((student) => {
         const speedDatingCompleted = Object.values(
           student.speedDatingProgress
-        ).filter((progress) => progress.completed).length;
+        ).filter((progress) => progress && typeof progress === "object" && progress.completed).length;
 
         const totalSpeedDatingScore = Object.values(
           student.speedDatingProgress
-        ).reduce((sum, progress) => sum + progress.score, 0);
+        )
+          .filter((progress) => progress && typeof progress === "object")
+          .reduce((sum, progress) => sum + (progress.score || 0), 0);
 
         return {
           name: student.name,
@@ -552,7 +554,8 @@ export class DatabaseService {
     let hackathonCompleted = 0;
 
     students.forEach((student) => {
-      const speedProgress = Object.values(student.speedDatingProgress);
+      const speedProgress = Object.values(student.speedDatingProgress)
+        .filter((p) => p && typeof p === "object");
       speedDatingTotal += speedProgress.length;
       speedDatingCompleted += speedProgress.filter((p) => p.completed).length;
 
