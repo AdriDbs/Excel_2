@@ -298,6 +298,15 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
             <div className="p-4">
               <p className="text-lg mb-4">{currentLevelData.description}</p>
 
+              {/* Zone de consigne */}
+              <div className="mt-4 bg-indigo-900/30 border border-indigo-700/50 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-medium mb-2 text-indigo-200 flex items-center gap-2">
+                  <Award size={18} />
+                  Consigne
+                </h3>
+                <p className="text-gray-200">{currentLevelData.instruction}</p>
+              </div>
+
               <div className="mt-4">
                 <h3 className="text-lg font-medium mb-2 text-indigo-300">
                   Fonctions requises:

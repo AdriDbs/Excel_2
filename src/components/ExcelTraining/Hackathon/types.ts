@@ -14,6 +14,7 @@ export interface Level {
   id: number;
   name: string;
   description: string;
+  instruction: string; // consigne détaillée affichée à l'étudiant
   exerciseDescription: string;
   exerciseQuestion: string;
   answerFormat?: string;
@@ -39,14 +40,13 @@ export interface Notification {
 
 export interface HackathonState {
   teams: Team[];
-  timeLeft: number;
+  timeLeftSeconds: number; // temps restant en secondes totales
   notification: Notification;
   sessionId: string;
   isGlobalView: boolean;
   registeredStudent: Student | null;
   sessionActive: boolean;
   isSessionStarted: boolean;
-  seconds: number;
 }
 
 export interface HackathonSession {

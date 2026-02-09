@@ -19,14 +19,15 @@ interface SessionControlOverlayProps {
 const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
   onClose,
 }) => {
-  const { 
-    state, 
-    setNotification, 
-    setSessionActive, 
-    startSessionTimer
+  const {
+    state,
+    setNotification,
+    setSessionActive,
+    startSessionTimer,
+    formatTime,
   } = useHackathon();
-  
-  const { teams, sessionId, timeLeft, isSessionStarted, seconds } = state;
+
+  const { teams, sessionId, timeLeftSeconds, isSessionStarted } = state;
   const [isStarting, setIsStarting] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -115,14 +116,6 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
     }
   };
 
-  // Formatter le temps restant avec secondes
-  const formatTime = (minutes: number, secs: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.floor(minutes % 60);
-    return `${hours.toString().padStart(2, "0")}:${mins
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
@@ -168,7 +161,7 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
                   size={20}
                 />
                 <span className="text-2xl font-mono text-white">
-                  {formatTime(timeLeft, seconds)}
+                  {formatTime(timeLeftSeconds)}
                 </span>
               </div>
 

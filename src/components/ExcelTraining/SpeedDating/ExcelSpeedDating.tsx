@@ -18,13 +18,19 @@ import {
   useProgressManager,
   useProgressNotifications,
 } from "../../../hooks/useProgressManager";
-import { excelFunctions, leaderboardData } from "./excelFunctionsData";
+import { excelFunctions } from "./excelFunctionsData";
 import { formatGlobalTime } from "./utils";
 import Timer from "./Timer";
 import FunctionCard from "./FunctionCard";
 import Passport from "./Passport";
 import Leaderboard from "./Leaderboard";
 import { BRAND } from "../../../constants/brand";
+import { databaseService } from "../../../services/databaseService";
+import {
+  saveSpeedDatingLeaderboardToFirebase,
+  subscribeToSpeedDatingLeaderboard,
+} from "../../../config/firebase";
+import { LeaderboardParticipant } from "../types";
 
 type Phase = "intro" | "video" | "exercise" | "trick" | "complete";
 
@@ -45,6 +51,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   const [globalTimer, setGlobalTimer] = useState(0);
   const [globalTimerRunning, setGlobalTimerRunning] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [liveLeaderboardData, setLiveLeaderboardData] = useState<LeaderboardParticipant[]>([]);
 
   const userName = useMemo(() => currentUser?.name ?? "Vous", [currentUser]);
 
@@ -60,6 +67,64 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     : null;
 
   const { notifications, addNotification } = useProgressNotifications();
+
+  // Construire le leaderboard à partir de databaseService et synchroniser avec Firebase
+  const buildLeaderboardData = useCallback((): LeaderboardParticipant[] => {
+    const students = databaseService.getStudents();
+    return students.map((student) => {
+      const completedFunctionIds: number[] = [];
+      let totalTime = 0;
+
+      Object.entries(student.speedDatingProgress).forEach(([key, progress]) => {
+        if (progress.completed) {
+          completedFunctionIds.push(parseInt(key) - 1);
+          totalTime += progress.timeSpent || 0;
+        }
+      });
+
+      const minutes = Math.floor(totalTime / 60);
+      const secs = totalTime % 60;
+
+      return {
+        name: student.name,
+        completed: completedFunctionIds.length,
+        completedFunctions: completedFunctionIds,
+        totalTime: `${minutes}:${secs < 10 ? "0" : ""}${secs}`,
+      };
+    }).filter((p) => p.completed > 0)
+      .sort((a, b) => b.completed - a.completed);
+  }, []);
+
+  // Mise à jour du leaderboard et sync Firebase
+  useEffect(() => {
+    // Construire le leaderboard initial
+    const data = buildLeaderboardData();
+    setLiveLeaderboardData(data);
+    if (data.length > 0) {
+      saveSpeedDatingLeaderboardToFirebase(data);
+    }
+
+    // Écouter les mises à jour du leaderboard via Firebase
+    const unsubscribe = subscribeToSpeedDatingLeaderboard((firebaseData) => {
+      if (firebaseData?.participants && Array.isArray(firebaseData.participants)) {
+        setLiveLeaderboardData(firebaseData.participants);
+      }
+    });
+
+    // Rafraîchir le leaderboard toutes les 10 secondes à partir du localStorage
+    const refreshInterval = setInterval(() => {
+      const freshData = buildLeaderboardData();
+      setLiveLeaderboardData(freshData);
+      if (freshData.length > 0) {
+        saveSpeedDatingLeaderboardToFirebase(freshData);
+      }
+    }, 10000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(refreshInterval);
+    };
+  }, [buildLeaderboardData]);
 
   useEffect(() => {
     if (progressManagerInstance) {
@@ -137,6 +202,15 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           completedAt: new Date().toISOString(),
         },
       });
+
+      // Mettre à jour le leaderboard après validation
+      setTimeout(() => {
+        const freshData = buildLeaderboardData();
+        setLiveLeaderboardData(freshData);
+        if (freshData.length > 0) {
+          saveSpeedDatingLeaderboardToFirebase(freshData);
+        }
+      }, 500);
 
       const completion = progressManagerInstance.getSpeedDatingCompletion();
       if (completion.completed === 5) {
@@ -454,7 +528,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
       {showLeaderboard && (
         <Leaderboard
-          leaderboardData={leaderboardData}
+          leaderboardData={liveLeaderboardData}
           onClose={() => setShowLeaderboard(false)}
         />
       )}

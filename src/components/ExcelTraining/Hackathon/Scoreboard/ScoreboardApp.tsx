@@ -22,22 +22,21 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   // Utiliser le contexte Hackathon
   const {
     state,
-    setTimeLeft,
+    setTimeLeftSeconds,
     setIsGlobalView,
     setSessionId,
     endCurrentSession,
     setNotification,
-    setSeconds,
+    formatTime,
   } = useHackathon();
 
   const {
     teams,
-    timeLeft,
+    timeLeftSeconds,
     notification,
     sessionId,
     sessionActive,
     isSessionStarted,
-    seconds,
   } = state;
 
   // État pour le classement précédent (pour les animations)
@@ -92,8 +91,8 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
   // Vérifier si on est dans les 5 dernières minutes
   useEffect(() => {
-    setIsUrgent(timeLeft <= 5);
-  }, [timeLeft]);
+    setIsUrgent(timeLeftSeconds <= 5 * 60);
+  }, [timeLeftSeconds]);
 
   // Vérifier si la session est active
   useEffect(() => {
@@ -104,17 +103,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
   // Fonction pour passer à 5 minutes
   const setToFiveMinutes = () => {
-    setTimeLeft(5);
-    setSeconds(0);
-  };
-
-  // Formatter le temps restant avec secondes
-  const formatTime = (minutes: number, secs: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.floor(minutes % 60);
-    return `${hours.toString().padStart(2, "0")}:${mins
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    setTimeLeftSeconds(5 * 60);
   };
 
   // Fonction pour rafraîchir manuellement les données
@@ -229,7 +218,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                   : "text-cyan-400"
               }`}
             >
-              {formatTime(timeLeft, seconds)}
+              {formatTime(timeLeftSeconds)}
             </span>
           </div>
         </div>
