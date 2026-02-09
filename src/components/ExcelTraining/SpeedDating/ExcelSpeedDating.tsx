@@ -71,7 +71,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   // Construire le leaderboard à partir de databaseService et synchroniser avec Firebase
   const buildLeaderboardData = useCallback((): LeaderboardParticipant[] => {
     const students = databaseService.getStudents();
-    return students.map((student) => {
+    const participants = students.map((student) => {
       const completedFunctionIds: number[] = [];
       let totalTime = 0;
 
@@ -91,9 +91,20 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         completedFunctions: completedFunctionIds,
         totalTime: `${minutes}:${secs < 10 ? "0" : ""}${secs}`,
       };
-    }).filter((p) => p.completed > 0)
-      .sort((a, b) => b.completed - a.completed);
-  }, []);
+    }).sort((a, b) => b.completed - a.completed);
+
+    // Toujours inclure l'utilisateur courant dans le leaderboard
+    if (currentUser && !participants.some((p) => p.name.toLowerCase() === currentUser.name.toLowerCase())) {
+      participants.push({
+        name: currentUser.name,
+        completed: 0,
+        completedFunctions: [],
+        totalTime: "0:00",
+      });
+    }
+
+    return participants;
+  }, [currentUser]);
 
   // Mise à jour du leaderboard et sync Firebase
   useEffect(() => {
@@ -256,6 +267,12 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   const skipVideo = useCallback(() => {
     setPhase("exercise");
     setTimeLeft(180);
+  }, []);
+
+  const goToTrick = useCallback(() => {
+    setPhase("trick");
+    setTimeLeft(60);
+    setTimerRunning(true);
   }, []);
 
   const completeFunction = useCallback(() => {
@@ -499,6 +516,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               validateAnswer={validateAnswer}
               startSession={startSession}
               skipVideo={skipVideo}
+              goToTrick={goToTrick}
               nextFunction={() => navigateFunction(1)}
               completeFunction={completeFunction}
               functionsLength={excelFunctions.length}
@@ -530,6 +548,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         <Leaderboard
           leaderboardData={liveLeaderboardData}
           onClose={() => setShowLeaderboard(false)}
+          excelFunctions={excelFunctions}
+          userName={userName}
         />
       )}
     </div>

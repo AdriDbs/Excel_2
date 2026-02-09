@@ -47,6 +47,7 @@ export interface ExcelFunction {
   avatar: string;
   superpower: string;
   description: string;
+  presentation: string;
   exercise: string;
   exercisePrompt1: string;
   exercisePrompt2: string;
