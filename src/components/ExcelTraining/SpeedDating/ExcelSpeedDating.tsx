@@ -116,7 +116,12 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     // Écouter les mises à jour du leaderboard via Firebase
     const unsubscribe = subscribeToSpeedDatingLeaderboard((firebaseData) => {
       if (firebaseData?.participants && Array.isArray(firebaseData.participants)) {
-        setLiveLeaderboardData(firebaseData.participants);
+        // Firebase supprime les tableaux vides, il faut s'assurer que completedFunctions est toujours un tableau
+        const normalized = firebaseData.participants.map((p: any) => ({
+          ...p,
+          completedFunctions: p.completedFunctions || [],
+        }));
+        setLiveLeaderboardData(normalized);
       }
     });
 
