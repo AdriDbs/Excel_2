@@ -330,7 +330,7 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {excelFunctions.map((func, index) => {
                   const completedBy = sortedLeaderboard.filter(
-                    p => p.completedFunctions.includes(index)
+                    p => (p.completedFunctions || []).includes(index)
                   );
                   const onlineCompletedBy = completedBy.filter(p => p.isOnline);
 
