@@ -55,16 +55,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
   const userName = useMemo(() => currentUser?.name ?? "Vous", [currentUser]);
 
-  const progressManager = useMemo(() => {
-    if (currentUser?.role === "student") {
-      return null; // Will be initialized in useEffect
-    }
-    return null;
-  }, [currentUser]);
-
-  const progressManagerInstance = currentUser?.role === "student"
-    ? useProgressManager({ userId: currentUser.id })
-    : null;
+  const isStudent = currentUser?.role === "student";
+  const progressManagerInstance = useProgressManager({ userId: currentUser?.id ?? "" });
 
   const { notifications, addNotification } = useProgressNotifications();
 
@@ -76,7 +68,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       let totalTime = 0;
 
       Object.entries(student.speedDatingProgress).forEach(([key, progress]) => {
-        if (progress.completed) {
+        if (progress && typeof progress === "object" && progress.completed) {
           completedFunctionIds.push(parseInt(key) - 1);
           totalTime += progress.timeSpent || 0;
         }
@@ -138,13 +130,16 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   }, [buildLeaderboardData]);
 
   useEffect(() => {
-    if (progressManagerInstance) {
+    if (isStudent && progressManagerInstance.speedDatingProgress) {
       const completedIds = Object.keys(progressManagerInstance.speedDatingProgress)
-        .filter((id) => progressManagerInstance.speedDatingProgress[parseInt(id)]?.completed)
+        .filter((id) => {
+          const progress = progressManagerInstance.speedDatingProgress[parseInt(id)];
+          return progress && typeof progress === "object" && progress.completed;
+        })
         .map((id) => parseInt(id) - 1);
       setCompletedFunctions(completedIds);
     }
-  }, [progressManagerInstance]);
+  }, [isStudent, progressManagerInstance.speedDatingProgress]);
 
   // Phase timer effect
   useEffect(() => {
@@ -188,7 +183,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     score: number,
     timeSpent: number
   ) => {
-    if (!progressManagerInstance) {
+    if (!isStudent) {
       setCompletedFunctions((prev) => Array.from(new Set([...prev, currentFunctionIndex])));
       return;
     }
@@ -232,7 +227,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         addNotification("Felicitations ! Toutes les fonctions maitrisees !", "milestone");
       }
     }
-  }, [progressManagerInstance, currentFunctionIndex, currentFunction.name, addNotification, onProgressUpdate]);
+  }, [isStudent, progressManagerInstance, currentFunctionIndex, currentFunction.name, addNotification, onProgressUpdate]);
 
   const toggleTimer = useCallback(() => setTimerRunning((prev) => !prev), []);
 
@@ -296,7 +291,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   }, [addNotification]);
 
   const progressStats = useMemo(() => {
-    if (!progressManagerInstance) {
+    if (!isStudent) {
       return {
         completed: completedFunctions.length,
         total: 12,
@@ -307,7 +302,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
     const completion = progressManagerInstance.getSpeedDatingCompletion();
     return { ...completion, totalScore: progressManagerInstance.getTotalScore() };
-  }, [progressManagerInstance, completedFunctions.length]);
+  }, [isStudent, progressManagerInstance, completedFunctions.length]);
 
   const phaseProgress = useMemo(() => {
     const progressMap: Record<Phase, string> = {

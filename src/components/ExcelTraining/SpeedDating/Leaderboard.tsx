@@ -135,7 +135,7 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
 
   return (
     <div className="fixed inset-0 bg-bp-red-700/95 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-bp-lg max-w-3xl w-full max-h-[90vh] overflow-auto">
+      <div className="bg-white text-gray-900 rounded-xl shadow-bp-lg max-w-3xl w-full max-h-[90vh] overflow-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-bp-gray-100 p-6">
           <div className="flex justify-between items-center mb-4">

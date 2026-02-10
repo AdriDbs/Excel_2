@@ -127,11 +127,10 @@ export const useProgressManager = ({
   );
 
   const getTotalScore = useCallback((): number => {
-    const speedDatingScore = Object.values(speedDatingProgress).reduce(
-      (sum, p) => sum + p.score,
-      0
-    );
-    return speedDatingScore + hackathonProgress.totalScore;
+    const speedDatingScore = Object.values(speedDatingProgress)
+      .filter((p) => p && typeof p === "object")
+      .reduce((sum, p) => sum + (p.score || 0), 0);
+    return speedDatingScore + (hackathonProgress.totalScore || 0);
   }, [speedDatingProgress, hackathonProgress]);
 
   const getSpeedDatingCompletion = useCallback((): {
@@ -139,7 +138,8 @@ export const useProgressManager = ({
     total: number;
     percentage: number;
   } => {
-    const progressArray = Object.values(speedDatingProgress);
+    const progressArray = Object.values(speedDatingProgress)
+      .filter((p) => p && typeof p === "object");
     const completed = progressArray.filter((p) => p.completed).length;
     const total = 12; // Nombre total de fonctions Excel
 
