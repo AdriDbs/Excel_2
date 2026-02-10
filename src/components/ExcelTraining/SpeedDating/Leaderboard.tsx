@@ -212,6 +212,17 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-bp-gray-100">
+                {sortedLeaderboard.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-bp-gray-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <Trophy size={32} className="text-bp-gray-300" />
+                        <p className="font-medium">Aucun participant pour le moment</p>
+                        <p className="text-sm">Completez votre premiere fonction pour apparaitre ici !</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {sortedLeaderboard.map((participant, index) => (
                   <tr
                     key={participant.name}

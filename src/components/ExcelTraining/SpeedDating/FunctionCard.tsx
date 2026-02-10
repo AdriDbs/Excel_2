@@ -7,6 +7,9 @@ import {
   ChevronRight,
   Award,
   BookOpen,
+  CheckCircle,
+  Lock,
+  Trophy,
 } from "lucide-react";
 import { ExcelFunction } from "../types";
 
@@ -25,6 +28,8 @@ interface FunctionCardProps {
   functionsLength: number;
   currentFunctionIndex: number;
   togglePassport: () => void;
+  isCompleted?: boolean;
+  completedScore?: number;
 }
 
 const FunctionCard: React.FC<FunctionCardProps> = memo(({
@@ -42,7 +47,51 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   functionsLength,
   currentFunctionIndex,
   togglePassport,
+  isCompleted = false,
+  completedScore,
 }) => {
+  const renderAlreadyCompletedPhase = () => (
+    <div className="text-center py-8">
+      <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+        <CheckCircle size={40} className="text-green-500" />
+      </div>
+      <h3 className="text-2xl font-bold mb-2 text-green-700">Fonction deja maitrisee !</h3>
+      <p className="text-lg text-bp-gray-500 mb-2">
+        Vous avez deja complete la session sur <strong>{currentFunction.name}</strong>
+      </p>
+      {completedScore !== undefined && (
+        <div className="inline-flex items-center gap-2 bg-bp-red-50 px-4 py-2 rounded-full mb-6">
+          <Trophy size={20} className="text-bp-red-500" />
+          <span className="font-bold text-bp-red-600">{completedScore} points</span>
+        </div>
+      )}
+      <div className="flex items-center justify-center gap-2 text-bp-gray-400 mb-6">
+        <Lock size={16} />
+        <span className="text-sm">Cette fonction ne peut pas etre refaite</span>
+      </div>
+
+      <div className="flex gap-4 justify-center">
+        {currentFunctionIndex < functionsLength - 1 ? (
+          <button
+            onClick={nextFunction}
+            className="bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
+          >
+            Fonction suivante
+            <ChevronRight size={20} />
+          </button>
+        ) : (
+          <button
+            onClick={togglePassport}
+            className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
+          >
+            Voir mon passeport
+            <Award size={20} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   const renderIntroPhase = () => (
     <div className="text-center">
       <p className="text-xl mb-8">{currentFunction.description}</p>
@@ -248,11 +297,17 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
 
   return (
     <div className="bg-bp-gray-50 rounded-xl p-6 mb-6 min-h-64">
-      {phase === "intro" && renderIntroPhase()}
-      {phase === "video" && renderVideoPhase()}
-      {phase === "exercise" && renderExercisePhase()}
-      {phase === "trick" && renderTrickPhase()}
-      {phase === "complete" && renderCompletePhase()}
+      {isCompleted ? (
+        renderAlreadyCompletedPhase()
+      ) : (
+        <>
+          {phase === "intro" && renderIntroPhase()}
+          {phase === "video" && renderVideoPhase()}
+          {phase === "exercise" && renderExercisePhase()}
+          {phase === "trick" && renderTrickPhase()}
+          {phase === "complete" && renderCompletePhase()}
+        </>
+      )}
     </div>
   );
 });

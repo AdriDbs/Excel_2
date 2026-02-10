@@ -60,6 +60,7 @@ export interface LeaderboardParticipant {
   completed: number;
   completedFunctions: number[];
   totalTime: string;
+  totalScore?: number;
 }
 
 // Types pour les événements de progression
