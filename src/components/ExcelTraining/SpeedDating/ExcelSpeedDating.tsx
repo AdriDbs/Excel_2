@@ -74,6 +74,10 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         }
       });
 
+      const totalScore = Object.values(student.speedDatingProgress)
+        .filter((p) => p && typeof p === "object")
+        .reduce((sum, p) => sum + (p.score || 0), 0);
+
       const minutes = Math.floor(totalTime / 60);
       const secs = totalTime % 60;
 
@@ -82,6 +86,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         completed: completedFunctionIds.length,
         completedFunctions: completedFunctionIds,
         totalTime: `${minutes}:${secs < 10 ? "0" : ""}${secs}`,
+        totalScore,
       };
     }).sort((a, b) => b.completed - a.completed);
 
@@ -92,6 +97,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         completed: 0,
         completedFunctions: [],
         totalTime: "0:00",
+        totalScore: 0,
       });
     }
 
@@ -129,6 +135,9 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     };
   }, [buildLeaderboardData]);
 
+  // Charger la progression et naviguer vers la premiere fonction non completee
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
   useEffect(() => {
     if (isStudent && progressManagerInstance.speedDatingProgress) {
       const completedIds = Object.keys(progressManagerInstance.speedDatingProgress)
@@ -138,6 +147,23 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         })
         .map((id) => parseInt(id) - 1);
       setCompletedFunctions(completedIds);
+
+      // Au premier chargement, naviguer vers la premiere fonction non completee
+      if (!initialLoadDone && completedIds.length > 0) {
+        setInitialLoadDone(true);
+        const firstUncompleted = excelFunctions.findIndex(
+          (_, index) => !completedIds.includes(index)
+        );
+        if (firstUncompleted !== -1) {
+          setCurrentFunctionIndex(firstUncompleted);
+          setPhase("intro");
+        } else {
+          // Toutes les fonctions sont completees, rester sur la premiere
+          setPhase("complete");
+        }
+      } else if (completedIds.includes(currentFunctionIndex)) {
+        setPhase("complete");
+      }
     }
   }, [isStudent, progressManagerInstance.speedDatingProgress]);
 
@@ -241,15 +267,24 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     const newIndex = currentFunctionIndex + direction;
     if (newIndex >= 0 && newIndex < excelFunctions.length) {
       setCurrentFunctionIndex(newIndex);
-      setPhase("intro");
+      // Si la fonction est deja completee, afficher directement la phase complete
+      if (completedFunctions.includes(newIndex)) {
+        setPhase("complete");
+      } else {
+        setPhase("intro");
+      }
       setTimeLeft(60);
       setTimerRunning(false);
       setAnswers({ answer1: "", answer2: "" });
       setValidated({ answer1: false, answer2: false });
     }
-  }, [currentFunctionIndex]);
+  }, [currentFunctionIndex, completedFunctions]);
 
   const startSession = useCallback(() => {
+    // Empecher de recommencer une fonction deja completee
+    if (completedFunctions.includes(currentFunctionIndex)) {
+      return;
+    }
     if (!sessionStarted) {
       setSessionStarted(true);
       setGlobalTimerRunning(true);
@@ -257,7 +292,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     setPhase("video");
     setTimeLeft(60);
     setTimerRunning(true);
-  }, [sessionStarted]);
+  }, [sessionStarted, completedFunctions, currentFunctionIndex]);
 
   const skipVideo = useCallback(() => {
     setPhase("exercise");
@@ -517,6 +552,10 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               functionsLength={excelFunctions.length}
               currentFunctionIndex={currentFunctionIndex}
               togglePassport={() => setShowPassport(true)}
+              isCompleted={completedFunctions.includes(currentFunctionIndex)}
+              completedScore={
+                progressManagerInstance.speedDatingProgress[currentFunctionIndex + 1]?.score
+              }
             />
 
             <div className="h-2 bg-bp-gray-100 rounded-full">
