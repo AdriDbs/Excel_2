@@ -9,6 +9,8 @@ import {
   Users,
   Award,
   Download,
+  LogOut,
+  RefreshCw,
 } from "lucide-react";
 import DownloadFilesOverlay from "./DownloadFilesOverlay";
 
@@ -16,12 +18,16 @@ interface WaitingScreenProps {
   teamName: string;
   studentName: string;
   goBackToLanding: () => void;
+  onLeaveTeam?: () => void;
+  isLeavingTeam?: boolean;
 }
 
 const WaitingScreen: React.FC<WaitingScreenProps> = ({
   teamName,
   studentName,
   goBackToLanding,
+  onLeaveTeam,
+  isLeavingTeam = false,
 }) => {
   const [showDownloadOverlay, setShowDownloadOverlay] = useState(false);
 
@@ -63,14 +69,31 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
             ci-dessous.
           </p>
 
-          {/* Bouton de téléchargement */}
-          <button
-            onClick={() => setShowDownloadOverlay(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 mx-auto transition-all duration-300 hover:shadow-lg"
-          >
-            <Download size={20} />
-            Télécharger les ressources
-          </button>
+          {/* Boutons d'action */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => setShowDownloadOverlay(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 transition-all duration-300 hover:shadow-lg"
+            >
+              <Download size={20} />
+              Télécharger les ressources
+            </button>
+
+            {onLeaveTeam && (
+              <button
+                onClick={onLeaveTeam}
+                disabled={isLeavingTeam}
+                className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLeavingTeam ? (
+                  <RefreshCw size={20} className="animate-spin" />
+                ) : (
+                  <LogOut size={20} />
+                )}
+                {isLeavingTeam ? "Départ en cours..." : "Quitter l'équipe"}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-gray-800 rounded-xl p-6 shadow-xl">

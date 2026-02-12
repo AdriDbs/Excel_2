@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, Auth, User as FirebaseUser } from "firebase/auth";
-import { getDatabase, ref, set, update, onValue, onDisconnect, serverTimestamp, Database } from "firebase/database";
+import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, serverTimestamp, Database } from "firebase/database";
 
 // Configuration Firebase fournie
 const firebaseConfig = {
@@ -203,6 +203,135 @@ export const subscribeToSpeedDatingLeaderboard = (
   return onValue(leaderboardRef, (snapshot) => {
     const data = snapshot.val();
     callback(data);
+  });
+};
+
+// --- Hackathon Session CRUD via Firebase ---
+
+// Référence vers les étudiants enregistrés d'une session
+export const getHackathonRegisteredStudentsRef = (sessionId: string) =>
+  ref(database, `hackathonSessions/${sessionId}/registeredStudents`);
+
+export const getHackathonRegisteredStudentRef = (sessionId: string, userId: string) =>
+  ref(database, `hackathonSessions/${sessionId}/registeredStudents/${userId}`);
+
+// Lire une session hackathon (one-shot)
+export const getHackathonSessionOnce = async (sessionId: string) => {
+  const sessionRef = getHackathonSessionRef(sessionId);
+  const snapshot = await get(sessionRef);
+  return snapshot.val();
+};
+
+// Lire toutes les sessions hackathon (one-shot)
+export const getAllHackathonSessions = async () => {
+  const sessionsRef = getHackathonSessionsRef();
+  const snapshot = await get(sessionsRef);
+  return snapshot.val() as Record<string, any> | null;
+};
+
+// Écouter toutes les sessions hackathon en temps réel
+export const subscribeToAllHackathonSessions = (
+  callback: (sessions: Record<string, any> | null) => void
+) => {
+  const sessionsRef = getHackathonSessionsRef();
+  return onValue(sessionsRef, (snapshot) => {
+    callback(snapshot.val());
+  });
+};
+
+// Mettre à jour partiellement une session hackathon (merge)
+export const updateHackathonSession = async (
+  sessionId: string,
+  updates: Record<string, any>
+) => {
+  const sessionRef = getHackathonSessionRef(sessionId);
+  try {
+    await update(sessionRef, {
+      ...updates,
+      lastUpdated: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour session hackathon Firebase:", error);
+    return false;
+  }
+};
+
+// Supprimer une session hackathon
+export const removeHackathonSession = async (sessionId: string) => {
+  const sessionRef = getHackathonSessionRef(sessionId);
+  try {
+    await remove(sessionRef);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la suppression session hackathon Firebase:", error);
+    return false;
+  }
+};
+
+// Enregistrer un étudiant dans une session (Firebase)
+export const registerStudentInFirebase = async (
+  sessionId: string,
+  userId: string,
+  studentData: {
+    id: string;
+    name: string;
+    teamId: number;
+    answers: Record<string, string>;
+    hintsUsed: number[];
+  }
+) => {
+  const studentRef = getHackathonRegisteredStudentRef(sessionId, userId);
+  try {
+    await set(studentRef, {
+      ...studentData,
+      registeredAt: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement étudiant Firebase:", error);
+    return false;
+  }
+};
+
+// Retirer un étudiant d'une session (Firebase)
+export const unregisterStudentFromFirebase = async (
+  sessionId: string,
+  userId: string
+) => {
+  const studentRef = getHackathonRegisteredStudentRef(sessionId, userId);
+  try {
+    await remove(studentRef);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la désinscription étudiant Firebase:", error);
+    return false;
+  }
+};
+
+// Récupérer l'enregistrement d'un étudiant dans une session (one-shot)
+export const getRegisteredStudentFromFirebase = async (
+  sessionId: string,
+  userId: string
+) => {
+  const studentRef = getHackathonRegisteredStudentRef(sessionId, userId);
+  try {
+    const snapshot = await get(studentRef);
+    return snapshot.val();
+  } catch (error) {
+    console.error("Erreur lors de la récupération étudiant Firebase:", error);
+    return null;
+  }
+};
+
+// Écouter les changements d'étudiants enregistrés dans une session
+export const subscribeToRegisteredStudents = (
+  sessionId: string,
+  callback: (students: Record<string, any> | null) => void
+) => {
+  const studentsRef = getHackathonRegisteredStudentsRef(sessionId);
+  return onValue(studentsRef, (snapshot) => {
+    callback(snapshot.val());
   });
 };
 

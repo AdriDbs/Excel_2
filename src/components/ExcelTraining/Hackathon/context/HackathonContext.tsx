@@ -12,11 +12,13 @@ import {
   syncTeamsData,
   fetchInitialState,
   endSession,
-  getStudentFromStorage,
+  getStudentFromFirebase,
+  unregisterStudent,
 } from "../services/hackathonService";
 import {
   saveHackathonSessionToFirebase,
   subscribeToHackathonSession,
+  updateHackathonSession,
 } from "../../../../config/firebase";
 
 const TOTAL_DURATION_SECONDS = 120 * 60; // 120 minutes en secondes
@@ -67,6 +69,8 @@ interface HackathonContextType {
   setIsSessionStarted: (started: boolean) => void;
   startSessionTimer: () => void;
   formatTime: (totalSeconds: number) => string;
+  leaveTeam: () => Promise<boolean>;
+  loadStudentFromFirebase: (sessionId: string, userId: string) => Promise<Student | null>;
 }
 
 // Création du contexte
@@ -81,6 +85,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
   const [state, setState] = useState<HackathonState>(defaultState);
   const firebaseUnsubRef = useRef<(() => void) | null>(null);
   const isFirebaseSyncingRef = useRef(false);
+  const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Formater le temps: HH:MM:SS
   const formatTime = useCallback((totalSeconds: number): string => {
@@ -93,29 +98,25 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }, []);
 
-  // Charger l'état initial
+  // Charger l'état initial depuis Firebase
   useEffect(() => {
     const initState = async () => {
       try {
         const initialState = await fetchInitialState();
-        const storedStudent = getStudentFromStorage();
 
-        // Calculer le temps restant en secondes
         const timeLeftMinutes = initialState.timeLeft || 120;
         const timeLeftSeconds = Math.floor(timeLeftMinutes * 60);
-        const isStarted = timeLeftSeconds < TOTAL_DURATION_SECONDS;
 
         setState((prevState) => ({
           ...prevState,
           teams: initialState.teams || [],
           timeLeftSeconds: timeLeftSeconds,
           sessionId: initialState.sessionId || "",
-          registeredStudent: storedStudent,
           sessionActive:
             initialState.sessionActive !== undefined
               ? initialState.sessionActive
               : true,
-          isSessionStarted: isStarted,
+          isSessionStarted: initialState.isSessionStarted || false,
         }));
       } catch (error) {
         console.error("Failed to fetch initial state:", error);
@@ -125,7 +126,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     initState();
   }, []);
 
-  // Timer countdown - un seul intervalle, une seule variable en secondes
+  // Timer countdown
   useEffect(() => {
     if (!state.isSessionStarted || !state.sessionActive) return;
 
@@ -144,23 +145,17 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     return () => clearInterval(interval);
   }, [state.isSessionStarted, state.sessionActive]);
 
-  // Synchroniser les changements d'équipes vers localStorage ET Firebase
+  // Synchroniser les changements d'équipes vers Firebase (debounced)
   useEffect(() => {
-    if (state.teams.length > 0 && state.sessionId) {
-      syncTeamsData(state.teams, state.sessionId);
-
-      // Sync to Firebase for real-time updates across clients
-      if (!isFirebaseSyncingRef.current) {
-        saveHackathonSessionToFirebase(state.sessionId, {
-          teams: state.teams,
-          isSessionStarted: state.isSessionStarted,
-          timeLeft: state.timeLeftSeconds / 60,
-          seconds: state.timeLeftSeconds % 60,
-          sessionActive: state.sessionActive,
-        });
+    if (state.teams.length > 0 && state.sessionId && !isFirebaseSyncingRef.current) {
+      if (syncDebounceRef.current) {
+        clearTimeout(syncDebounceRef.current);
       }
+      syncDebounceRef.current = setTimeout(() => {
+        syncTeamsData(state.teams, state.sessionId);
+      }, 300);
     }
-  }, [state.teams, state.sessionId, state.isSessionStarted, state.sessionActive]);
+  }, [state.teams, state.sessionId]);
 
   // S'abonner aux mises à jour Firebase de la session hackathon
   useEffect(() => {
@@ -176,15 +171,40 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       isFirebaseSyncingRef.current = true;
 
       setState((prevState) => {
-        const firebaseTeams = data.teams || prevState.teams;
-        const isStarted = data.isSessionStarted !== undefined ? data.isSessionStarted : prevState.isSessionStarted;
-        const isActive = data.sessionActive !== undefined ? data.sessionActive : prevState.sessionActive;
+        const firebaseTeams = data.teams
+          ? data.teams.filter(Boolean).map((team: any) => ({
+              ...team,
+              progress: team.progress || {},
+              completedLevels: team.completedLevels || [],
+              currentLevel: team.currentLevel ?? 0,
+              studentIds: team.studentIds || [],
+            }))
+          : prevState.teams;
+
+        const isStarted =
+          data.isSessionStarted !== undefined
+            ? data.isSessionStarted
+            : prevState.isSessionStarted;
+        const isActive =
+          data.sessionActive !== undefined
+            ? data.sessionActive
+            : prevState.sessionActive;
+
+        // Recalculer le temps si la session a un startTime
+        let timeLeftSeconds = prevState.timeLeftSeconds;
+        if (data.startTime && isStarted) {
+          const elapsedSeconds = (Date.now() - data.startTime) / 1000;
+          timeLeftSeconds = Math.max(0, Math.floor(TOTAL_DURATION_SECONDS - elapsedSeconds));
+        } else if (!isStarted) {
+          timeLeftSeconds = TOTAL_DURATION_SECONDS;
+        }
 
         return {
           ...prevState,
           teams: firebaseTeams,
           isSessionStarted: isStarted,
           sessionActive: isActive,
+          timeLeftSeconds,
         };
       });
 
@@ -203,47 +223,39 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [state.sessionId]);
 
-  // Écouter les événements de démarrage et de fin de session (communication locale)
-  useEffect(() => {
-    const handleSessionStart = (event: CustomEvent) => {
-      if (event.detail && event.detail.sessionId === state.sessionId) {
-        setState((prev) => ({
-          ...prev,
-          isSessionStarted: true,
-          timeLeftSeconds: TOTAL_DURATION_SECONDS,
-        }));
-      }
-    };
+  // Charger un étudiant depuis Firebase
+  const loadStudentFromFirebase = async (
+    sessionId: string,
+    userId: string
+  ): Promise<Student | null> => {
+    const student = await getStudentFromFirebase(sessionId, userId);
+    if (student) {
+      setState((prev) => ({ ...prev, registeredStudent: student }));
+    }
+    return student;
+  };
 
-    const handleSessionEnd = (event: CustomEvent) => {
-      if (event.detail && event.detail.sessionId === state.sessionId) {
-        setState((prev) => ({
-          ...prev,
-          sessionActive: false,
-        }));
-      }
-    };
+  // Quitter l'équipe
+  const leaveTeam = async (): Promise<boolean> => {
+    if (!state.registeredStudent || !state.sessionId) return false;
 
-    window.addEventListener(
-      "hackathon_session_started",
-      handleSessionStart as EventListener
-    );
-    window.addEventListener(
-      "hackathon_session_ended",
-      handleSessionEnd as EventListener
-    );
-
-    return () => {
-      window.removeEventListener(
-        "hackathon_session_started",
-        handleSessionStart as EventListener
+    try {
+      const result = await unregisterStudent(
+        state.sessionId,
+        state.registeredStudent.id,
+        state.registeredStudent.teamId
       );
-      window.removeEventListener(
-        "hackathon_session_ended",
-        handleSessionEnd as EventListener
-      );
-    };
-  }, [state.sessionId]);
+
+      if (result) {
+        setState((prev) => ({ ...prev, registeredStudent: null }));
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error leaving team:", error);
+      return false;
+    }
+  };
 
   const resetHackathonState = () => {
     setState({
@@ -383,7 +395,10 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       ...prevState,
       sessionId: id,
       sessionActive: id ? true : false,
-      timeLeftSeconds: id && prevState.sessionId !== id ? TOTAL_DURATION_SECONDS : prevState.timeLeftSeconds,
+      timeLeftSeconds:
+        id && prevState.sessionId !== id
+          ? TOTAL_DURATION_SECONDS
+          : prevState.timeLeftSeconds,
     }));
 
     if (id && id !== state.sessionId) {
@@ -400,6 +415,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
               initialState.sessionActive !== undefined
                 ? initialState.sessionActive
                 : true,
+            isSessionStarted: initialState.isSessionStarted || false,
           }));
         }
       } catch (error) {
@@ -416,15 +432,6 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       ...prevState,
       registeredStudent: student,
     }));
-
-    if (student) {
-      localStorage.setItem(
-        "hackathon_registered_student",
-        JSON.stringify(student)
-      );
-    } else {
-      localStorage.removeItem("hackathon_registered_student");
-    }
   };
 
   const setSessionActive = (active: boolean) => {
@@ -442,6 +449,8 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const startSessionTimer = () => {
+    const startTime = Date.now();
+
     setState((prevState) => ({
       ...prevState,
       isSessionStarted: true,
@@ -449,21 +458,14 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     }));
 
     if (state.sessionId) {
-      saveHackathonSessionToFirebase(state.sessionId, {
-        teams: state.teams,
+      updateHackathonSession(state.sessionId, {
         isSessionStarted: true,
+        sessionActive: true,
+        startTime,
         timeLeft: 120,
         seconds: 0,
-        sessionActive: true,
-        startTime: Date.now(),
       });
     }
-
-    window.dispatchEvent(
-      new CustomEvent("hackathon_session_started", {
-        detail: { sessionId: state.sessionId },
-      })
-    );
   };
 
   const checkSessionValidity = async (): Promise<boolean> => {
@@ -511,26 +513,12 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       if (result) {
         setNotification("La session a été terminée avec succès", "success");
 
-        saveHackathonSessionToFirebase(state.sessionId, {
-          teams: state.teams,
-          isSessionStarted: false,
-          timeLeft: 0,
-          seconds: 0,
-          sessionActive: false,
-        });
-
         setState((prevState) => ({
           ...prevState,
           sessionId: "",
           sessionActive: false,
           isSessionStarted: false,
         }));
-
-        window.dispatchEvent(
-          new CustomEvent("hackathon_session_ended", {
-            detail: { sessionId: state.sessionId },
-          })
-        );
       } else {
         setNotification("Erreur lors de la fermeture de la session", "error");
       }
@@ -563,6 +551,8 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
         setIsSessionStarted,
         startSessionTimer,
         formatTime,
+        leaveTeam,
+        loadStudentFromFirebase,
       }}
     >
       {children}
