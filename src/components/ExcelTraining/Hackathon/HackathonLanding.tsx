@@ -11,7 +11,6 @@ import {
   User,
   Crown,
   Zap,
-  Award,
   Star,
   Calendar,
   Power,
@@ -46,10 +45,13 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [isEndingSession, setIsEndingSession] = useState(false);
 
+  const isInstructor = currentUser?.role === "instructor";
+  const isStudent = currentUser?.role === "student";
+
   // Hook de progression pour les étudiants
   const progressManager =
-    currentUser?.role === "student"
-      ? useProgressManager({ userId: currentUser.id })
+    isStudent
+      ? useProgressManager({ userId: currentUser!.id })
       : null;
 
   // Calculer la durée totale du hackathon
@@ -110,9 +112,8 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
     }
   };
 
-  // Naviguer vers une vue avec un délai pour s'assurer que les données sont bien chargées
+  // Naviguer vers une vue
   const handleNavigate = (view: string) => {
-    // Petite délai pour s'assurer que le contexte est bien mis à jour
     setTimeout(() => {
       setHackathonView(view);
     }, 100);
@@ -169,15 +170,13 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
           {currentUser && (
             <div className="flex items-center justify-center gap-4 mt-6">
               <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-                {currentUser.role === "instructor" ? (
+                {isInstructor ? (
                   <Crown size={18} className="text-bp-red-400" />
                 ) : (
                   <User size={18} className="text-blue-400" />
                 )}
                 <span className="font-medium">
-                  {currentUser.role === "instructor"
-                    ? "Instructeur"
-                    : "Étudiant"}
+                  {isInstructor ? "Instructeur" : "Étudiant"}
                   : {currentUser.name}
                 </span>
               </div>
@@ -196,7 +195,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
               {/* Bouton terminer session pour instructeurs */}
               {sessionId &&
                 sessionActive &&
-                currentUser.role === "instructor" && (
+                isInstructor && (
                   <button
                     onClick={handleEndSession}
                     disabled={isEndingSession}
@@ -382,13 +381,15 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
             <div className="flex flex-col items-center">
               <div className="text-5xl mb-6">🔍</div>
               <h2 className="text-2xl font-bold mb-4">
-                Choisissez votre interface
+                {isInstructor
+                  ? "Gestion du Hackathon"
+                  : "Rejoindre le Hackathon"}
               </h2>
 
               <p className="text-center text-bp-red-100 mb-8 max-w-2xl">
-                Vous pouvez choisir entre l'interface étudiant qui vous guidera
-                étape par étape, ou l'interface globale qui sert d'affichage
-                lors du Hackathon.
+                {isInstructor
+                  ? "Créez et gérez les sessions de hackathon, suivez la progression des équipes en temps réel depuis l'interface globale."
+                  : "Rejoignez une équipe et participez au hackathon ! Vous serez guidé étape par étape."}
               </p>
 
               {!sessionId ? (
@@ -398,94 +399,91 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                     <h3 className="font-bold">Aucune session active</h3>
                   </div>
                   <p className="text-yellow-200 text-sm">
-                    {currentUser?.role === "instructor"
+                    {isInstructor
                       ? "Vous devez créer une session de hackathon pour que les participants puissent accéder aux interfaces."
                       : "Une session de hackathon doit être créée par un instructeur pour accéder aux interfaces."}
                   </p>
                 </div>
               ) : null}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-                <button
-                  onClick={() => handleNavigate("student")}
-                  disabled={!sessionActive}
-                  className={`rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg flex items-center gap-4 ${
-                    sessionActive
-                      ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  }`}
-                >
-                  <div className="bg-white bg-opacity-20 p-3 rounded-full">
-                    <User size={32} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">
-                      Interface Étudiant
-                    </h3>
-                    <p className="text-sm opacity-90">
-                      Rejoignez une équipe et participez au hackathon avec un
-                      guidage étape par étape
-                    </p>
-                    {progressStats && (
-                      <div className="mt-2 flex items-center gap-2 text-xs">
-                        <Star size={12} />
-                        <span>
-                          Niveau {progressStats.currentLevel} •{" "}
-                          {progressStats.totalScore} pts
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <Play size={24} />
-                </button>
-
-                <button
-                  onClick={() => handleNavigate("global")}
-                  disabled={!sessionActive}
-                  className={`rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg flex items-center gap-4 ${
-                    sessionActive
-                      ? "bg-gradient-to-r from-bp-red-500 to-pink-600 hover:from-bp-red-500 hover:to-pink-700 text-white"
-                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  }`}
-                >
-                  <div className="bg-white bg-opacity-20 p-3 rounded-full">
-                    <Users size={32} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">
-                      Interface Globale
-                    </h3>
-                    <p className="text-sm opacity-90">
-                      Affichage temps réel pour animer le hackathon et suivre la
-                      progression des équipes
-                    </p>
-                    <div className="mt-2 flex items-center gap-2 text-xs">
-                      <Zap size={12} />
-                      <span>Vue d'ensemble • Temps réel</span>
+              <div className="w-full max-w-4xl">
+                {/* Étudiant: uniquement le bouton Interface Étudiant */}
+                {isStudent && (
+                  <button
+                    onClick={() => handleNavigate("student")}
+                    disabled={!sessionActive}
+                    className={`w-full rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg flex items-center gap-4 ${
+                      sessionActive
+                        ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    <div className="bg-white bg-opacity-20 p-3 rounded-full">
+                      <User size={32} />
                     </div>
-                  </div>
-                  <Target size={24} />
-                </button>
-              </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold mb-2">
+                        Rejoindre le Hackathon
+                      </h3>
+                      <p className="text-sm opacity-90">
+                        Rejoignez une équipe et participez au hackathon avec un
+                        guidage étape par étape
+                      </p>
+                      {progressStats && (
+                        <div className="mt-2 flex items-center gap-2 text-xs">
+                          <Star size={12} />
+                          <span>
+                            Niveau {progressStats.currentLevel} •{" "}
+                            {progressStats.totalScore} pts
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <Play size={24} />
+                  </button>
+                )}
 
-              {/* ✅ CODE CORRIGÉ - Plus de popup! */}
-              {currentUser && (
-                <button
-                  onClick={() => {
-                    if (currentUser.role === "instructor") {
-                      setShowSessionSelector(true);
-                    } else {
-                      handleNavigate("student");
-                    }
-                  }}
-                  className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-all duration-300 hover:shadow-md"
-                >
-                  <Settings size={20} />
-                  {currentUser.role === "instructor"
-                    ? "Gérer les sessions"
-                    : "Rejoindre une session"}
-                </button>
-              )}
+                {/* Instructeur: Interface Globale + Gérer les sessions */}
+                {isInstructor && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => handleNavigate("global")}
+                      disabled={!sessionActive}
+                      className={`w-full rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg flex items-center gap-4 ${
+                        sessionActive
+                          ? "bg-gradient-to-r from-bp-red-500 to-pink-600 hover:from-bp-red-500 hover:to-pink-700 text-white"
+                          : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <div className="bg-white bg-opacity-20 p-3 rounded-full">
+                        <Users size={32} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold mb-2">
+                          Interface Globale (Scoreboard)
+                        </h3>
+                        <p className="text-sm opacity-90">
+                          Affichage temps réel pour animer le hackathon et suivre la
+                          progression des équipes
+                        </p>
+                        <div className="mt-2 flex items-center gap-2 text-xs">
+                          <Zap size={12} />
+                          <span>Vue d'ensemble • Temps réel</span>
+                        </div>
+                      </div>
+                      <Target size={24} />
+                    </button>
+
+                    <button
+                      onClick={() => setShowSessionSelector(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-md"
+                    >
+                      <Settings size={24} />
+                      Gérer les sessions
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

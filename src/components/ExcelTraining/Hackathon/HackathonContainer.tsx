@@ -20,28 +20,23 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
   onProgressUpdate,
 }) => {
   const [currentView, setCurrentView] = useState<HackathonViewType>("landing");
-  const { setRegisteredStudent } = useHackathon();
+  const { state, loadStudentFromFirebase } = useHackathon();
+
+  const isInstructor = currentUser?.role === "instructor";
+  const isStudent = currentUser?.role === "student";
 
   // Hook de progression pour les étudiants
   const progressManager =
-    currentUser?.role === "student"
-      ? useProgressManager({ userId: currentUser.id })
+    isStudent
+      ? useProgressManager({ userId: currentUser!.id })
       : null;
 
-  // Enregistrer l'étudiant dans le contexte Hackathon
+  // Charger l'étudiant enregistré depuis Firebase au montage
   useEffect(() => {
-    if (currentUser?.role === "student") {
-      // Convertir l'utilisateur en Student pour le hackathon
-      const hackathonStudent = {
-        id: currentUser.id,
-        name: currentUser.name,
-        teamId: 0, // Sera défini lors de l'inscription à une équipe
-        answers: {},
-        hintsUsed: [],
-      };
-      setRegisteredStudent(hackathonStudent);
+    if (isStudent && currentUser && state.sessionId) {
+      loadStudentFromFirebase(state.sessionId, currentUser.id);
     }
-  }, [currentUser, setRegisteredStudent]);
+  }, [isStudent, currentUser?.id, state.sessionId]);
 
   // Fonction pour gérer la completion d'un niveau
   const handleLevelComplete = async (
@@ -79,18 +74,24 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
     setCurrentView(view);
   };
 
-  // Fonction wrapper pour convertir string vers HackathonViewType
+  // Fonction wrapper pour convertir string vers HackathonViewType avec role guards
   const handleSetHackathonView = (view: string) => {
+    // Guard: instructor cannot access student view
+    if (isInstructor && view === "student") {
+      navigateToView("landing");
+      return;
+    }
+    // Guard: student cannot access global/scoreboard views
+    if (isStudent && (view === "global" || view === "scoreboard")) {
+      navigateToView("landing");
+      return;
+    }
+
     if (view === "student" || view === "global" || view === "landing" || view === "scoreboard") {
       navigateToView(view as HackathonViewType);
     } else {
       navigateToView("landing");
     }
-  };
-
-  // Fonction pour revenir au menu principal
-  const goBackToMenu = () => {
-    navigateTo("menu");
   };
 
   // Fonction pour revenir au landing du hackathon
@@ -111,6 +112,16 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
         );
 
       case "student":
+        // Block instructor from accessing student view
+        if (isInstructor) {
+          return (
+            <HackathonLanding
+              navigateTo={navigateTo}
+              setHackathonView={handleSetHackathonView}
+              currentUser={currentUser}
+            />
+          );
+        }
         return (
           <StudentInterface
             navigateTo={navigateTo}
@@ -121,13 +132,6 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
         );
 
       case "scoreboard":
-        return (
-          <ScoreboardApp
-            navigateTo={navigateTo}
-            goBackToLanding={goBackToLanding}
-          />
-        );
-
       case "global":
         return (
           <ScoreboardApp

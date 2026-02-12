@@ -10,7 +10,6 @@ import {
   Trash2,
   Eye,
   AlertTriangle,
-  CheckCircle,
   Plus,
   Minus,
   Trophy,
@@ -18,27 +17,19 @@ import {
   Power,
   Calendar,
 } from "lucide-react";
-import { HackathonSession, Team } from "./types";
-import { createNewSession, endSession } from "./services/hackathonService";
+import { HackathonSession } from "./types";
+import {
+  createNewSession,
+  endSession,
+  deleteSession,
+  getAllSessions,
+} from "./services/hackathonService";
 import { useHackathon } from "./context/HackathonContext";
-import { databaseService } from "../../../services/databaseService";
+import { subscribeToAllHackathonSessions } from "../../../config/firebase";
 
 interface SessionSelectorProps {
   goBackToLanding: () => void;
 }
-
-// Récupérer les sessions existantes depuis le localStorage
-const getExistingSessions = (): HackathonSession[] => {
-  try {
-    const storedData = localStorage.getItem("hackathon_session_data");
-    if (storedData) {
-      return JSON.parse(storedData);
-    }
-  } catch (error) {
-    console.error("Error reading sessions:", error);
-  }
-  return [];
-};
 
 // Formater la date de début de session
 const formatSessionDate = (timestamp: number): string => {
@@ -77,29 +68,44 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [teamNames, setTeamNames] = useState<string[]>([]);
 
-  // Charger les sessions existantes
+  // Charger les sessions existantes depuis Firebase et s'abonner aux mises à jour
   useEffect(() => {
-    const loadSessions = () => {
-      const existingSessions = getExistingSessions();
-      // Trier par date de création (plus récentes d'abord)
-      existingSessions.sort((a, b) => b.sessionCreationTime - a.sessionCreationTime);
-      setSessions(existingSessions);
+    // Chargement initial
+    const loadSessions = async () => {
+      try {
+        const allSessions = await getAllSessions();
+        allSessions.sort((a, b) => b.sessionCreationTime - a.sessionCreationTime);
+        setSessions(allSessions);
+      } catch (error) {
+        console.error("Error loading sessions from Firebase:", error);
+      }
     };
 
     loadSessions();
 
-    // Gérer les mises à jour de session
-    const handleSessionUpdate = () => {
-      loadSessions();
-    };
+    // S'abonner aux changements en temps réel
+    const unsubscribe = subscribeToAllHackathonSessions((data) => {
+      if (!data) {
+        setSessions([]);
+        return;
+      }
 
-    window.addEventListener("hackathon_session_created", handleSessionUpdate);
-    window.addEventListener("hackathon_session_ended", handleSessionUpdate);
+      const sessionsList: HackathonSession[] = Object.entries(data).map(
+        ([id, session]: [string, any]) => ({
+          id,
+          teams: (session.teams || []).filter(Boolean),
+          sessionCreationTime: session.sessionCreationTime || 0,
+          startTime: session.startTime || null,
+          endTime: session.endTime,
+          isActive: session.sessionActive !== false && session.isActive !== false,
+        })
+      );
 
-    return () => {
-      window.removeEventListener("hackathon_session_created", handleSessionUpdate);
-      window.removeEventListener("hackathon_session_ended", handleSessionUpdate);
-    };
+      sessionsList.sort((a, b) => b.sessionCreationTime - a.sessionCreationTime);
+      setSessions(sessionsList);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Initialiser les noms d'équipes par défaut quand le nombre change
@@ -112,16 +118,11 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
   const handleCreateNewSession = async () => {
     setIsLoading(true);
     try {
-      // Supprimer l'étudiant du localStorage pour assurer un démarrage propre
-      localStorage.removeItem("hackathon_registered_student");
-
       const newSessionId = await createNewSession(teamCount, teamNames);
 
       // Définir l'ID de session
       setSessionId(newSessionId);
 
-      // Recharger les sessions
-      setSessions(getExistingSessions());
       setNotification(`Nouvelle session créée avec ${teamCount} équipes`, "success");
 
       // Revenir à la landing page
@@ -146,7 +147,6 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
     try {
       const result = await endSession(sessionId);
       if (result) {
-        setSessions(getExistingSessions());
         setNotification("Session terminée avec succès", "success");
         setShowDeleteConfirm(null);
       } else {
@@ -159,22 +159,33 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
     }
   };
 
-  // Supprimer une session du localStorage
-  const handleDeleteSession = (sessionId: string) => {
+  // Supprimer une session de Firebase
+  const handleDeleteSession = async (sessionId: string) => {
+    setIsLoading(true);
     try {
-      const updatedSessions = sessions.filter(s => s.id !== sessionId);
-      localStorage.setItem("hackathon_session_data", JSON.stringify(updatedSessions));
-      setSessions(updatedSessions);
-      setNotification("Session supprimée", "success");
-      setShowDeleteConfirm(null);
+      const result = await deleteSession(sessionId);
+      if (result) {
+        setNotification("Session supprimée", "success");
+        setShowDeleteConfirm(null);
+      } else {
+        setNotification("Erreur lors de la suppression", "error");
+      }
     } catch (error) {
       setNotification("Erreur lors de la suppression", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Rafraîchir la liste des sessions
-  const refreshSessions = () => {
-    setSessions(getExistingSessions());
+  const refreshSessions = async () => {
+    try {
+      const allSessions = await getAllSessions();
+      allSessions.sort((a, b) => b.sessionCreationTime - a.sessionCreationTime);
+      setSessions(allSessions);
+    } catch (error) {
+      console.error("Error refreshing sessions:", error);
+    }
   };
 
   // Mettre à jour le nom d'une équipe

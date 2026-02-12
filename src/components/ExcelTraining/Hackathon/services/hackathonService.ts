@@ -1,14 +1,19 @@
 import {
   Team,
   HackathonSession,
-  HackathonState,
   Student,
   Level,
 } from "../types";
-
-// Simuler le stockage de données côté "serveur"
-const localStorageKey = "hackathon_session_data";
-const studentStorageKey = "hackathon_registered_student";
+import {
+  saveHackathonSessionToFirebase,
+  getHackathonSessionOnce,
+  getAllHackathonSessions,
+  updateHackathonSession,
+  removeHackathonSession,
+  registerStudentInFirebase,
+  unregisterStudentFromFirebase,
+  getRegisteredStudentFromFirebase,
+} from "../../../../config/firebase";
 
 // Définition des niveaux du jeu basés sur le scénario détaillé
 export const hackathonLevels: Level[] = [
@@ -143,271 +148,15 @@ export const generateSessionId = (): string => {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-// Type de retour pour fetchInitialState (timeLeft en minutes, converti en secondes par le consommateur)
+// Type de retour pour fetchInitialState
 export interface InitialHackathonState {
   teams?: Team[];
   timeLeft?: number; // en minutes
   sessionId?: string;
   sessionActive?: boolean;
+  isSessionStarted?: boolean;
+  startTime?: number | null;
 }
-
-// Récupérer l'état initial
-export const fetchInitialState = async (): Promise<InitialHackathonState> => {
-  try {
-    // Simuler un délai de réseau
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Récupérer les données depuis localStorage (simulation de base de données)
-    const storedData = localStorage.getItem(localStorageKey);
-    let sessionData: HackathonSession | null = null;
-
-    if (storedData) {
-      const sessions = JSON.parse(storedData) as HackathonSession[];
-      // Trouver la session active la plus récente
-      sessionData = sessions.find((session) => session.isActive) || null;
-    }
-
-    // Si aucune session active, créer des données d'exemple vides
-    if (!sessionData) {
-      return {
-        teams: [],
-        timeLeft: 120,
-        sessionId: "",
-      };
-    }
-
-    // S'assurer que les équipes ont toutes les propriétés correctement initialisées
-    const teams = sessionData.teams.map((team) => {
-      // S'assurer que progress est initialisé pour tous les niveaux
-      if (!team.progress) {
-        team.progress = initializeProgressObject();
-      }
-
-      // S'assurer que completedLevels existe
-      if (!team.completedLevels) {
-        team.completedLevels = [];
-      }
-
-      // S'assurer que currentLevel est initialisé
-      if (team.currentLevel === undefined) {
-        team.currentLevel = 0;
-      }
-
-      // S'assurer que studentIds existe
-      if (!team.studentIds) {
-        team.studentIds = [];
-      }
-
-      return team;
-    });
-
-    // Vérifier si la session a été démarrée
-    const hasStarted = sessionData.startTime !== null;
-    // Calculer le temps restant seulement si la session a été démarrée
-    const timeLeft = hasStarted ? calculateTimeLeft(sessionData) : 120;
-
-    return {
-      teams,
-      sessionId: sessionData.id,
-      timeLeft: timeLeft,
-      sessionActive: sessionData.isActive,
-    };
-  } catch (error) {
-    console.error("Error fetching initial state:", error);
-    return {};
-  }
-};
-
-// Synchroniser les données des équipes
-export const syncTeamsData = async (
-  teams: Team[],
-  sessionId: string
-): Promise<void> => {
-  try {
-    // Simuler un délai de réseau
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    // Récupérer les sessions existantes
-    const storedData = localStorage.getItem(localStorageKey);
-    let sessions: HackathonSession[] = storedData ? JSON.parse(storedData) : [];
-
-    // Trouver l'index de la session actuelle
-    const sessionIndex = sessions.findIndex(
-      (session) => session.id === sessionId
-    );
-
-    if (sessionIndex >= 0) {
-      // Mettre à jour la session existante
-      sessions[sessionIndex].teams = teams;
-    } else {
-      // Créer une nouvelle session
-      const newSession: HackathonSession = {
-        id: sessionId || generateSessionId(),
-        teams,
-        sessionCreationTime: Date.now(),
-        startTime: null,
-        isActive: true,
-      };
-      sessions.push(newSession);
-    }
-
-    // Sauvegarder les sessions mises à jour
-    localStorage.setItem(localStorageKey, JSON.stringify(sessions));
-
-    // Émettre un événement de mise à jour pour la communication entre onglets
-    window.dispatchEvent(
-      new CustomEvent("hackathon_data_updated", {
-        detail: { sessionId, teams },
-      })
-    );
-  } catch (error) {
-    console.error("Error syncing teams data:", error);
-  }
-};
-
-// Récupérer les données d'équipe en temps réel
-export const subscribeToTeamUpdates = (
-  sessionId: string,
-  callback: (teams: Team[]) => void
-): (() => void) => {
-  // Fonction de gestionnaire d'événements
-  const handleUpdate = (event: Event) => {
-    const customEvent = event as CustomEvent<{
-      sessionId: string;
-      teams: Team[];
-    }>;
-    if (customEvent.detail && customEvent.detail.sessionId === sessionId) {
-      callback(customEvent.detail.teams);
-    }
-  };
-
-  // Ajouter un écouteur d'événements
-  window.addEventListener("hackathon_data_updated", handleUpdate);
-
-  // Fonction de nettoyage pour supprimer l'écouteur
-  return () => {
-    window.removeEventListener("hackathon_data_updated", handleUpdate);
-  };
-};
-
-// Récupérer l'étudiant du localStorage
-export const getStudentFromStorage = (): Student | null => {
-  try {
-    const storedStudent = localStorage.getItem(studentStorageKey);
-    if (storedStudent) {
-      return JSON.parse(storedStudent);
-    }
-    return null;
-  } catch (error) {
-    console.error("Error retrieving student from storage:", error);
-    return null;
-  }
-};
-
-// Enregistrer un étudiant dans une équipe
-export const registerStudent = async (
-  studentName: string,
-  teamId: number,
-  sessionId: string
-): Promise<Student> => {
-  // Vérifier si la session existe et est active
-  const storedData = localStorage.getItem(localStorageKey);
-  if (!storedData) {
-    throw new Error("Session not found");
-  }
-
-  const sessions = JSON.parse(storedData) as HackathonSession[];
-  const session = sessions.find((s) => s.id === sessionId && s.isActive);
-
-  if (!session) {
-    throw new Error("Session not active or not found");
-  }
-
-  // Créer un nouvel étudiant
-  const newStudent: Student = {
-    id: `student_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    name: studentName,
-    teamId,
-    answers: {},
-    hintsUsed: [],
-  };
-
-  try {
-    // Trouver l'index de la session actuelle
-    const sessionIndex = sessions.findIndex(
-      (session) => session.id === sessionId
-    );
-
-    if (sessionIndex >= 0) {
-      // Trouver l'équipe correspondante
-      const teamIndex = sessions[sessionIndex].teams.findIndex(
-        (team) => team.id === teamId
-      );
-
-      if (teamIndex >= 0) {
-        // Ajouter l'ID de l'étudiant à l'équipe
-        const team = sessions[sessionIndex].teams[teamIndex];
-
-        if (!team.studentIds) {
-          team.studentIds = [];
-        }
-
-        team.studentIds.push(newStudent.id);
-
-        // Mettre à jour la session
-        sessions[sessionIndex].teams[teamIndex] = team;
-        localStorage.setItem(localStorageKey, JSON.stringify(sessions));
-
-        // Émettre un événement de mise à jour
-        window.dispatchEvent(
-          new CustomEvent("hackathon_data_updated", {
-            detail: { sessionId, teams: sessions[sessionIndex].teams },
-          })
-        );
-      }
-    }
-
-    // Stocker les informations de l'étudiant dans le localStorage local
-    localStorage.setItem(studentStorageKey, JSON.stringify(newStudent));
-
-    return newStudent;
-  } catch (error) {
-    console.error("Error registering student:", error);
-    throw new Error("Failed to register student");
-  }
-};
-
-// Calculer le temps restant en fonction de la durée prévue
-const calculateTimeLeft = (session: HackathonSession): number => {
-  const totalDurationMinutes = 120; // Durée totale en minutes
-
-  // Si la session n'a pas encore été démarrée, retourner la durée totale
-  if (!session.startTime) {
-    return totalDurationMinutes;
-  }
-
-  // Sinon, calculer le temps écoulé depuis le démarrage
-  const elapsedTimeMinutes = (Date.now() - session.startTime) / (1000 * 60);
-  return Math.max(0, totalDurationMinutes - elapsedTimeMinutes);
-};
-
-// Vérifier si une session existe et est active
-export const isSessionActive = (sessionId: string): boolean => {
-  try {
-    const storedData = localStorage.getItem(localStorageKey);
-    if (!storedData) return false;
-
-    const sessions = JSON.parse(storedData) as HackathonSession[];
-    const session = sessions.find(
-      (session) => session.id === sessionId && session.isActive
-    );
-
-    return !!session;
-  } catch (error) {
-    console.error("Error checking session status:", error);
-    return false;
-  }
-};
 
 // Noms d'équipes par défaut
 const defaultTeamNames = [
@@ -423,14 +172,186 @@ const defaultTeamNames = [
   "Équipe Kappa",
 ];
 
+// Récupérer l'état initial depuis Firebase
+export const fetchInitialState = async (): Promise<InitialHackathonState> => {
+  try {
+    const allSessions = await getAllHackathonSessions();
+    if (!allSessions) {
+      return { teams: [], timeLeft: 120, sessionId: "" };
+    }
+
+    // Trouver la session active la plus récente
+    let activeSession: any = null;
+    let activeSessionId: string = "";
+
+    for (const [id, session] of Object.entries(allSessions)) {
+      if (session && session.sessionActive !== false && session.isActive !== false) {
+        if (!activeSession || (session.sessionCreationTime || 0) > (activeSession.sessionCreationTime || 0)) {
+          activeSession = session;
+          activeSessionId = id;
+        }
+      }
+    }
+
+    if (!activeSession) {
+      return { teams: [], timeLeft: 120, sessionId: "" };
+    }
+
+    // S'assurer que les équipes ont toutes les propriétés correctement initialisées
+    const rawTeams = activeSession.teams || [];
+    const teams: Team[] = rawTeams.map((team: any) => {
+      if (!team) return null;
+      return {
+        ...team,
+        progress: team.progress || initializeProgressObject(),
+        completedLevels: team.completedLevels || [],
+        currentLevel: team.currentLevel ?? 0,
+        studentIds: team.studentIds || [],
+      };
+    }).filter(Boolean);
+
+    const hasStarted = activeSession.startTime != null;
+    const timeLeft = hasStarted ? calculateTimeLeft(activeSession) : 120;
+
+    return {
+      teams,
+      sessionId: activeSessionId,
+      timeLeft,
+      sessionActive: true,
+      isSessionStarted: hasStarted,
+      startTime: activeSession.startTime || null,
+    };
+  } catch (error) {
+    console.error("Error fetching initial state from Firebase:", error);
+    return {};
+  }
+};
+
+// Synchroniser les données des équipes vers Firebase
+export const syncTeamsData = async (
+  teams: Team[],
+  sessionId: string
+): Promise<void> => {
+  if (!sessionId) return;
+  try {
+    await updateHackathonSession(sessionId, { teams });
+  } catch (error) {
+    console.error("Error syncing teams data to Firebase:", error);
+  }
+};
+
+// Récupérer l'étudiant enregistré depuis Firebase
+export const getStudentFromFirebase = async (
+  sessionId: string,
+  userId: string
+): Promise<Student | null> => {
+  if (!sessionId || !userId) return null;
+  try {
+    const data = await getRegisteredStudentFromFirebase(sessionId, userId);
+    if (data) {
+      return {
+        id: data.id,
+        name: data.name,
+        teamId: data.teamId,
+        answers: data.answers || {},
+        hintsUsed: data.hintsUsed || [],
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error retrieving student from Firebase:", error);
+    return null;
+  }
+};
+
+// Enregistrer un étudiant dans une équipe (Firebase)
+export const registerStudent = async (
+  studentName: string,
+  teamId: number,
+  sessionId: string,
+  userId: string
+): Promise<Student> => {
+  // Vérifier si la session existe et est active
+  const sessionData = await getHackathonSessionOnce(sessionId);
+  if (!sessionData || sessionData.sessionActive === false) {
+    throw new Error("Session not active or not found");
+  }
+
+  // Créer un nouvel étudiant
+  const newStudent: Student = {
+    id: userId,
+    name: studentName,
+    teamId,
+    answers: {},
+    hintsUsed: [],
+  };
+
+  // Enregistrer dans Firebase
+  await registerStudentInFirebase(sessionId, userId, newStudent);
+
+  // Ajouter l'ID de l'étudiant à l'équipe
+  const teams = sessionData.teams || [];
+  const teamIndex = teams.findIndex((team: any) => team && team.id === teamId);
+  if (teamIndex >= 0) {
+    const team = teams[teamIndex];
+    const studentIds = team.studentIds || [];
+    if (!studentIds.includes(userId)) {
+      studentIds.push(userId);
+      teams[teamIndex] = { ...team, studentIds };
+      await updateHackathonSession(sessionId, { teams });
+    }
+  }
+
+  return newStudent;
+};
+
+// Retirer un étudiant d'une équipe (Firebase)
+export const unregisterStudent = async (
+  sessionId: string,
+  userId: string,
+  teamId: number
+): Promise<boolean> => {
+  try {
+    // Retirer de la liste des étudiants enregistrés
+    await unregisterStudentFromFirebase(sessionId, userId);
+
+    // Retirer de l'équipe
+    const sessionData = await getHackathonSessionOnce(sessionId);
+    if (sessionData && sessionData.teams) {
+      const teams = [...sessionData.teams];
+      const teamIndex = teams.findIndex((team: any) => team && team.id === teamId);
+      if (teamIndex >= 0) {
+        const team = teams[teamIndex];
+        const studentIds = (team.studentIds || []).filter((id: string) => id !== userId);
+        teams[teamIndex] = { ...team, studentIds };
+        await updateHackathonSession(sessionId, { teams });
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error unregistering student:", error);
+    return false;
+  }
+};
+
+// Calculer le temps restant en fonction de la durée prévue
+const calculateTimeLeft = (session: any): number => {
+  const totalDurationMinutes = 120;
+  if (!session.startTime) {
+    return totalDurationMinutes;
+  }
+  const elapsedTimeMinutes = (Date.now() - session.startTime) / (1000 * 60);
+  return Math.max(0, totalDurationMinutes - elapsedTimeMinutes);
+};
+
 // Créer une nouvelle session avec un nombre d'équipes configurable
-export const createNewSession = async (teamCount: number = 4, customTeamNames?: string[]): Promise<string> => {
+export const createNewSession = async (
+  teamCount: number = 4,
+  customTeamNames?: string[]
+): Promise<string> => {
   const sessionId = generateSessionId();
-
-  // Initialiser le progress object pour toutes les équipes
   const initialProgress = initializeProgressObject();
-
-  // Créer le nombre d'équipes demandé (min 2, max 10)
   const actualTeamCount = Math.max(2, Math.min(10, teamCount));
 
   const teams: Team[] = Array.from({ length: actualTeamCount }, (_, index) => ({
@@ -443,75 +364,52 @@ export const createNewSession = async (teamCount: number = 4, customTeamNames?: 
     studentIds: [],
   }));
 
-  // Modifier ici: ne pas définir startTime lors de la création
-  // mais seulement sessionCreationTime pour tracking
-  const newSession: HackathonSession = {
-    id: sessionId,
+  // Désactiver toutes les sessions actives existantes dans Firebase
+  const allSessions = await getAllHackathonSessions();
+  if (allSessions) {
+    for (const [id, session] of Object.entries(allSessions)) {
+      if (session && (session.sessionActive !== false && session.isActive !== false)) {
+        await updateHackathonSession(id, { sessionActive: false, isActive: false });
+      }
+    }
+  }
+
+  // Sauvegarder la nouvelle session dans Firebase
+  await saveHackathonSessionToFirebase(sessionId, {
     teams,
-    sessionCreationTime: Date.now(), // Quand la session a été créée
-    startTime: null, // Sera défini quand la session sera démarrée manuellement
+    isSessionStarted: false,
+    timeLeft: 120,
+    seconds: 0,
+    sessionActive: true,
+    startTime: null,
+  });
+
+  // Ajouter les métadonnées
+  await updateHackathonSession(sessionId, {
+    sessionCreationTime: Date.now(),
     isActive: true,
-  };
-
-  // Récupérer les sessions existantes
-  const storedData = localStorage.getItem(localStorageKey);
-  let sessions: HackathonSession[] = storedData ? JSON.parse(storedData) : [];
-
-  // Désactiver toutes les sessions actives existantes
-  sessions = sessions.map((session) => ({
-    ...session,
-    isActive: false,
-  }));
-
-  // Ajouter la nouvelle session
-  sessions.push(newSession);
-
-  // Sauvegarder les sessions mises à jour
-  localStorage.setItem(localStorageKey, JSON.stringify(sessions));
-
-  // Émettre un événement de mise à jour
-  window.dispatchEvent(
-    new CustomEvent("hackathon_session_created", {
-      detail: { sessionId, teams },
-    })
-  );
+  });
 
   return sessionId;
 };
 
-// Voici la fonction startSession modifiée dans hackathonService.ts
-// Vous devez remplacer juste cette fonction dans votre fichier existant
-
 // Démarrer une session existante
 export const startSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // Récupérer les sessions existantes
-    const storedData = localStorage.getItem(localStorageKey);
-    if (!storedData) return false;
-
-    let sessions: HackathonSession[] = JSON.parse(storedData);
-
-    // Trouver l'index de la session à démarrer
-    const sessionIndex = sessions.findIndex(
-      (session) => session.id === sessionId && session.isActive
-    );
-
-    if (sessionIndex === -1) return false;
+    const sessionData = await getHackathonSessionOnce(sessionId);
+    if (!sessionData || sessionData.sessionActive === false) return false;
 
     // Vérifier si la session est déjà démarrée
-    if (sessions[sessionIndex].startTime) {
-      // La session est déjà démarrée, pas besoin de la redémarrer
+    if (sessionData.startTime) {
       return true;
     }
 
-    // Démarrer la session en définissant startTime
-    sessions[sessionIndex] = {
-      ...sessions[sessionIndex],
+    await updateHackathonSession(sessionId, {
       startTime: Date.now(),
-    };
-
-    // Sauvegarder les sessions mises à jour
-    localStorage.setItem(localStorageKey, JSON.stringify(sessions));
+      isSessionStarted: true,
+      timeLeft: 120,
+      seconds: 0,
+    });
 
     return true;
   } catch (error) {
@@ -527,41 +425,15 @@ export const updateTeamName = async (
   newTeamName: string
 ): Promise<boolean> => {
   try {
-    // Récupérer les sessions existantes
-    const storedData = localStorage.getItem(localStorageKey);
-    if (!storedData) return false;
+    const sessionData = await getHackathonSessionOnce(sessionId);
+    if (!sessionData) return false;
 
-    let sessions: HackathonSession[] = JSON.parse(storedData);
-
-    // Trouver l'index de la session
-    const sessionIndex = sessions.findIndex(
-      (session) => session.id === sessionId && session.isActive
-    );
-
-    if (sessionIndex === -1) return false;
-
-    // Trouver l'équipe à mettre à jour
-    const teamIndex = sessions[sessionIndex].teams.findIndex(
-      (team) => team.id === teamId
-    );
-
+    const teams = sessionData.teams || [];
+    const teamIndex = teams.findIndex((team: any) => team && team.id === teamId);
     if (teamIndex === -1) return false;
 
-    // Mettre à jour le nom de l'équipe
-    sessions[sessionIndex].teams[teamIndex].name = newTeamName;
-
-    // Sauvegarder les sessions mises à jour
-    localStorage.setItem(localStorageKey, JSON.stringify(sessions));
-
-    // Émettre un événement de mise à jour
-    window.dispatchEvent(
-      new CustomEvent("hackathon_data_updated", {
-        detail: {
-          sessionId,
-          teams: sessions[sessionIndex].teams,
-        },
-      })
-    );
+    teams[teamIndex].name = newTeamName;
+    await updateHackathonSession(sessionId, { teams });
 
     return true;
   } catch (error) {
@@ -573,42 +445,47 @@ export const updateTeamName = async (
 // Terminer une session existante
 export const endSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // Récupérer les sessions existantes
-    const storedData = localStorage.getItem(localStorageKey);
-    if (!storedData) return false;
-
-    let sessions: HackathonSession[] = JSON.parse(storedData);
-
-    // Trouver l'index de la session à terminer
-    const sessionIndex = sessions.findIndex(
-      (session) => session.id === sessionId
-    );
-
-    if (sessionIndex === -1) return false;
-
-    // Mettre à jour la session
-    sessions[sessionIndex] = {
-      ...sessions[sessionIndex],
+    await updateHackathonSession(sessionId, {
+      sessionActive: false,
       isActive: false,
+      isSessionStarted: false,
       endTime: Date.now(),
-    };
-
-    // Sauvegarder les sessions mises à jour
-    localStorage.setItem(localStorageKey, JSON.stringify(sessions));
-
-    // Émettre un événement de mise à jour
-    window.dispatchEvent(
-      new CustomEvent("hackathon_session_ended", {
-        detail: { sessionId },
-      })
-    );
-
-    // Supprimer les étudiants associés à cette session
-    localStorage.removeItem(studentStorageKey);
+    });
 
     return true;
   } catch (error) {
     console.error("Error ending session:", error);
     return false;
+  }
+};
+
+// Supprimer une session de Firebase
+export const deleteSession = async (sessionId: string): Promise<boolean> => {
+  try {
+    await removeHackathonSession(sessionId);
+    return true;
+  } catch (error) {
+    console.error("Error deleting session:", error);
+    return false;
+  }
+};
+
+// Récupérer toutes les sessions depuis Firebase
+export const getAllSessions = async (): Promise<HackathonSession[]> => {
+  try {
+    const allSessions = await getAllHackathonSessions();
+    if (!allSessions) return [];
+
+    return Object.entries(allSessions).map(([id, session]: [string, any]) => ({
+      id,
+      teams: (session.teams || []).filter(Boolean),
+      sessionCreationTime: session.sessionCreationTime || 0,
+      startTime: session.startTime || null,
+      endTime: session.endTime,
+      isActive: session.sessionActive !== false && session.isActive !== false,
+    }));
+  } catch (error) {
+    console.error("Error fetching all sessions:", error);
+    return [];
   }
 };
