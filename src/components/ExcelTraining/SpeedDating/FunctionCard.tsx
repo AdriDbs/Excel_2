@@ -12,6 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { ExcelFunction } from "../types";
+import { getExpectedAnswer, validateSpeedDatingAnswer } from "./utils";
 
 interface FunctionCardProps {
   currentFunction: ExcelFunction;
@@ -196,7 +197,14 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
                   </div>
                 ) : (
                   <button
-                    onClick={() => validateAnswer(field, answers[field].toLowerCase() === "bearingpoint")}
+                    onClick={() => {
+                      const exerciseNum = (index + 1) as 1 | 2;
+                      const expected = getExpectedAnswer(currentFunction.name, exerciseNum);
+                      const isCorrect = expected
+                        ? validateSpeedDatingAnswer(answers[field], expected)
+                        : false;
+                      validateAnswer(field, isCorrect);
+                    }}
                     className="bg-bp-red-400 hover:bg-bp-red-500 text-white rounded-lg px-3 py-2 transition-colors"
                   >
                     Valider
@@ -223,7 +231,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
             </div>
           ) : (
             <div className="text-bp-gray-400 text-sm">
-              Pour cette version d'essai, entrez "BearingPoint" comme reponse
+              Validez vos deux reponses pour continuer
             </div>
           )}
         </div>

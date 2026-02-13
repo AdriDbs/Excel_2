@@ -254,7 +254,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         addNotification("Milestone atteint : 5 fonctions maitrisees !", "milestone");
       } else if (completion.completed === 10) {
         addNotification("Excellent ! 10 fonctions maitrisees !", "milestone");
-      } else if (completion.completed === 12) {
+      } else if (completion.completed === excelFunctions.length) {
         addNotification("Felicitations ! Toutes les fonctions maitrisees !", "milestone");
       }
     }
@@ -327,15 +327,19 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
   const validateAnswer = useCallback((field: string, isCorrect: boolean) => {
     setValidated((prev) => ({ ...prev, [field]: isCorrect }));
-    if (isCorrect) addNotification("Bonne reponse !", "success");
+    if (isCorrect) {
+      addNotification("Bonne reponse !", "success");
+    } else {
+      addNotification("Mauvaise reponse, reessayez !", "warning");
+    }
   }, [addNotification]);
 
   const progressStats = useMemo(() => {
     if (!isStudent) {
       return {
         completed: completedFunctions.length,
-        total: 12,
-        percentage: (completedFunctions.length / 12) * 100,
+        total: excelFunctions.length,
+        percentage: (completedFunctions.length / excelFunctions.length) * 100,
         totalScore: 0,
       };
     }
