@@ -25,7 +25,7 @@ import {
   Activity,
   History,
 } from "lucide-react";
-import { databaseService } from "../../services/databaseService";
+import { firebaseDataService } from "../../services/firebaseDataService";
 import { Student, Instructor, UserStats, DeviceInfo, ConnectionLog } from "../../types/database";
 
 interface InstructorDashboardProps {
@@ -39,6 +39,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
 }) => {
   const [users, setUsers] = useState<(Student | Instructor)[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"stats" | "users" | "sessions" | "settings">("stats");
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{
@@ -60,17 +61,19 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setIsLoading(true);
     try {
-      databaseService.forcSync();
-      databaseService.updateOnlineStatuses();
+      await firebaseDataService.forcSync();
+      await firebaseDataService.updateOnlineStatuses();
 
-      const allUsers = databaseService.getAllUsers();
-      const userStats = databaseService.getStats();
+      const allUsers = await firebaseDataService.getAllUsers();
+      const userStats = await firebaseDataService.getStats();
+      const leaderboardData = (await firebaseDataService.getLeaderboard()).slice(0, 10);
 
       setUsers(allUsers);
       setStats(userStats);
+      setLeaderboard(leaderboardData);
     } catch (error) {
       showNotification("Erreur lors du chargement des données", "error");
     } finally {
@@ -86,21 +89,21 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleResetDatabase = () => {
+  const handleResetDatabase = async () => {
     if (
       window.confirm(
         "Êtes-vous sûr de vouloir réinitialiser toute la base de données ? Cette action est irréversible."
       )
     ) {
-      databaseService.resetDatabase();
-      refreshData();
+      await firebaseDataService.resetDatabase();
+      await refreshData();
       showNotification("Base de données réinitialisée avec succès", "success");
     }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    if (databaseService.deleteUser(userId)) {
-      refreshData();
+  const handleDeleteUser = async (userId: string) => {
+    if (await firebaseDataService.deleteUser(userId)) {
+      await refreshData();
       showNotification("Utilisateur supprimé avec succès", "success");
     } else {
       showNotification(
@@ -111,9 +114,9 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
     setShowDeleteConfirm(null);
   };
 
-  const handleExportData = () => {
+  const handleExportData = async () => {
     try {
-      const data = databaseService.exportData();
+      const data = await firebaseDataService.exportData();
       const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -137,11 +140,11 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = e.target?.result as string;
-        if (databaseService.importData(data)) {
-          refreshData();
+        if (await firebaseDataService.importData(data)) {
+          await refreshData();
           showNotification("Données importées avec succès", "success");
         } else {
           showNotification("Erreur lors de l'import des données", "error");
@@ -152,10 +155,6 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
     };
     reader.readAsText(file);
     event.target.value = "";
-  };
-
-  const getLeaderboard = () => {
-    return databaseService.getLeaderboard().slice(0, 10);
   };
 
   const getOnlineUsers = () => {
@@ -391,9 +390,9 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                   </h3>
                 </div>
                 <div className="p-4">
-                  {getLeaderboard().length > 0 ? (
+                  {leaderboard.length > 0 ? (
                     <div className="space-y-2">
-                      {getLeaderboard().map((student, index) => (
+                      {leaderboard.map((student, index) => (
                         <div
                           key={student.name}
                           className={`flex items-center justify-between p-3 rounded-lg ${

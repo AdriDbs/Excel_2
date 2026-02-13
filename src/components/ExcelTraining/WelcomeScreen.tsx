@@ -14,7 +14,7 @@ import {
   ChevronRight,
   History,
 } from "lucide-react";
-import { databaseService } from "../../services/databaseService";
+import { firebaseDataService } from "../../services/firebaseDataService";
 import { Student, Instructor } from "../../types/database";
 
 interface WelcomeScreenProps {
@@ -36,16 +36,21 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const users = databaseService.getAllUsers();
-    setExistingUsers(users);
+    const loadData = async () => {
+      const users = await firebaseDataService.getAllUsers();
+      setExistingUsers(users);
 
-    // Charger les étudiants récents
-    const recent = databaseService.getRecentStudents();
-    setRecentStudents(recent);
+      // Charger les étudiants récents
+      const recent = await firebaseDataService.getRecentStudents();
+      setRecentStudents(recent);
 
-    if (!databaseService.isInitialized()) {
-      databaseService.initializeDatabase();
-    }
+      const isInit = await firebaseDataService.isInitialized();
+      if (!isInit) {
+        await firebaseDataService.initializeDatabase();
+      }
+    };
+
+    loadData();
   }, []);
 
   const handleUserLogin = useCallback(async (
@@ -59,12 +64,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       let user: Student | Instructor;
 
       if (role === "instructor") {
-        const existingInstructor = databaseService.getInstructors()[0];
+        const instructors = await firebaseDataService.getInstructors();
+        const existingInstructor = instructors[0];
         if (existingInstructor) {
           user = existingInstructor;
-          databaseService.updateLastActivity(existingInstructor.id, true);
+          await firebaseDataService.updateLastActivity(existingInstructor.id, true);
         } else {
-          user = databaseService.addUser("Instructeur", "instructor");
+          user = await firebaseDataService.addUser("Instructeur", "instructor");
         }
       } else {
         if (!name || name.trim().length < 2) {
@@ -73,12 +79,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           return;
         }
 
-        const existingStudent = databaseService.getUserByName(name.trim());
+        const existingStudent = await firebaseDataService.getUserByName(name.trim());
         if (existingStudent && existingStudent.role === "student") {
           user = existingStudent as Student;
-          databaseService.updateLastActivity(existingStudent.id, true);
+          await firebaseDataService.updateLastActivity(existingStudent.id, true);
         } else {
-          user = databaseService.addUser(name.trim(), "student");
+          user = await firebaseDataService.addUser(name.trim(), "student");
         }
       }
 
@@ -101,9 +107,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
     }
   }, [handleUserLogin]);
 
-  const handleExistingUserSelection = useCallback((user: Student | Instructor) => {
+  const handleExistingUserSelection = useCallback(async (user: Student | Instructor) => {
     setIsLoading(true);
-    databaseService.updateLastActivity(user.id, true);
+    await firebaseDataService.updateLastActivity(user.id, true);
     onUserSelected(user);
   }, [onUserSelected]);
 

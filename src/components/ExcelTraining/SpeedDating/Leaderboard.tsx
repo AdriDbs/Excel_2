@@ -1,7 +1,7 @@
 import React, { memo, useMemo, useState, useEffect } from "react";
 import { X, Trophy, Medal, Wifi, WifiOff, RefreshCw, Clock, Monitor, Smartphone, Tablet } from "lucide-react";
 import { ExcelFunction, LeaderboardParticipant } from "../types";
-import { databaseService } from "../../../services/databaseService";
+import { firebaseDataService } from "../../../services/firebaseDataService";
 import { Student, DeviceInfo } from "../../../types/database";
 
 interface LeaderboardProps {
@@ -30,8 +30,8 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
 
   // Enrichir les données avec les infos de connexion
   useEffect(() => {
-    const enrichData = () => {
-      const students = databaseService.getStudents();
+    const enrichData = async () => {
+      const students = await firebaseDataService.getStudents();
       const studentMap = new Map<string, Student>();
 
       students.forEach(student => {
@@ -127,9 +127,9 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
     return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    databaseService.forcSync();
+    await firebaseDataService.forcSync();
     setTimeout(() => setIsRefreshing(false), 500);
   };
 

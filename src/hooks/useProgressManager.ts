@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { databaseService } from "../services/databaseService";
+import { firebaseDataService } from "../services/firebaseDataService";
 import {
   Student,
   SpeedDatingProgress,
@@ -48,8 +48,8 @@ export const useProgressManager = ({
     }
   );
 
-  const refreshProgress = useCallback(() => {
-    const user = databaseService.getUserById(userId);
+  const refreshProgress = useCallback(async () => {
+    const user = await firebaseDataService.getUserById(userId);
     if (user && user.role === "student") {
       const student = user as Student;
       setSpeedDatingProgress(student.speedDatingProgress);
@@ -78,7 +78,7 @@ export const useProgressManager = ({
         };
 
         // Mettre à jour en base
-        const success = databaseService.updateUserProgress(
+        const success = await firebaseDataService.updateUserProgress(
           userId,
           "speedDating",
           updatedProgress
@@ -106,7 +106,7 @@ export const useProgressManager = ({
           ...progress,
         };
 
-        const success = databaseService.updateUserProgress(
+        const success = await firebaseDataService.updateUserProgress(
           userId,
           "hackathon",
           updatedProgress
@@ -196,8 +196,8 @@ export const useLeaderboard = () => {
     topScore: 0,
   });
 
-  const refreshLeaderboard = useCallback(() => {
-    const leaderboardData = databaseService.getLeaderboard();
+  const refreshLeaderboard = useCallback(async () => {
+    const leaderboardData = await firebaseDataService.getLeaderboard();
     setLeaderboard(leaderboardData);
 
     // Calculer des statistiques

@@ -25,7 +25,7 @@ import FunctionCard from "./FunctionCard";
 import Passport from "./Passport";
 import Leaderboard from "./Leaderboard";
 import { BRAND } from "../../../constants/brand";
-import { databaseService } from "../../../services/databaseService";
+import { firebaseDataService } from "../../../services/firebaseDataService";
 import {
   saveSpeedDatingLeaderboardToFirebase,
   subscribeToSpeedDatingLeaderboard,
@@ -60,9 +60,9 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
   const { notifications, addNotification } = useProgressNotifications();
 
-  // Construire le leaderboard à partir de databaseService et synchroniser avec Firebase
-  const buildLeaderboardData = useCallback((): LeaderboardParticipant[] => {
-    const students = databaseService.getStudents();
+  // Construire le leaderboard à partir de firebaseDataService et synchroniser avec Firebase
+  const buildLeaderboardData = useCallback(async (): Promise<LeaderboardParticipant[]> => {
+    const students = await firebaseDataService.getStudents();
     const participants = students.map((student) => {
       const completedFunctionIds: number[] = [];
       let totalTime = 0;
@@ -107,11 +107,15 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   // Mise à jour du leaderboard et sync Firebase
   useEffect(() => {
     // Construire le leaderboard initial
-    const data = buildLeaderboardData();
-    setLiveLeaderboardData(data);
-    if (data.length > 0) {
-      saveSpeedDatingLeaderboardToFirebase(data);
-    }
+    const initLeaderboard = async () => {
+      const data = await buildLeaderboardData();
+      setLiveLeaderboardData(data);
+      if (data.length > 0) {
+        saveSpeedDatingLeaderboardToFirebase(data);
+      }
+    };
+
+    initLeaderboard();
 
     // Écouter les mises à jour du leaderboard via Firebase
     const unsubscribe = subscribeToSpeedDatingLeaderboard((firebaseData) => {
@@ -126,8 +130,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     });
 
     // Rafraîchir le leaderboard toutes les 10 secondes à partir du localStorage
-    const refreshInterval = setInterval(() => {
-      const freshData = buildLeaderboardData();
+    const refreshInterval = setInterval(async () => {
+      const freshData = await buildLeaderboardData();
       setLiveLeaderboardData(freshData);
       if (freshData.length > 0) {
         saveSpeedDatingLeaderboardToFirebase(freshData);
@@ -241,8 +245,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       });
 
       // Mettre à jour le leaderboard après validation
-      setTimeout(() => {
-        const freshData = buildLeaderboardData();
+      setTimeout(async () => {
+        const freshData = await buildLeaderboardData();
         setLiveLeaderboardData(freshData);
         if (freshData.length > 0) {
           saveSpeedDatingLeaderboardToFirebase(freshData);
