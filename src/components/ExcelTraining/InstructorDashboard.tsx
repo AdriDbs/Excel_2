@@ -64,7 +64,7 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
   const refreshData = async () => {
     setIsLoading(true);
     try {
-      await firebaseDataService.forcSync();
+      await firebaseDataService.forceSync();
       await firebaseDataService.updateOnlineStatuses();
 
       const allUsers = await firebaseDataService.getAllUsers();
