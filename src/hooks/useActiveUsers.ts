@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useUser, ActiveUser } from "../contexts/UserContext";
-import { databaseService } from "../services/databaseService";
+import { firebaseDataService } from "../services/firebaseDataService";
 
 interface UseActiveUsersOptions {
   includeLocalUsers?: boolean; // Inclure aussi les utilisateurs du localStorage
@@ -23,7 +23,7 @@ interface UseActiveUsersReturn {
   getUsersByRole: (role: "student" | "instructor") => ActiveUser[];
   isUserOnline: (userId: string) => boolean;
   getOnlineUsers: () => ActiveUser[];
-  refreshUsers: () => void;
+  refreshUsers: () => Promise<void>;
 }
 
 export const useActiveUsers = (
@@ -42,8 +42,8 @@ export const useActiveUsers = (
   // Charger les utilisateurs locaux si nécessaire
   useEffect(() => {
     if (includeLocalUsers) {
-      const loadLocalUsers = () => {
-        const onlineUsers = databaseService.getOnlineUsers();
+      const loadLocalUsers = async () => {
+        const onlineUsers = await firebaseDataService.getOnlineUsers();
         const now = Date.now();
 
         const formattedLocalUsers: ActiveUser[] = onlineUsers.map((user) => ({
@@ -142,9 +142,9 @@ export const useActiveUsers = (
     return activeUsers.filter((user) => user.isOnline);
   }, [activeUsers]);
 
-  const refreshUsers = useCallback(() => {
+  const refreshUsers = useCallback(async () => {
     if (includeLocalUsers) {
-      const onlineUsers = databaseService.getOnlineUsers();
+      const onlineUsers = await firebaseDataService.getOnlineUsers();
       const formattedLocalUsers: ActiveUser[] = onlineUsers.map((user) => ({
         odcfUserId: user.id,
         name: user.name,

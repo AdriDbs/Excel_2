@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { SectionType } from "./types";
 import { Student, Instructor } from "../../types/database";
-import { databaseService } from "../../services/databaseService";
+import { firebaseDataService } from "../../services/firebaseDataService";
 import { useUser } from "../../contexts/UserContext";
 
 // Composants
@@ -14,16 +14,9 @@ import WorkInProgressSection from "./WorkInProgress/WorkInProgressSection";
 import HackathonContainer from "./Hackathon/HackathonContainer";
 
 // Composant principal qui gère la navigation entre les sections et l'authentification
-const SECTION_STORAGE_KEY = "bearingpoint_current_section";
-
 const ExcelTraining: React.FC = () => {
-  const [currentSection, setCurrentSection] = useState<SectionType>(() => {
-    const saved = sessionStorage.getItem(SECTION_STORAGE_KEY);
-    if (saved && ["menu", "functions", "bestPractices", "hackathon", "hackathonLanding", "useCases"].includes(saved)) {
-      return saved as SectionType;
-    }
-    return "menu";
-  });
+  // Toujours commencer sur "menu" - pas de persistence de section
+  const [currentSection, setCurrentSection] = useState<SectionType>("menu");
 
   // Utiliser le UserContext pour la gestion des utilisateurs avec Firebase
   const {
@@ -35,13 +28,13 @@ const ExcelTraining: React.FC = () => {
     updateUserProgress,
   } = useUser();
 
-  const navigateTo = (section: SectionType) => {
+  const navigateTo = async (section: SectionType) => {
     setCurrentSection(section);
-    sessionStorage.setItem(SECTION_STORAGE_KEY, section);
+    // Plus de persistence dans sessionStorage
 
-    // Mettre à jour l'activité de l'utilisateur (géré par le contexte)
+    // Mettre à jour l'activité de l'utilisateur
     if (currentUser) {
-      databaseService.updateLastActivity(currentUser.id);
+      await firebaseDataService.updateLastActivity(currentUser.id);
     }
   };
 

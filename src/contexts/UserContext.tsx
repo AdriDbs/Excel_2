@@ -7,7 +7,7 @@ import React, {
   ReactNode,
 } from "react";
 import { Student, Instructor, DeviceInfo } from "../types/database";
-import { databaseService } from "../services/databaseService";
+import { firebaseDataService } from "../services/firebaseDataService";
 import {
   signInAnonymouslyToFirebase,
   onAuthStateChange,
@@ -19,8 +19,6 @@ import {
 } from "../config/firebase";
 
 // Constantes
-const CURRENT_USER_KEY = "bearingpoint_current_user_id";
-const FIREBASE_SESSION_KEY = "bearingpoint_firebase_session_id";
 const ACTIVITY_UPDATE_INTERVAL = 30000; // 30 secondes
 
 // Types pour le contexte
@@ -136,14 +134,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
 
-  // Initialiser ou récupérer l'ID de session
+  // Générer un nouvel ID de session à chaque ouverture de page
   useEffect(() => {
-    let storedSessionId = sessionStorage.getItem(FIREBASE_SESSION_KEY);
-    if (!storedSessionId) {
-      storedSessionId = generateSessionId();
-      sessionStorage.setItem(FIREBASE_SESSION_KEY, storedSessionId);
-    }
-    setSessionId(storedSessionId);
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
   }, []);
 
   // Initialiser l'authentification Firebase
@@ -174,28 +168,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     initFirebaseAuth();
   }, []);
 
-  // Charger l'utilisateur existant depuis localStorage
+  // Initialiser le contexte - ne plus charger automatiquement l'utilisateur
   useEffect(() => {
-    const loadExistingUser = () => {
-      try {
-        const storedUserId = localStorage.getItem(CURRENT_USER_KEY);
-        if (storedUserId) {
-          const user = databaseService.getUserById(storedUserId);
-          if (user) {
-            setCurrentUser(user);
-            databaseService.updateLastActivity(user.id);
-          } else {
-            localStorage.removeItem(CURRENT_USER_KEY);
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement de l'utilisateur:", error);
-        localStorage.removeItem(CURRENT_USER_KEY);
-      }
-      setIsInitialized(true);
-    };
-
-    loadExistingUser();
+    // L'utilisateur commence toujours déconnecté
+    setIsInitialized(true);
   }, []);
 
   // Mettre à jour la présence Firebase quand l'utilisateur change
@@ -270,8 +246,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const loginUser = useCallback(
     async (user: Student | Instructor) => {
       setCurrentUser(user);
-      localStorage.setItem(CURRENT_USER_KEY, user.id);
-      databaseService.updateLastActivity(user.id);
+      await firebaseDataService.updateLastActivity(user.id, true);
 
       // Mettre à jour Firebase si connecté
       if (isFirebaseConnected && sessionId) {
@@ -302,10 +277,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const logoutUser = useCallback(async () => {
     setCurrentUser(null);
-    localStorage.removeItem(CURRENT_USER_KEY);
-
-    // Nettoyer la présence Firebase (sera automatiquement supprimé via onDisconnect)
-    // mais on peut forcer la déconnexion si nécessaire
+    // Plus besoin de nettoyer localStorage
+    // La présence Firebase sera automatiquement supprimée via onDisconnect
   }, []);
 
   const updateUserProgress = useCallback(
@@ -317,20 +290,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         return false;
       }
 
-      // Mettre à jour dans localStorage via databaseService
-      const success = databaseService.updateUserProgress(
+      // Mettre à jour directement dans Firebase
+      const success = await firebaseDataService.updateUserProgress(
         currentUser.id,
         progressType,
         progress
       );
 
       if (success) {
-        // Rafraîchir les données utilisateur
-        const updatedUser = databaseService.getUserById(currentUser.id);
+        // Rafraîchir les données utilisateur depuis Firebase
+        const updatedUser = await firebaseDataService.getUserById(currentUser.id);
         if (updatedUser) {
           setCurrentUser(updatedUser);
 
-          // Synchroniser avec Firebase
+          // Synchroniser avec Firebase (les données utilisateur et la présence)
           if (isFirebaseConnected) {
             const deviceInfo = getDeviceInfo();
             const userData = {
@@ -352,9 +325,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     [currentUser, isFirebaseConnected]
   );
 
-  const refreshCurrentUser = useCallback(() => {
+  const refreshCurrentUser = useCallback(async () => {
     if (currentUser) {
-      const updatedUser = databaseService.getUserById(currentUser.id);
+      const updatedUser = await firebaseDataService.getUserById(currentUser.id);
       if (updatedUser) {
         setCurrentUser(updatedUser);
       }
