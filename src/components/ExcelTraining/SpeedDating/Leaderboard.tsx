@@ -129,7 +129,7 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await firebaseDataService.forcSync();
+    await firebaseDataService.forceSync();
     setTimeout(() => setIsRefreshing(false), 500);
   };
 

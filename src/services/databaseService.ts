@@ -195,7 +195,7 @@ export class DatabaseService {
   }
 
   // Forcer la synchronisation
-  public forcSync(): void {
+  public forceSync(): void {
     this.database = this.loadDatabase();
   }
 
@@ -218,7 +218,7 @@ export class DatabaseService {
     role: "instructor" | "student"
   ): Student | Instructor {
     // Forcer la synchronisation avant d'ajouter
-    this.forcSync();
+    this.forceSync();
 
     const userId = `${role}_${Date.now()}_${Math.random()
       .toString(36)
@@ -278,13 +278,13 @@ export class DatabaseService {
 
   public getUserById(userId: string): Student | Instructor | null {
     // Forcer la synchronisation avant de chercher
-    this.forcSync();
+    this.forceSync();
     return this.database.users.find((user) => user.id === userId) || null;
   }
 
   public getUserByName(name: string): Student | Instructor | null {
     // Forcer la synchronisation avant de chercher
-    this.forcSync();
+    this.forceSync();
     return (
       this.database.users.find(
         (user) => user.name.toLowerCase() === name.toLowerCase()
@@ -294,13 +294,13 @@ export class DatabaseService {
 
   public getAllUsers(): (Student | Instructor)[] {
     // Forcer la synchronisation avant de retourner tous les utilisateurs
-    this.forcSync();
+    this.forceSync();
     return [...this.database.users];
   }
 
   public getStudents(): Student[] {
     // Forcer la synchronisation avant de retourner les étudiants
-    this.forcSync();
+    this.forceSync();
     return this.database.users.filter(
       (user) => user.role === "student"
     ) as Student[];
@@ -308,7 +308,7 @@ export class DatabaseService {
 
   public getInstructors(): Instructor[] {
     // Forcer la synchronisation avant de retourner les instructeurs
-    this.forcSync();
+    this.forceSync();
     return this.database.users.filter(
       (user) => user.role === "instructor"
     ) as Instructor[];
@@ -320,7 +320,7 @@ export class DatabaseService {
     progress: any
   ): boolean {
     // Forcer la synchronisation avant la mise à jour
-    this.forcSync();
+    this.forceSync();
 
     const userIndex = this.database.users.findIndex(
       (user) => user.id === userId
@@ -349,7 +349,7 @@ export class DatabaseService {
 
   public updateLastActivity(userId: string, logConnection: boolean = false): boolean {
     // Forcer la synchronisation avant la mise à jour
-    this.forcSync();
+    this.forceSync();
 
     const userIndex = this.database.users.findIndex(
       (user) => user.id === userId
@@ -433,7 +433,7 @@ export class DatabaseService {
   }
 
   public getRecentStudents(): Student[] {
-    this.forcSync();
+    this.forceSync();
     const recentUsers = this.getRecentUsers();
     const students: Student[] = [];
 
@@ -449,7 +449,7 @@ export class DatabaseService {
 
   // Obtenir les utilisateurs en ligne (actifs dans les 2 dernières minutes)
   public getOnlineUsers(): (Student | Instructor)[] {
-    this.forcSync();
+    this.forceSync();
     const threshold = Date.now() - ONLINE_THRESHOLD;
 
     return this.database.users.filter(user => {
@@ -460,7 +460,7 @@ export class DatabaseService {
 
   // Mettre à jour le statut en ligne de tous les utilisateurs
   public updateOnlineStatuses(): void {
-    this.forcSync();
+    this.forceSync();
     const threshold = Date.now() - ONLINE_THRESHOLD;
     let changed = false;
 
@@ -481,7 +481,7 @@ export class DatabaseService {
 
   public deleteUser(userId: string): boolean {
     // Forcer la synchronisation avant la suppression
-    this.forcSync();
+    this.forceSync();
 
     const initialLength = this.database.users.length;
     this.database.users = this.database.users.filter(
@@ -504,7 +504,7 @@ export class DatabaseService {
     lastActivity: string;
   }> {
     // Forcer la synchronisation avant de calculer le leaderboard
-    this.forcSync();
+    this.forceSync();
 
     return this.getStudents()
       .map((student) => {
@@ -532,7 +532,7 @@ export class DatabaseService {
 
   public getStats(): UserStats {
     // Forcer la synchronisation avant de calculer les stats
-    this.forcSync();
+    this.forceSync();
 
     const users = this.database.users;
     const students = users.filter(
@@ -591,7 +591,7 @@ export class DatabaseService {
 
   public exportData(): string {
     // Forcer la synchronisation avant l'export
-    this.forcSync();
+    this.forceSync();
     return JSON.stringify(this.database, null, 2);
   }
 
