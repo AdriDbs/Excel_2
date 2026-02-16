@@ -97,9 +97,9 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
     }
 
     const student = currentUser as Student;
-    const speedDatingCompleted = Object.values(student.speedDatingProgress).filter(
-      (p) => p.completed
-    ).length;
+    const speedDatingCompleted = student.speedDatingProgress
+      ? Object.values(student.speedDatingProgress).filter((p) => p.completed).length
+      : 0;
     return `Bienvenue, ${student.name} - ${speedDatingCompleted} fonctions maîtrisées`;
   }, [currentUser]);
 
@@ -107,14 +107,18 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
     if (!currentUser || currentUser.role !== "student") return null;
 
     const student = currentUser as Student;
-    const speedDatingProgress = Object.values(student.speedDatingProgress);
+    const speedDatingProgress = student.speedDatingProgress
+      ? Object.values(student.speedDatingProgress)
+      : [];
     const completed = speedDatingProgress.filter((p) => p.completed).length;
     const totalScore = speedDatingProgress.reduce((sum, p) => sum + p.score, 0);
+    const hackathonTotalScore = student.hackathonProgress?.totalScore || 0;
+    const hackathonLevel = student.hackathonProgress?.currentLevel || 0;
 
     return {
       speedDatingCompleted: completed,
-      totalScore: totalScore + student.hackathonProgress.totalScore,
-      hackathonLevel: student.hackathonProgress.currentLevel,
+      totalScore: totalScore + hackathonTotalScore,
+      hackathonLevel: hackathonLevel,
     };
   }, [currentUser]);
 

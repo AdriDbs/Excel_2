@@ -355,12 +355,54 @@ export class FirebaseDataService {
   }
 
   /**
-   * Supprimer un utilisateur
+   * Supprimer un utilisateur et toutes ses données associées
    */
   public async deleteUser(userId: string): Promise<boolean> {
     try {
+      // 1. Supprimer l'utilisateur principal
       const userRef = ref(database, `users/${userId}`);
       await remove(userRef);
+
+      // 2. Supprimer toutes les sessions actives de cet utilisateur
+      const activeUsersRef = ref(database, "activeUsers");
+      const activeUsersSnapshot = await get(activeUsersRef);
+      if (activeUsersSnapshot.exists()) {
+        const activeSessions = activeUsersSnapshot.val();
+        const sessionsToDelete = Object.keys(activeSessions).filter(
+          sessionId => activeSessions[sessionId].odcfUserId === userId
+        );
+
+        for (const sessionId of sessionsToDelete) {
+          await remove(ref(database, `activeUsers/${sessionId}`));
+        }
+      }
+
+      // 3. Supprimer l'utilisateur de la liste des utilisateurs récents
+      const recentUsersRef = ref(database, "recentUsers");
+      const recentSnapshot = await get(recentUsersRef);
+      if (recentSnapshot.exists()) {
+        const recentUsers = Object.values(recentSnapshot.val()) as Array<{ id: string; name: string; lastUsed: string }>;
+        const updatedRecentUsers = recentUsers.filter(u => u.id !== userId);
+        await set(recentUsersRef, updatedRecentUsers);
+      }
+
+      // 4. Supprimer l'entrée du leaderboard Speed Dating
+      const leaderboardRef = ref(database, `speedDatingLeaderboard/${userId}`);
+      await remove(leaderboardRef);
+
+      // 5. Nettoyer les sessions hackathon où l'utilisateur est enregistré
+      const hackathonSessionsRef = ref(database, "hackathonSessions");
+      const hackathonSnapshot = await get(hackathonSessionsRef);
+      if (hackathonSnapshot.exists()) {
+        const sessions = hackathonSnapshot.val();
+        for (const sessionId of Object.keys(sessions)) {
+          const session = sessions[sessionId];
+          if (session.registeredStudents && session.registeredStudents[userId]) {
+            await remove(ref(database, `hackathonSessions/${sessionId}/registeredStudents/${userId}`));
+          }
+        }
+      }
+
       return true;
     } catch (error) {
       console.error("Error deleting user:", error);
