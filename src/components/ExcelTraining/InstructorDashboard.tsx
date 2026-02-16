@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { firebaseDataService } from "../../services/firebaseDataService";
 import { Student, Instructor, UserStats, DeviceInfo, ConnectionLog } from "../../types/database";
+import { getAllRegisteredStudents, unregisterStudent } from "./Hackathon/services/hackathonService";
 
 interface InstructorDashboardProps {
   currentUser: Instructor;
@@ -49,6 +50,8 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<Student | Instructor | null>(null);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+  const [hackathonProfiles, setHackathonProfiles] = useState<any[]>([]);
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     refreshData();
@@ -70,10 +73,12 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
       const allUsers = await firebaseDataService.getAllUsers();
       const userStats = await firebaseDataService.getStats();
       const leaderboardData = (await firebaseDataService.getLeaderboard()).slice(0, 10);
+      const hackathonProfilesData = await getAllRegisteredStudents();
 
       setUsers(allUsers);
       setStats(userStats);
       setLeaderboard(leaderboardData);
+      setHackathonProfiles(hackathonProfilesData);
     } catch (error) {
       showNotification("Erreur lors du chargement des données", "error");
     } finally {
@@ -225,6 +230,28 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
       newExpanded.add(userId);
     }
     setExpandedUsers(newExpanded);
+  };
+
+  const toggleSessionExpand = (sessionId: string) => {
+    const newExpanded = new Set(expandedSessions);
+    if (newExpanded.has(sessionId)) {
+      newExpanded.delete(sessionId);
+    } else {
+      newExpanded.add(sessionId);
+    }
+    setExpandedSessions(newExpanded);
+  };
+
+  const handleRemoveStudentFromSession = async (sessionId: string, userId: string, teamId: number) => {
+    if (window.confirm("Êtes-vous sûr de vouloir retirer cet étudiant de la session ?")) {
+      const result = await unregisterStudent(sessionId, userId, teamId);
+      if (result) {
+        showNotification("Étudiant retiré de la session avec succès", "success");
+        await refreshData();
+      } else {
+        showNotification("Erreur lors du retrait de l'étudiant", "error");
+      }
+    }
   };
 
   const onlineUsers = getOnlineUsers();
@@ -619,6 +646,98 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
                   <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
                   Actualiser
                 </button>
+              </div>
+
+              {/* Profils des Sessions Hackathon */}
+              <div className="bg-white border border-gray-200 rounded-lg">
+                <div className="bg-purple-50 px-4 py-3 border-b border-purple-200">
+                  <h4 className="font-semibold text-purple-800 flex items-center gap-2">
+                    <Users size={18} />
+                    Profils des Sessions Hackathon ({hackathonProfiles.reduce((sum, session) => sum + session.students.length, 0)})
+                  </h4>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {hackathonProfiles.length > 0 ? (
+                    hackathonProfiles.map((session) => {
+                      const isExpanded = expandedSessions.has(session.sessionId);
+                      return (
+                        <div key={session.sessionId}>
+                          <button
+                            onClick={() => toggleSessionExpand(session.sessionId)}
+                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-2 h-2 rounded-full ${session.isActive ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
+                              <div className="text-left">
+                                <p className="font-medium">{session.sessionName}</p>
+                                <p className="text-xs text-gray-500">
+                                  {session.students.length} participant(s) • {session.isActive ? "Active" : "Terminée"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs px-2 py-1 rounded-full ${session.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                                {session.isActive ? "En cours" : "Archivée"}
+                              </span>
+                              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            </div>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="px-4 pb-4 bg-purple-50">
+                              <div className="space-y-2">
+                                {session.students.map((student: any) => (
+                                  <div
+                                    key={student.id}
+                                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-100"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <Target size={16} className="text-purple-500" />
+                                      <div>
+                                        <p className="font-medium text-gray-800">{student.name}</p>
+                                        <p className="text-xs text-gray-500">
+                                          {student.teamName} • {student.hintsUsed.length} indice(s) utilisé(s)
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => {
+                                          setSelectedUser({
+                                            ...student,
+                                            role: "student",
+                                            createdAt: new Date().toISOString(),
+                                            lastActivity: new Date().toISOString(),
+                                          } as any);
+                                        }}
+                                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                                        title="Voir détails"
+                                      >
+                                        <Eye size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleRemoveStudentFromSession(session.sessionId, student.id, student.teamId)}
+                                        className="text-red-600 hover:text-red-800 transition-colors"
+                                        title="Retirer de la session"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-8 text-center text-gray-500">
+                      <Users size={48} className="mx-auto mb-4 opacity-50" />
+                      <p>Aucun profil dans les sessions hackathon</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Vue temps réel */}

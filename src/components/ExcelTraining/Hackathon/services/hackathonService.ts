@@ -489,3 +489,52 @@ export const getAllSessions = async (): Promise<HackathonSession[]> => {
     return [];
   }
 };
+
+// Récupérer tous les étudiants inscrits dans toutes les sessions avec leurs détails
+export const getAllRegisteredStudents = async (): Promise<{
+  sessionId: string;
+  sessionName: string;
+  isActive: boolean;
+  students: Array<Student & { teamName: string }>;
+}[]> => {
+  try {
+    const allSessions = await getAllHackathonSessions();
+    if (!allSessions) return [];
+
+    const result = [];
+
+    for (const [sessionId, session] of Object.entries(allSessions)) {
+      if (!session) continue;
+
+      const registeredStudents = session.registeredStudents || {};
+      const teams = session.teams || [];
+      const isActive = session.sessionActive !== false && session.isActive !== false;
+
+      const students = Object.entries(registeredStudents).map(([userId, studentData]: [string, any]) => {
+        const team = teams.find((t: any) => t && t.id === studentData.teamId);
+        return {
+          id: studentData.id,
+          name: studentData.name,
+          teamId: studentData.teamId,
+          teamName: team?.name || `Équipe ${studentData.teamId}`,
+          answers: studentData.answers || {},
+          hintsUsed: studentData.hintsUsed || [],
+        };
+      });
+
+      if (students.length > 0) {
+        result.push({
+          sessionId,
+          sessionName: `Session ${sessionId.substring(sessionId.indexOf("_") + 1, sessionId.indexOf("_") + 9)}`,
+          isActive,
+          students,
+        });
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error fetching all registered students:", error);
+    return [];
+  }
+};
