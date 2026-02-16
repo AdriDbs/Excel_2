@@ -455,6 +455,50 @@ export class FirebaseDataService {
   }
 
   /**
+   * Forcer la synchronisation (pour compatibilité avec databaseService)
+   * Firebase se synchronise automatiquement, donc cette méthode est un no-op
+   */
+  public async forceSync(): Promise<void> {
+    // Firebase est déjà en temps réel, pas besoin de synchronisation manuelle
+    return Promise.resolve();
+  }
+
+  /**
+   * Mettre à jour le statut en ligne de tous les utilisateurs
+   */
+  public async updateOnlineStatuses(): Promise<void> {
+    try {
+      const allUsers = await this.getAllUsers();
+      const threshold = Date.now() - ONLINE_THRESHOLD;
+
+      const updates: Promise<void>[] = [];
+
+      allUsers.forEach(user => {
+        const lastActivity = new Date(user.lastActivity).getTime();
+        const shouldBeOnline = lastActivity > threshold;
+
+        // Mettre à jour uniquement si le statut a changé
+        if (user.isOnline !== shouldBeOnline) {
+          const userRef = ref(database, `users/${user.id}`);
+          updates.push(
+            update(userRef, {
+              isOnline: shouldBeOnline,
+              lastSyncedAt: serverTimestamp(),
+            })
+          );
+        }
+      });
+
+      // Exécuter toutes les mises à jour en parallèle
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+    } catch (error) {
+      console.error("Error updating online statuses:", error);
+    }
+  }
+
+  /**
    * Écouter les changements d'utilisateurs en temps réel
    */
   public subscribeToUsers(
