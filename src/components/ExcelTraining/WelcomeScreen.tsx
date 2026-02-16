@@ -4,7 +4,6 @@ import {
   UserCheck,
   Users,
   LogIn,
-  BookOpen,
   ChevronDown,
   Clock,
   Monitor,
@@ -177,13 +176,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       description: "Accès aux exercices, speed dating Excel et hackathons",
       bgClass: "bg-bp-red-400 hover:bg-bp-red-500",
     },
-    {
-      role: "guest" as const,
-      icon: BookOpen,
-      title: "Visiteur",
-      description: "Consulter le contenu sans enregistrer de progression",
-      bgClass: "bg-bp-gray-500 hover:bg-bp-gray-400",
-    },
   ], []);
 
   const students = existingUsers.filter(u => u.role === "student") as Student[];
@@ -209,11 +201,11 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </h3>
 
           {!selectedRole && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {roleButtons.map(({ role, icon: Icon, title, description, bgClass }) => (
                 <button
                   key={role}
-                  onClick={() => role === "guest" ? onViewAsGuest() : handleRoleSelection(role)}
+                  onClick={() => handleRoleSelection(role)}
                   disabled={isLoading}
                   className={`${bgClass} text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bp transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
