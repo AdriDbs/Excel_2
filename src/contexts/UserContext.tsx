@@ -179,13 +179,37 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     if (!sessionId || !isFirebaseConnected || !currentUser) return;
 
     const updatePresence = async () => {
+      // Validation défensive: vérifier que currentUser a tous les champs requis
+      if (!currentUser.id || !currentUser.name || !currentUser.role) {
+        console.warn("[UserContext] Cannot update presence: currentUser missing required fields", {
+          hasId: !!currentUser.id,
+          hasName: !!currentUser.name,
+          hasRole: !!currentUser.role,
+        });
+        return;
+      }
+
+      // Validation du rôle
+      if (currentUser.role !== "instructor" && currentUser.role !== "student") {
+        console.warn("[UserContext] Cannot update presence: invalid role", {
+          role: currentUser.role,
+        });
+        return;
+      }
+
       const deviceInfo = getDeviceInfo();
-      await setUserOnlinePresence(sessionId, {
+      const result = await setUserOnlinePresence(sessionId, {
         odcfUserId: currentUser.id,
         name: currentUser.name,
         role: currentUser.role,
         deviceInfo,
       });
+
+      // Gérer le résultat de la mise à jour de présence
+      if (!result.success) {
+        console.error("[UserContext] Failed to update presence:", result.error);
+        // Continue quand même avec la sauvegarde utilisateur (dégradation gracieuse)
+      }
 
       // Sauvegarder également les données utilisateur dans Firebase
       const userData = {
@@ -250,13 +274,39 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       // Mettre à jour Firebase si connecté
       if (isFirebaseConnected && sessionId) {
+        // Validation défensive: vérifier que l'utilisateur a tous les champs requis
+        if (!user.id || !user.name || !user.role) {
+          console.warn("[UserContext] Cannot update presence during login: user missing required fields", {
+            hasId: !!user.id,
+            hasName: !!user.name,
+            hasRole: !!user.role,
+          });
+          // Continuer quand même le login (dégradation gracieuse)
+          return;
+        }
+
+        // Validation du rôle
+        if (user.role !== "instructor" && user.role !== "student") {
+          console.warn("[UserContext] Cannot update presence during login: invalid role", {
+            role: user.role,
+          });
+          // Continuer quand même le login
+          return;
+        }
+
         const deviceInfo = getDeviceInfo();
-        await setUserOnlinePresence(sessionId, {
+        const result = await setUserOnlinePresence(sessionId, {
           odcfUserId: user.id,
           name: user.name,
           role: user.role,
           deviceInfo,
         });
+
+        // Gérer le résultat de la mise à jour de présence
+        if (!result.success) {
+          console.error("[UserContext] Failed to update presence during login:", result.error);
+          // Continuer quand même avec la sauvegarde utilisateur (dégradation gracieuse)
+        }
 
         const userData = {
           name: user.name,

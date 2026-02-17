@@ -100,3 +100,17 @@ export interface UserStats {
     hackathon: number;
   };
 }
+
+// Interface pour les données de présence utilisateur
+export interface PresenceData {
+  odcfUserId: string;
+  name: string;
+  role: "instructor" | "student";
+  deviceInfo?: DeviceInfo;
+}
+
+// Interface pour les résultats d'opération
+export interface OperationResult {
+  success: boolean;
+  error?: string;
+}

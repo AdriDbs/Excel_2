@@ -55,26 +55,56 @@ export const setUserOnlinePresence = async (
     role: "instructor" | "student";
     deviceInfo?: object;
   }
-) => {
+): Promise<{ success: boolean; error?: string }> => {
   const activeUserRef = getActiveUserRef(sessionId);
 
   try {
-    // Définir les données de présence
-    await set(activeUserRef, {
+    // Import des fonctions de validation
+    const { validatePresenceData, sanitizeForFirebase } = await import('../utils/firebaseHelpers');
+
+    // Validation des données avant l'envoi à Firebase
+    if (!validatePresenceData(userData)) {
+      const errorMsg = "Données utilisateur invalides: champs requis manquants ou invalides";
+      console.error("[Firebase] setUserOnlinePresence failed:", errorMsg, {
+        sessionId,
+        userData: {
+          hasOdcfUserId: !!userData.odcfUserId,
+          hasName: !!userData.name,
+          hasRole: !!userData.role,
+          role: userData.role,
+        },
+      });
+      return { success: false, error: errorMsg };
+    }
+
+    // Sanitization pour retirer les valeurs undefined (Firebase les rejette)
+    const presenceData = sanitizeForFirebase({
       ...userData,
       isOnline: true,
       lastSeen: serverTimestamp(),
       connectedAt: serverTimestamp()
     });
 
+    // Définir les données de présence
+    await set(activeUserRef, presenceData);
+
     // Configurer la déconnexion automatique
     const disconnectRef = onDisconnect(activeUserRef);
     await disconnectRef.remove();
 
-    return true;
+    return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la présence:", error);
-    return false;
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
+    console.error("[Firebase] Erreur lors de la mise à jour de la présence:", {
+      error: errorMsg,
+      sessionId,
+      userData: {
+        odcfUserId: userData.odcfUserId,
+        name: userData.name,
+        role: userData.role,
+      },
+    });
+    return { success: false, error: errorMsg };
   }
 };
 
