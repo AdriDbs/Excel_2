@@ -180,19 +180,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
     const updatePresence = async () => {
       // Validation défensive: vérifier que currentUser a tous les champs requis
-      if (!currentUser.id || !currentUser.name || !currentUser.role) {
+      if (!currentUser.id || !currentUser.name) {
         console.warn("[UserContext] Cannot update presence: currentUser missing required fields", {
           hasId: !!currentUser.id,
           hasName: !!currentUser.name,
-          hasRole: !!currentUser.role,
-        });
-        return;
-      }
-
-      // Validation du rôle
-      if (currentUser.role !== "instructor" && currentUser.role !== "student") {
-        console.warn("[UserContext] Cannot update presence: invalid role", {
-          role: currentUser.role,
         });
         return;
       }
@@ -275,22 +266,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Mettre à jour Firebase si connecté
       if (isFirebaseConnected && sessionId) {
         // Validation défensive: vérifier que l'utilisateur a tous les champs requis
-        if (!user.id || !user.name || !user.role) {
+        if (!user.id || !user.name) {
           console.warn("[UserContext] Cannot update presence during login: user missing required fields", {
             hasId: !!user.id,
             hasName: !!user.name,
-            hasRole: !!user.role,
           });
           // Continuer quand même le login (dégradation gracieuse)
-          return;
-        }
-
-        // Validation du rôle
-        if (user.role !== "instructor" && user.role !== "student") {
-          console.warn("[UserContext] Cannot update presence during login: invalid role", {
-            role: user.role,
-          });
-          // Continuer quand même le login
           return;
         }
 
