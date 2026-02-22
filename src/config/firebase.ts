@@ -138,6 +138,7 @@ export const saveUserToFirebase = async (
 
   try {
     await set(userRef, {
+      id: userId,
       ...userData,
       lastSyncedAt: serverTimestamp()
     });
