@@ -594,22 +594,24 @@ export class FirebaseDataService {
 
     return students
       .map((student) => {
-        const speedDatingCompleted = Object.values(
-          student.speedDatingProgress
-        ).filter((progress) => progress && typeof progress === "object" && progress.completed).length;
+        const speedDatingValues = Object.values(
+          student.speedDatingProgress || {}
+        );
 
-        const totalSpeedDatingScore = Object.values(
-          student.speedDatingProgress
-        )
+        const speedDatingCompleted = speedDatingValues
+          .filter((progress) => progress && typeof progress === "object" && progress.completed).length;
+
+        const totalSpeedDatingScore = speedDatingValues
           .filter((progress) => progress && typeof progress === "object")
           .reduce((sum, progress) => sum + (progress.score || 0), 0);
 
+        const hackathonProgress = student.hackathonProgress || { totalScore: 0, currentLevel: 0 };
+
         return {
           name: student.name,
-          totalScore:
-            totalSpeedDatingScore + student.hackathonProgress.totalScore,
+          totalScore: totalSpeedDatingScore + (hackathonProgress.totalScore || 0),
           speedDatingCompleted,
-          hackathonLevel: student.hackathonProgress.currentLevel,
+          hackathonLevel: hackathonProgress.currentLevel || 0,
           lastActivity: student.lastActivity,
         };
       })
@@ -638,14 +640,15 @@ export class FirebaseDataService {
     let hackathonCompleted = 0;
 
     students.forEach((student) => {
-      const speedProgress = Object.values(student.speedDatingProgress)
+      const speedProgress = Object.values(student.speedDatingProgress || {})
         .filter((p) => p && typeof p === "object");
       speedDatingTotal += speedProgress.length;
       speedDatingCompleted += speedProgress.filter((p) => p.completed).length;
 
-      if (student.hackathonProgress.currentLevel > 0) {
+      const hackathonProgress = student.hackathonProgress || { currentLevel: 0, levelsCompleted: [] };
+      if ((hackathonProgress.currentLevel || 0) > 0) {
         hackathonTotal += 1;
-        if (student.hackathonProgress.levelsCompleted.length >= 6) {
+        if ((hackathonProgress.levelsCompleted || []).length >= 6) {
           hackathonCompleted += 1;
         }
       }
