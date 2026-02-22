@@ -194,7 +194,7 @@ export class FirebaseDataService {
       const snapshot = await get(userRef);
 
       if (snapshot.exists()) {
-        return snapshot.val() as Student | Instructor;
+        return { ...snapshot.val(), id: userId } as Student | Instructor;
       }
       return null;
     } catch (error) {
@@ -213,10 +213,13 @@ export class FirebaseDataService {
 
       if (snapshot.exists()) {
         const users = snapshot.val();
-        const foundUser = Object.values(users).find(
-          (user: any) => user.name.toLowerCase() === name.toLowerCase()
+        const entry = Object.entries(users).find(
+          ([, user]: [string, any]) => user.name.toLowerCase() === name.toLowerCase()
         );
-        return foundUser as Student | Instructor | null;
+        if (entry) {
+          const [key, user] = entry as [string, any];
+          return { ...user, id: user.id || key } as Student | Instructor;
+        }
       }
       return null;
     } catch (error) {
@@ -235,7 +238,10 @@ export class FirebaseDataService {
 
       if (snapshot.exists()) {
         const users = snapshot.val();
-        return Object.values(users) as (Student | Instructor)[];
+        return Object.entries(users).map(([key, user]: [string, any]) => ({
+          ...user,
+          id: user.id || key,
+        })) as (Student | Instructor)[];
       }
       return [];
     } catch (error) {
