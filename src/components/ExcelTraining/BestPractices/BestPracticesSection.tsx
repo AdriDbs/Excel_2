@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, Check, AlertTriangle, Info, Lightbulb, PanelLeft, BarChart } from "lucide-react";
+import { ArrowLeft, Check, AlertTriangle, Info, Lightbulb, PanelLeft, BarChart, Zap } from "lucide-react";
 import { NavigationProps } from "../types";
 
 const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
@@ -9,6 +9,7 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
     { id: "organization", label: "Organisation", icon: <PanelLeft size={18} /> },
     { id: "performance", label: "Performance", icon: <Lightbulb size={18} /> },
     { id: "formatting", label: "Mise en forme", icon: <BarChart size={18} /> },
+    { id: "dynamic", label: "Fonctions Dynamiques", icon: <Zap size={18} /> },
   ];
 
   return (
@@ -584,6 +585,300 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+          {activeTab === "dynamic" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-2 text-bp-red-600">
+                Fonctions Dynamiques Excel
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Depuis Excel 365, une nouvelle génération de fonctions transforme radicalement la façon de travailler avec les données. Ces fonctions — présentées dans le Speed Dating et le Hackathon — renvoient des <span className="font-semibold">tableaux entiers</span> qui se répandent automatiquement dans les cellules voisines (<em>spilling</em>), sans manipulation manuelle.
+              </p>
+
+              {/* Qu'est-ce qu'une fonction dynamique ? */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Zap className="text-bp-red-500" size={20} />
+                  Qu'est-ce qu'une fonction dynamique ?
+                </h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-4">
+                  <p className="mb-3">
+                    Une <span className="font-bold">fonction dynamique</span> (ou <em>dynamic array function</em>) est une formule qui peut renvoyer plusieurs valeurs à la fois, remplissant automatiquement une plage de cellules à partir d'une seule formule.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <h4 className="font-bold text-gray-700 mb-2">Avant (fonctions classiques)</h4>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li className="flex items-start gap-2"><span className="text-red-500 font-bold">✗</span> Une formule = une seule valeur</li>
+                        <li className="flex items-start gap-2"><span className="text-red-500 font-bold">✗</span> Copier-coller sur chaque ligne manuellement</li>
+                        <li className="flex items-start gap-2"><span className="text-red-500 font-bold">✗</span> Formules rigides, difficiles à mettre à jour</li>
+                        <li className="flex items-start gap-2"><span className="text-red-500 font-bold">✗</span> Risque d'oublier de copier la formule sur les nouvelles lignes</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <h4 className="font-bold text-gray-700 mb-2">Après (fonctions dynamiques)</h4>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span> Une formule = un tableau de valeurs</li>
+                        <li className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span> Propagation automatique (<em>spill</em>) dans les cellules voisines</li>
+                        <li className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span> Mise à jour automatique si les données sources changent</li>
+                        <li className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span> Combinables entre elles pour des analyses puissantes</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="text-yellow-600 mt-1 flex-shrink-0" size={20} />
+                    <p className="text-sm">
+                      <span className="font-bold">Prérequis :</span> Les fonctions dynamiques sont disponibles dans <span className="font-bold">Excel 365</span> et <span className="font-bold">Excel 2021</span>. Elles ne fonctionnent pas dans les versions antérieures (2019 et avant).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Avantages clés */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Check className="text-bp-red-500" size={20} />
+                  Pourquoi les adopter ?
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="text-3xl mb-2">⚡</div>
+                    <h4 className="font-bold text-green-800 mb-1">Productivité</h4>
+                    <p className="text-sm text-gray-600">
+                      Une seule formule remplace des dizaines de formules copiées-collées. Moins de temps passé à maintenir des colonnes d'aide répétitives.
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div className="text-3xl mb-2">🔄</div>
+                    <h4 className="font-bold text-purple-800 mb-1">Dynamisme</h4>
+                    <p className="text-sm text-gray-600">
+                      Les résultats se mettent à jour automatiquement dès que les données sources changent. Aucune manipulation manuelle nécessaire.
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="text-3xl mb-2">🧩</div>
+                    <h4 className="font-bold text-blue-800 mb-1">Combinabilité</h4>
+                    <p className="text-sm text-gray-600">
+                      Les fonctions s'imbriquent facilement entre elles. <span className="font-mono text-xs">FILTER</span>, <span className="font-mono text-xs">SORT</span>, <span className="font-mono text-xs">XLOOKUP</span> combinés créent des analyses puissantes en une ligne.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Les fonctions clés */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4 text-bp-red-500 flex items-center gap-2">
+                  <Check className="text-bp-red-500" size={20} />
+                  Les fonctions dynamiques essentielles
+                </h3>
+
+                <div className="space-y-4">
+                  {/* XLOOKUP */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">🔍</span>
+                      <div>
+                        <span className="font-bold text-gray-800">XLOOKUP</span>
+                        <span className="ml-2 text-sm text-gray-500">— Le successeur de RECHERCHEV</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        Recherche dans <strong>n'importe quelle direction</strong> (gauche, droite, haut, bas) et peut renvoyer <strong>plusieurs colonnes</strong> en une seule formule. Gère nativement les erreurs avec son 4ᵉ argument.
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =XLOOKUP("Sophie Martin", B2:B500, C2:E500, "Introuvable")
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Renvoie 3 colonnes d'un coup : Service, Grade, Salaire</p>
+                    </div>
+                  </div>
+
+                  {/* FILTER */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">🧹</span>
+                      <div>
+                        <span className="font-bold text-gray-800">FILTER</span>
+                        <span className="ml-2 text-sm text-gray-500">— Filtrage dynamique en formule</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        Extrait les lignes correspondant à un ou plusieurs critères, <strong>sans modifier les données source</strong>. Combine conditions ET (<code className="text-xs bg-gray-100 px-1 rounded">*</code>) et OU (<code className="text-xs bg-gray-100 px-1 rounded">+</code>).
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =FILTER(A2:E500, (B2:B500="Paris")*(E2:E500&gt;5000))
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Ventes à Paris ET supérieures à 5 000 €, mis à jour en temps réel</p>
+                    </div>
+                  </div>
+
+                  {/* SORT & UNIQUE */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">🔤</span>
+                      <div>
+                        <span className="font-bold text-gray-800">SORT / UNIQUE</span>
+                        <span className="ml-2 text-sm text-gray-500">— Tri et dédoublonnage dynamiques</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>SORT</strong> trie un tableau dans l'ordre souhaité. <strong>UNIQUE</strong> élimine les doublons. Combinés à FILTER, ils créent des listes déroulantes et des classements entièrement automatiques.
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =SORT(FILTER(A2:E500, B2:B500="Paris"), 3, -1)
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Ventes de Paris triées par CA décroissant, sans aucune manipulation</p>
+                    </div>
+                  </div>
+
+                  {/* SEQUENCE */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">🔢</span>
+                      <div>
+                        <span className="font-bold text-gray-800">SEQUENCE</span>
+                        <span className="ml-2 text-sm text-gray-500">— Génération automatique de séquences</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        Génère des séries de nombres, de dates, ou de grilles sans saisie manuelle. Idéal pour créer des en-têtes de tableaux, des numéros de lignes ou des calendriers.
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =DATE(2025,1,1) + SEQUENCE(30,1,0,1)
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Génère 30 dates consécutives à partir du 1er janvier 2025</p>
+                    </div>
+                  </div>
+
+                  {/* VSTACK & HSTACK */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">📚</span>
+                      <div>
+                        <span className="font-bold text-gray-800">VSTACK / HSTACK</span>
+                        <span className="ml-2 text-sm text-gray-500">— Consolidation sans copier-coller</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        Empile des tableaux verticalement (VSTACK) ou horizontalement (HSTACK). Parfait pour consolider des données réparties sur plusieurs onglets ou fichiers.
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =VSTACK(Q1!A2:D31, Q2!A2:D32, Q3!A2:D33, Q4!A2:D34)
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Consolide 4 trimestres en un seul tableau, mis à jour automatiquement</p>
+                    </div>
+                  </div>
+
+                  {/* GROUPBY */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">📊</span>
+                      <div>
+                        <span className="font-bold text-gray-800">GROUPBY</span>
+                        <span className="ml-2 text-sm text-gray-500">— Tableau croisé dynamique en formule</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        Regroupe et agrège des données <strong>sans créer de TCD</strong>. Le résultat est utilisable directement dans d'autres formules, contrairement aux tableaux croisés dynamiques classiques.
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =GROUPBY(B2:B500, E2:E500, SUM)
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Total des ventes par région, dynamique et imbricable</p>
+                    </div>
+                  </div>
+
+                  {/* LET & LAMBDA */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                      <span className="text-2xl">🧠</span>
+                      <div>
+                        <span className="font-bold text-gray-800">LET / MAP / BYROW / BYCOL</span>
+                        <span className="ml-2 text-sm text-gray-500">— Programmation dans Excel</span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>LET</strong> crée des variables nommées pour simplifier les formules complexes. <strong>MAP</strong>, <strong>BYROW</strong> et <strong>BYCOL</strong> appliquent une transformation personnalisée à chaque élément, ligne ou colonne d'un tableau.
+                      </p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        =LET(ca, C2, couts, B2, marge, (ca-couts)/ca, marge)
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">→ Formule lisible avec variables nommées, facile à auditer et maintenir</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bonnes pratiques d'utilisation */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Check className="text-bp-red-500" size={20} />
+                  Bonnes pratiques d'utilisation
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-bold text-green-800 mb-2">À faire</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Laisser les colonnes de <em>spill</em> libres de tout contenu pour éviter l'erreur <code className="bg-gray-100 px-1 rounded text-xs">#EPARS!</code></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Utiliser la notation <code className="bg-gray-100 px-1 rounded text-xs">A1#</code> (opérateur de déversement) pour référencer toute la plage dynamique d'une formule</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Combiner les fonctions dynamiques avec des <strong>Tableaux Excel structurés</strong> pour une mise à jour encore plus automatique</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Utiliser <strong>LET</strong> pour nommer les sous-formules et rendre les imbrications lisibles</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 className="font-bold text-red-800 mb-2">À éviter</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">Mettre du contenu dans les cellules où la formule dynamique va se déverser</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">Utiliser des fonctions dynamiques dans des classeurs partagés avec des collaborateurs sous Excel 2019 ou antérieur</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">Imbriquer plus de 4-5 niveaux sans utiliser LET pour nommer les étapes intermédiaires</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Exemple d'analyse complète */}
+              <div className="bg-bp-red-50 border border-bp-red-200 rounded-xl p-5">
+                <h4 className="font-bold text-bp-red-700 mb-3 text-lg">Exemple : analyse complète en une formule</h4>
+                <p className="text-sm text-gray-700 mb-3">
+                  Grâce aux fonctions dynamiques, une analyse qui nécessitait autrefois plusieurs onglets de calculs intermédiaires peut s'écrire en une seule formule :
+                </p>
+                <div className="font-mono text-xs bg-white border border-bp-red-100 p-3 rounded-lg mb-3">
+                  =TAKE(SORT(GROUPBY(B2:B500, E2:E500, SUM), 2, -1), 5)
+                </div>
+                <p className="text-sm text-gray-600">
+                  <span className="font-bold">Résultat :</span> Top 5 des régions par chiffre d'affaires total, trié du plus grand au plus petit — dynamique, sans TCD, sans colonne d'aide.
+                </p>
               </div>
             </div>
           )}

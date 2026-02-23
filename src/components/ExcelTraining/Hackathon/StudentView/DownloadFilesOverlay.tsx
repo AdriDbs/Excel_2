@@ -39,7 +39,8 @@ const getFileIcon = (type: string) => {
 const DownloadFilesOverlay: React.FC<DownloadFilesOverlayProps> = ({ onClose }) => {
   const handleDownload = (filename: string) => {
     const link = document.createElement("a");
-    link.href = `/${filename}`;
+    const base = process.env.PUBLIC_URL || "";
+    link.href = `${base}/${filename}`;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
