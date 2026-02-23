@@ -140,38 +140,47 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setSessionId(newSessionId);
   }, []);
 
-  // Initialiser l'authentification Firebase
+  // Initialiser l'application : auth Firebase puis restauration de session
   useEffect(() => {
-    const initFirebaseAuth = async () => {
+    const initialize = async () => {
+      // 1. Initialiser Firebase Auth
       try {
-        // Écouter les changements d'état d'authentification
-        const unsubscribe = onAuthStateChange((user) => {
+        onAuthStateChange((user) => {
           setFirebaseUser(user);
           setIsFirebaseConnected(!!user);
         });
 
-        // Authentification anonyme
         const user = await signInAnonymouslyToFirebase();
         if (user) {
           console.log("Firebase: Authentification anonyme réussie");
         } else {
-          console.warn("Firebase: Authentification échouée, utilisation du localStorage uniquement");
+          console.warn("Firebase: Authentification échouée, utilisation du mode dégradé");
         }
-
-        return unsubscribe;
       } catch (error) {
         console.error("Firebase: Erreur d'initialisation", error);
         setIsFirebaseConnected(false);
       }
+
+      // 2. Restaurer la session depuis localStorage
+      const storedUserId = localStorage.getItem("excel_training_user_id");
+      if (storedUserId) {
+        try {
+          const user = await firebaseDataService.getUserById(storedUserId);
+          if (user) {
+            setCurrentUser(user);
+          } else {
+            localStorage.removeItem("excel_training_user_id");
+          }
+        } catch (error) {
+          console.error("Erreur lors de la restauration de session:", error);
+          localStorage.removeItem("excel_training_user_id");
+        }
+      }
+
+      setIsInitialized(true);
     };
 
-    initFirebaseAuth();
-  }, []);
-
-  // Initialiser le contexte - ne plus charger automatiquement l'utilisateur
-  useEffect(() => {
-    // L'utilisateur commence toujours déconnecté
-    setIsInitialized(true);
+    initialize();
   }, []);
 
   // Mettre à jour la présence Firebase quand l'utilisateur change
@@ -266,6 +275,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const loginUser = useCallback(
     async (user: Student | Instructor) => {
       setCurrentUser(user);
+      localStorage.setItem("excel_training_user_id", user.id);
       await firebaseDataService.updateLastActivity(user.id, true);
 
       // Mettre à jour Firebase si connecté
@@ -318,7 +328,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const logoutUser = useCallback(async () => {
     setCurrentUser(null);
-    // Plus besoin de nettoyer localStorage
+    localStorage.removeItem("excel_training_user_id");
     // La présence Firebase sera automatiquement supprimée via onDisconnect
   }, []);
 
