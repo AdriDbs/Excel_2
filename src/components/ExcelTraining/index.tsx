@@ -30,11 +30,12 @@ const ExcelTraining: React.FC = () => {
 
   const navigateTo = async (section: SectionType) => {
     setCurrentSection(section);
-    // Plus de persistence dans sessionStorage
 
-    // Mettre à jour l'activité de l'utilisateur
+    // Mettre à jour l'activité de l'utilisateur (sans bloquer la navigation)
     if (currentUser) {
-      await firebaseDataService.updateLastActivity(currentUser.id);
+      firebaseDataService.updateLastActivity(currentUser.id).catch((err) => {
+        console.error("Erreur mise à jour activité:", err);
+      });
     }
   };
 
