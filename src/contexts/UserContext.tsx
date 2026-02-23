@@ -210,8 +210,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         lastActivity: currentUser.lastActivity,
         deviceInfo,
         ...(currentUser.role === "student" && {
-          speedDatingProgress: (currentUser as Student).speedDatingProgress,
-          hackathonProgress: (currentUser as Student).hackathonProgress,
+          speedDatingProgress: (currentUser as Student).speedDatingProgress ?? {},
+          hackathonProgress: (currentUser as Student).hackathonProgress ?? {
+            currentLevel: 0,
+            levelsCompleted: [],
+            totalScore: 0,
+            individualContributions: {},
+          },
         }),
       };
       await saveUserToFirebase(currentUser.id, userData);
@@ -296,8 +301,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           lastActivity: user.lastActivity,
           deviceInfo,
           ...(user.role === "student" && {
-            speedDatingProgress: (user as Student).speedDatingProgress,
-            hackathonProgress: (user as Student).hackathonProgress,
+            speedDatingProgress: (user as Student).speedDatingProgress ?? {},
+            hackathonProgress: (user as Student).hackathonProgress ?? {
+              currentLevel: 0,
+              levelsCompleted: [],
+              totalScore: 0,
+              individualContributions: {},
+            },
           }),
         };
         await saveUserToFirebase(user.id, userData);
@@ -343,8 +353,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
               createdAt: updatedUser.createdAt,
               lastActivity: updatedUser.lastActivity,
               deviceInfo,
-              speedDatingProgress: (updatedUser as Student).speedDatingProgress,
-              hackathonProgress: (updatedUser as Student).hackathonProgress,
+              speedDatingProgress: (updatedUser as Student).speedDatingProgress ?? {},
+              hackathonProgress: (updatedUser as Student).hackathonProgress ?? {
+                currentLevel: 0,
+                levelsCompleted: [],
+                totalScore: 0,
+                individualContributions: {},
+              },
             };
             await saveUserToFirebase(updatedUser.id, userData);
           }
