@@ -9,10 +9,12 @@ import {
   LogOut,
   Trophy,
   Target,
+  Download,
 } from "lucide-react";
 import { NavigationProps } from "../types";
 import { Student, Instructor } from "../../../types/database";
 import InstructorDashboard from "../InstructorDashboard";
+import DownloadFilesOverlay from "../Hackathon/StudentView/DownloadFilesOverlay";
 import { BRAND } from "../../../constants/brand";
 
 interface MainMenuProps extends NavigationProps {
@@ -88,6 +90,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
 
 const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }) => {
   const [showInstructorDashboard, setShowInstructorDashboard] = useState(false);
+  const [showDownloadOverlay, setShowDownloadOverlay] = useState(false);
 
   const welcomeMessage = useMemo(() => {
     if (!currentUser) return "Bienvenue dans la formation Excel BearingPoint";
@@ -272,6 +275,16 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
                 </button>
               )}
 
+              {currentUser.role === "student" && (
+                <button
+                  onClick={() => setShowDownloadOverlay(true)}
+                  className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bp"
+                >
+                  <Download size={20} />
+                  Télécharger les fichiers
+                </button>
+              )}
+
               <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
                 <User className="text-bp-red-200" size={20} />
                 <div className="text-right">
@@ -358,6 +371,11 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
           currentUser={currentUser as Instructor}
           onClose={() => setShowInstructorDashboard(false)}
         />
+      )}
+
+      {/* Overlay de téléchargement (étudiant) */}
+      {showDownloadOverlay && (
+        <DownloadFilesOverlay onClose={() => setShowDownloadOverlay(false)} />
       )}
     </div>
   );
