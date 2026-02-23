@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Formation Excel Avancé BearingPoint</title>
+    <script>
+      // Redirect SPA pour GitHub Pages
+      // Source: https://github.com/rafgraph/spa-github-pages
+      // Le segment count correspond au nombre de sous-dossiers dans l'URL
+      // Ex: username.github.io/Excel_2 => segmentCount = 1
+      var segmentCount = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+        l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
