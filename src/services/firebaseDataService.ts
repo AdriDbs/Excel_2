@@ -194,7 +194,22 @@ export class FirebaseDataService {
       const snapshot = await get(userRef);
 
       if (snapshot.exists()) {
-        return { ...snapshot.val(), id: userId } as Student | Instructor;
+        const data = { ...snapshot.val(), id: userId };
+        // Firebase removes empty objects/arrays, so restore defaults for students
+        if (data.role === "student") {
+          const hp = data.hackathonProgress || {};
+          return {
+            ...data,
+            speedDatingProgress: data.speedDatingProgress ?? {},
+            hackathonProgress: {
+              currentLevel: hp.currentLevel ?? 0,
+              levelsCompleted: hp.levelsCompleted ?? [],
+              totalScore: hp.totalScore ?? 0,
+              individualContributions: hp.individualContributions ?? {},
+            },
+          } as Student;
+        }
+        return data as Instructor;
       }
       return null;
     } catch (error) {
@@ -288,12 +303,12 @@ export class FirebaseDataService {
 
       if (progressType === "speedDating") {
         updates.speedDatingProgress = {
-          ...(user as Student).speedDatingProgress,
+          ...((user as Student).speedDatingProgress || {}),
           ...progress,
         };
       } else if (progressType === "hackathon") {
         updates.hackathonProgress = {
-          ...(user as Student).hackathonProgress,
+          ...((user as Student).hackathonProgress || {}),
           ...progress,
         };
       }

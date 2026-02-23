@@ -52,8 +52,15 @@ export const useProgressManager = ({
     const user = await firebaseDataService.getUserById(userId);
     if (user && user.role === "student") {
       const student = user as Student;
-      setSpeedDatingProgress(student.speedDatingProgress);
-      setHackathonProgress(student.hackathonProgress);
+      setSpeedDatingProgress(student.speedDatingProgress ?? {});
+      setHackathonProgress(
+        student.hackathonProgress ?? {
+          currentLevel: 0,
+          levelsCompleted: [],
+          totalScore: 0,
+          individualContributions: {},
+        }
+      );
     }
   }, [userId]);
 
@@ -68,12 +75,13 @@ export const useProgressManager = ({
     ): Promise<boolean> => {
       try {
         // Préparer la mise à jour
+        const safeProgress = speedDatingProgress ?? {};
         const updatedProgress = {
-          ...speedDatingProgress,
+          ...safeProgress,
           [functionId]: {
-            ...speedDatingProgress[functionId],
+            ...(safeProgress[functionId] ?? {}),
             ...progress,
-            attempts: (speedDatingProgress[functionId]?.attempts || 0) + 1,
+            attempts: (safeProgress[functionId]?.attempts || 0) + 1,
           },
         };
 
