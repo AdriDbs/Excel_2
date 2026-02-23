@@ -67,14 +67,14 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       const completedFunctionIds: number[] = [];
       let totalTime = 0;
 
-      Object.entries(student.speedDatingProgress).forEach(([key, progress]) => {
+      Object.entries(student.speedDatingProgress || {}).forEach(([key, progress]) => {
         if (progress && typeof progress === "object" && progress.completed) {
           completedFunctionIds.push(parseInt(key) - 1);
           totalTime += progress.timeSpent || 0;
         }
       });
 
-      const totalScore = Object.values(student.speedDatingProgress)
+      const totalScore = Object.values(student.speedDatingProgress || {})
         .filter((p) => p && typeof p === "object")
         .reduce((sum, p) => sum + (p.score || 0), 0);
 
@@ -106,12 +106,19 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
   // Mise à jour du leaderboard et sync Firebase
   useEffect(() => {
+    let isMounted = true;
+
     // Construire le leaderboard initial
     const initLeaderboard = async () => {
-      const data = await buildLeaderboardData();
-      setLiveLeaderboardData(data);
-      if (data.length > 0) {
-        saveSpeedDatingLeaderboardToFirebase(data);
+      try {
+        const data = await buildLeaderboardData();
+        if (!isMounted) return;
+        setLiveLeaderboardData(data);
+        if (data.length > 0) {
+          saveSpeedDatingLeaderboardToFirebase(data);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du leaderboard:", error);
       }
     };
 
@@ -119,6 +126,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
     // Écouter les mises à jour du leaderboard via Firebase
     const unsubscribe = subscribeToSpeedDatingLeaderboard((firebaseData) => {
+      if (!isMounted) return;
       if (firebaseData?.participants && Array.isArray(firebaseData.participants)) {
         // Firebase supprime les tableaux vides, il faut s'assurer que completedFunctions est toujours un tableau
         const normalized = firebaseData.participants.map((p: any) => ({
@@ -129,16 +137,22 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       }
     });
 
-    // Rafraîchir le leaderboard toutes les 10 secondes à partir du localStorage
+    // Rafraîchir le leaderboard toutes les 10 secondes
     const refreshInterval = setInterval(async () => {
-      const freshData = await buildLeaderboardData();
-      setLiveLeaderboardData(freshData);
-      if (freshData.length > 0) {
-        saveSpeedDatingLeaderboardToFirebase(freshData);
+      try {
+        const freshData = await buildLeaderboardData();
+        if (!isMounted) return;
+        setLiveLeaderboardData(freshData);
+        if (freshData.length > 0) {
+          saveSpeedDatingLeaderboardToFirebase(freshData);
+        }
+      } catch (error) {
+        console.error("Erreur lors du rafraîchissement du leaderboard:", error);
       }
     }, 10000);
 
     return () => {
+      isMounted = false;
       unsubscribe();
       clearInterval(refreshInterval);
     };
@@ -211,7 +225,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     return () => clearInterval(interval);
   }, [globalTimerRunning]);
 
-  const currentFunction = excelFunctions[currentFunctionIndex];
+  const currentFunction = excelFunctions[currentFunctionIndex] ?? excelFunctions[0];
 
   const handleFunctionComplete = useCallback(async (
     functionId: number,
@@ -246,10 +260,14 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
       // Mettre à jour le leaderboard après validation
       setTimeout(async () => {
-        const freshData = await buildLeaderboardData();
-        setLiveLeaderboardData(freshData);
-        if (freshData.length > 0) {
-          saveSpeedDatingLeaderboardToFirebase(freshData);
+        try {
+          const freshData = await buildLeaderboardData();
+          setLiveLeaderboardData(freshData);
+          if (freshData.length > 0) {
+            saveSpeedDatingLeaderboardToFirebase(freshData);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour du leaderboard:", error);
         }
       }, 500);
 

@@ -176,7 +176,9 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
           {["answer1", "answer2"].map((field, index) => (
             <div key={field} className="border border-bp-gray-200 rounded-lg p-4 bg-bp-gray-50">
               <label className="block font-medium mb-2">
-                {index === 0 ? currentFunction.exercisePrompt1 : currentFunction.exercisePrompt2}
+                {index === 0
+                  ? "Veuillez renseigner la réponse à la question 1"
+                  : "Veuillez renseigner la réponse à la question 2"}
               </label>
               <div className="flex gap-2">
                 <input
