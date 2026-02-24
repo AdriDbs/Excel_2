@@ -185,69 +185,6 @@ export const useProgressManager = ({
   };
 };
 
-// Hook pour les leaderboards et statistiques
-export const useLeaderboard = () => {
-  const [leaderboard, setLeaderboard] = useState<
-    Array<{
-      name: string;
-      totalScore: number;
-      speedDatingCompleted: number;
-      hackathonLevel: number;
-      lastActivity: string;
-    }>
-  >([]);
-
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    averageSpeedDatingCompletion: 0,
-    averageHackathonLevel: 0,
-    topScore: 0,
-  });
-
-  const refreshLeaderboard = useCallback(async () => {
-    const leaderboardData = await firebaseDataService.getLeaderboard();
-    setLeaderboard(leaderboardData);
-
-    // Calculer des statistiques
-    if (leaderboardData.length > 0) {
-      const avgSpeedDating =
-        leaderboardData.reduce(
-          (sum, student) => sum + student.speedDatingCompleted,
-          0
-        ) / leaderboardData.length;
-      const avgHackathon =
-        leaderboardData.reduce(
-          (sum, student) => sum + student.hackathonLevel,
-          0
-        ) / leaderboardData.length;
-      const topScore = Math.max(
-        ...leaderboardData.map((student) => student.totalScore)
-      );
-
-      setStats({
-        totalStudents: leaderboardData.length,
-        averageSpeedDatingCompletion: avgSpeedDating,
-        averageHackathonLevel: avgHackathon,
-        topScore,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshLeaderboard();
-
-    // Rafraîchir toutes les 30 secondes
-    const interval = setInterval(refreshLeaderboard, 30000);
-    return () => clearInterval(interval);
-  }, [refreshLeaderboard]);
-
-  return {
-    leaderboard,
-    stats,
-    refreshLeaderboard,
-  };
-};
-
 // Hook pour les notifications de progression
 export const useProgressNotifications = () => {
   const [notifications, setNotifications] = useState<

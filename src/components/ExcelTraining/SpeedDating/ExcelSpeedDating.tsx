@@ -29,6 +29,8 @@ import { firebaseDataService } from "../../../services/firebaseDataService";
 import {
   saveSpeedDatingLeaderboardToFirebase,
   subscribeToSpeedDatingLeaderboard,
+  setSpeedDatingSessionStartTime,
+  getSpeedDatingSessionStartTime,
 } from "../../../config/firebase";
 import { LeaderboardParticipant } from "../types";
 
@@ -157,6 +159,23 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       clearInterval(refreshInterval);
     };
   }, [buildLeaderboardData]);
+
+  // Restaurer le timer global depuis Firebase au montage
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const restoreTimer = async () => {
+      const startTime = await getSpeedDatingSessionStartTime(currentUser.id);
+      if (startTime) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setGlobalTimer(elapsed);
+        setSessionStarted(true);
+        setGlobalTimerRunning(true);
+      }
+    };
+
+    restoreTimer();
+  }, [currentUser?.id]);
 
   // Charger la progression et naviguer vers la premiere fonction non completee
   const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -315,11 +334,15 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     if (!sessionStarted) {
       setSessionStarted(true);
       setGlobalTimerRunning(true);
+      // Persister le timestamp de démarrage dans Firebase
+      if (currentUser?.id) {
+        setSpeedDatingSessionStartTime(currentUser.id, Date.now());
+      }
     }
     setPhase("video");
     setTimeLeft(60);
     setTimerRunning(true);
-  }, [sessionStarted, completedFunctions, currentFunctionIndex]);
+  }, [sessionStarted, completedFunctions, currentFunctionIndex, currentUser?.id]);
 
   const skipVideo = useCallback(() => {
     setPhase("exercise");

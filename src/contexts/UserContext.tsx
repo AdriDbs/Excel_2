@@ -6,8 +6,8 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { Student, Instructor, DeviceInfo } from "../types/database";
-import { firebaseDataService } from "../services/firebaseDataService";
+import { Student, Instructor } from "../types/database";
+import { firebaseDataService, getDeviceInfo } from "../services/firebaseDataService";
 import {
   signInAnonymouslyToFirebase,
   onAuthStateChange,
@@ -29,7 +29,6 @@ export interface ActiveUser {
   isOnline: boolean;
   lastSeen: number;
   connectedAt: number;
-  deviceInfo?: DeviceInfo;
 }
 
 interface UserContextType {
@@ -59,66 +58,6 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // Générateur d'ID de session unique
 const generateSessionId = (): string => {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-};
-
-// Récupérer les infos de l'appareil
-const getDeviceInfo = (): DeviceInfo => {
-  const userAgent = navigator.userAgent;
-  let browser = "Unknown";
-  let browserVersion = "";
-  let os = "Unknown";
-  let osVersion = "";
-  let deviceType: "desktop" | "mobile" | "tablet" = "desktop";
-
-  // Détection du navigateur
-  if (userAgent.includes("Firefox/")) {
-    browser = "Firefox";
-    browserVersion = userAgent.split("Firefox/")[1]?.split(" ")[0] || "";
-  } else if (userAgent.includes("Chrome/")) {
-    browser = "Chrome";
-    browserVersion = userAgent.split("Chrome/")[1]?.split(" ")[0] || "";
-  } else if (userAgent.includes("Safari/") && !userAgent.includes("Chrome")) {
-    browser = "Safari";
-    browserVersion = userAgent.split("Version/")[1]?.split(" ")[0] || "";
-  } else if (userAgent.includes("Edge/")) {
-    browser = "Edge";
-    browserVersion = userAgent.split("Edge/")[1]?.split(" ")[0] || "";
-  }
-
-  // Détection de l'OS
-  if (userAgent.includes("Windows")) {
-    os = "Windows";
-    osVersion = userAgent.match(/Windows NT (\d+\.\d+)/)?.[1] || "";
-  } else if (userAgent.includes("Mac OS X")) {
-    os = "macOS";
-    osVersion = userAgent.match(/Mac OS X (\d+[._]\d+)/)?.[1]?.replace("_", ".") || "";
-  } else if (userAgent.includes("Linux")) {
-    os = "Linux";
-  } else if (userAgent.includes("Android")) {
-    os = "Android";
-    osVersion = userAgent.match(/Android (\d+\.?\d*)/)?.[1] || "";
-  } else if (userAgent.includes("iOS") || userAgent.includes("iPhone") || userAgent.includes("iPad")) {
-    os = "iOS";
-    osVersion = userAgent.match(/OS (\d+[._]\d+)/)?.[1]?.replace("_", ".") || "";
-  }
-
-  // Détection du type d'appareil
-  if (/Mobi|Android/i.test(userAgent)) {
-    deviceType = "mobile";
-  } else if (/Tablet|iPad/i.test(userAgent)) {
-    deviceType = "tablet";
-  }
-
-  return {
-    browser,
-    browserVersion,
-    os,
-    osVersion,
-    deviceType,
-    screenResolution: `${window.screen.width}x${window.screen.height}`,
-    language: navigator.language,
-    userAgent,
-  };
 };
 
 interface UserProviderProps {
@@ -257,7 +196,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           isOnline: value.isOnline,
           lastSeen: value.lastSeen || 0,
           connectedAt: value.connectedAt || 0,
-          deviceInfo: value.deviceInfo,
         }))
         // Filtrer les utilisateurs inactifs depuis plus de 2 minutes
         .filter((user) => {

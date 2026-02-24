@@ -366,5 +366,34 @@ export const subscribeToRegisteredStudents = (
   });
 };
 
+// Sauvegarder le timestamp de démarrage de session Speed Dating
+export const setSpeedDatingSessionStartTime = async (
+  userId: string,
+  startTime: number
+): Promise<boolean> => {
+  const userRef = getUserRef(userId);
+  try {
+    await update(userRef, { speedDatingSessionStartTime: startTime });
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde du startTime Speed Dating:", error);
+    return false;
+  }
+};
+
+// Récupérer le timestamp de démarrage de session Speed Dating
+export const getSpeedDatingSessionStartTime = async (
+  userId: string
+): Promise<number | null> => {
+  const startTimeRef = ref(database, `users/${userId}/speedDatingSessionStartTime`);
+  try {
+    const snapshot = await get(startTimeRef);
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du startTime Speed Dating:", error);
+    return null;
+  }
+};
+
 export { app };
 export type { FirebaseUser };
