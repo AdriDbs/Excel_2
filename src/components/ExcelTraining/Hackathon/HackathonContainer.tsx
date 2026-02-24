@@ -38,6 +38,13 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
     }
   }, [isStudent, currentUser?.id, state.sessionId]);
 
+  // Rediriger automatiquement l'étudiant vers sa vue s'il est déjà enregistré
+  useEffect(() => {
+    if (isStudent && state.registeredStudent && state.sessionId && currentView === "landing") {
+      setCurrentView("student");
+    }
+  }, [isStudent, state.registeredStudent, state.sessionId]);
+
   // Fonction pour gérer la completion d'un niveau
   const handleLevelComplete = async (
     level: number,
