@@ -43,7 +43,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 }) => {
   const [currentFunctionIndex, setCurrentFunctionIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("intro");
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(420);
   const [timerRunning, setTimerRunning] = useState(false);
   const [completedFunctions, setCompletedFunctions] = useState<number[]>([]);
   const [showPassport, setShowPassport] = useState(false);
@@ -59,6 +59,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     phase: Phase;
     answers: AnswersState;
     validated: ValidatedState;
+    timerRunning: boolean;
+    departureTime?: number;
   }>>({});
 
   const userName = useMemo(() => currentUser?.name ?? "Vous", [currentUser]);
@@ -312,37 +314,54 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   const navigateFunction = useCallback((direction: 1 | -1) => {
     const newIndex = currentFunctionIndex + direction;
     if (newIndex >= 0 && newIndex < excelFunctions.length) {
-      // Save current function's timer/phase state before leaving
+      const now = Date.now();
+
+      // Save current function's state, including timer running status and departure time
       setFunctionStates(prev => ({
         ...prev,
-        [currentFunctionIndex]: { timeLeft, phase, answers, validated },
+        [currentFunctionIndex]: {
+          timeLeft,
+          phase,
+          answers,
+          validated,
+          timerRunning,
+          departureTime: timerRunning ? now : undefined,
+        },
       }));
 
       setCurrentFunctionIndex(newIndex);
-      setTimerRunning(false); // Always pause when navigating away
 
       if (completedFunctions.includes(newIndex)) {
         setPhase("complete");
         setTimeLeft(0);
+        setTimerRunning(false);
         setAnswers({ answer1: "", answer2: "" });
         setValidated({ answer1: false, answer2: false });
       } else {
         const savedState = functionStates[newIndex];
         if (savedState) {
-          // Restore the saved state for this function (timer paused, user resumes manually)
-          setTimeLeft(savedState.timeLeft);
-          setPhase(savedState.phase);
+          // Compute remaining time accounting for elapsed time if timer was running
+          let restoredTime = savedState.timeLeft;
+          if (savedState.timerRunning && savedState.departureTime) {
+            const elapsed = Math.floor((now - savedState.departureTime) / 1000);
+            restoredTime = Math.max(0, savedState.timeLeft - elapsed);
+          }
+          const restoredPhase = restoredTime <= 0 ? "expired" : savedState.phase;
+          setTimeLeft(restoredTime);
+          setPhase(restoredPhase);
+          setTimerRunning(savedState.timerRunning && restoredTime > 0);
           setAnswers(savedState.answers);
           setValidated(savedState.validated);
         } else {
           setPhase("intro");
           setTimeLeft(420);
+          setTimerRunning(false);
           setAnswers({ answer1: "", answer2: "" });
           setValidated({ answer1: false, answer2: false });
         }
       }
     }
-  }, [currentFunctionIndex, completedFunctions, timeLeft, phase, answers, validated, functionStates]);
+  }, [currentFunctionIndex, completedFunctions, timeLeft, phase, answers, validated, functionStates, timerRunning]);
 
   const startSession = useCallback(() => {
     // Empecher de recommencer une fonction deja completee
