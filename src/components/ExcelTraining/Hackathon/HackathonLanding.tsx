@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Users,
-  Clock,
-  Trophy,
   Target,
   Play,
   Settings,
@@ -49,10 +47,8 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
   const isStudent = currentUser?.role === "student";
 
   // Hook de progression pour les étudiants
-  const progressManager =
-    isStudent
-      ? useProgressManager({ userId: currentUser!.id })
-      : null;
+  const progressManagerInstance = useProgressManager({ userId: currentUser?.id ?? "" });
+  const progressManager = isStudent ? progressManagerInstance : null;
 
   // Calculer la durée totale du hackathon
   const totalDuration = hackathonLevels.reduce(

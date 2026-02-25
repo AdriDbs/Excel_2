@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { ExtendedNavigationProps, HackathonViewType } from "../types";
-import { Student } from "../../../types/database";
 import { useProgressManager } from "../../../hooks/useProgressManager";
 import HackathonLanding from "./HackathonLanding";
 import WorkInProgressSection from "../WorkInProgress/WorkInProgressSection";
@@ -26,24 +25,22 @@ const HackathonContent: React.FC<HackathonContainerProps> = ({
   const isStudent = currentUser?.role === "student";
 
   // Hook de progression pour les étudiants
-  const progressManager =
-    isStudent
-      ? useProgressManager({ userId: currentUser!.id })
-      : null;
+  const progressManagerInstance = useProgressManager({ userId: currentUser?.id ?? "" });
+  const progressManager = isStudent ? progressManagerInstance : null;
 
   // Charger l'étudiant enregistré depuis Firebase au montage
   useEffect(() => {
     if (isStudent && currentUser && state.sessionId) {
       loadStudentFromFirebase(state.sessionId, currentUser.id);
     }
-  }, [isStudent, currentUser?.id, state.sessionId]);
+  }, [isStudent, currentUser?.id, state.sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Rediriger automatiquement l'étudiant vers sa vue s'il est déjà enregistré
   useEffect(() => {
     if (isStudent && state.registeredStudent && state.sessionId && currentView === "landing") {
       setCurrentView("student");
     }
-  }, [isStudent, state.registeredStudent, state.sessionId]);
+  }, [isStudent, state.registeredStudent, state.sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fonction pour gérer la completion d'un niveau
   const handleLevelComplete = async (

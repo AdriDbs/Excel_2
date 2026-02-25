@@ -24,7 +24,6 @@ import Timer from "./Timer";
 import FunctionCard from "./FunctionCard";
 import Passport from "./Passport";
 import Leaderboard from "./Leaderboard";
-import { BRAND } from "../../../constants/brand";
 import { firebaseDataService } from "../../../services/firebaseDataService";
 import {
   saveSpeedDatingLeaderboardToFirebase,
@@ -308,7 +307,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         setPhase("complete");
       }
     }
-  }, [isStudent, progressManagerInstance.speedDatingProgress, restoredFromStorage]);
+  }, [isStudent, progressManagerInstance.speedDatingProgress, restoredFromStorage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Phase timer effect — single shared timer per function, always expires to "expired"
   useEffect(() => {
