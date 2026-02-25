@@ -54,6 +54,12 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   const [globalTimerRunning, setGlobalTimerRunning] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [liveLeaderboardData, setLiveLeaderboardData] = useState<LeaderboardParticipant[]>([]);
+  const [functionStates, setFunctionStates] = useState<Record<number, {
+    timeLeft: number;
+    phase: Phase;
+    answers: AnswersState;
+    validated: ValidatedState;
+  }>>({});
 
   const userName = useMemo(() => currentUser?.name ?? "Vous", [currentUser]);
 
@@ -209,7 +215,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     }
   }, [isStudent, progressManagerInstance.speedDatingProgress]);
 
-  // Phase timer effect
+  // Phase timer effect — single shared timer per function, always expires to "expired"
   useEffect(() => {
     if (!timerRunning || timeLeft <= 0) return;
 
@@ -217,13 +223,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       setTimeLeft((time) => {
         if (time <= 1) {
           setTimerRunning(false);
-          if (phase === "video") {
-            setPhase("exercise");
-            return 420;
-          } else if (phase === "exercise") {
-            setPhase("expired");
-            return 0;
-          }
+          setPhase("expired");
           return 0;
         }
         return time - 1;
@@ -231,7 +231,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timerRunning, phase, timeLeft]);
+  }, [timerRunning, timeLeft]);
 
   // Global timer effect
   useEffect(() => {
@@ -312,19 +312,37 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   const navigateFunction = useCallback((direction: 1 | -1) => {
     const newIndex = currentFunctionIndex + direction;
     if (newIndex >= 0 && newIndex < excelFunctions.length) {
+      // Save current function's timer/phase state before leaving
+      setFunctionStates(prev => ({
+        ...prev,
+        [currentFunctionIndex]: { timeLeft, phase, answers, validated },
+      }));
+
       setCurrentFunctionIndex(newIndex);
-      // Si la fonction est deja completee, afficher directement la phase complete
+      setTimerRunning(false); // Always pause when navigating away
+
       if (completedFunctions.includes(newIndex)) {
         setPhase("complete");
+        setTimeLeft(0);
+        setAnswers({ answer1: "", answer2: "" });
+        setValidated({ answer1: false, answer2: false });
       } else {
-        setPhase("intro");
+        const savedState = functionStates[newIndex];
+        if (savedState) {
+          // Restore the saved state for this function (timer paused, user resumes manually)
+          setTimeLeft(savedState.timeLeft);
+          setPhase(savedState.phase);
+          setAnswers(savedState.answers);
+          setValidated(savedState.validated);
+        } else {
+          setPhase("intro");
+          setTimeLeft(420);
+          setAnswers({ answer1: "", answer2: "" });
+          setValidated({ answer1: false, answer2: false });
+        }
       }
-      setTimeLeft(420);
-      setTimerRunning(false);
-      setAnswers({ answer1: "", answer2: "" });
-      setValidated({ answer1: false, answer2: false });
     }
-  }, [currentFunctionIndex, completedFunctions]);
+  }, [currentFunctionIndex, completedFunctions, timeLeft, phase, answers, validated, functionStates]);
 
   const startSession = useCallback(() => {
     // Empecher de recommencer une fonction deja completee
@@ -346,10 +364,17 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
   const skipVideo = useCallback(() => {
     setPhase("exercise");
-    setTimeLeft(420);
+    // Timer continues without reset — single shared timer per function
   }, []);
 
   const completeFunction = useCallback(() => {
+    // If the countdown has expired, points cannot be awarded
+    if (timeLeft <= 0) {
+      setPhase("expired");
+      setTimerRunning(false);
+      return;
+    }
+
     const baseScore = 100;
     const timeBonus = Math.max(0, 50 - Math.floor((180 - timeLeft) / 10) * 5);
     const finalScore = baseScore + timeBonus;
