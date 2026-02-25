@@ -34,7 +34,7 @@ import {
 } from "../../../config/firebase";
 import { LeaderboardParticipant } from "../types";
 
-type Phase = "intro" | "video" | "exercise" | "trick" | "complete";
+type Phase = "intro" | "video" | "exercise" | "expired" | "complete";
 
 const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   navigateTo,
@@ -219,10 +219,10 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           setTimerRunning(false);
           if (phase === "video") {
             setPhase("exercise");
-            return 180;
+            return 420;
           } else if (phase === "exercise") {
-            setPhase("trick");
-            return 60;
+            setPhase("expired");
+            return 0;
           }
           return 0;
         }
@@ -305,7 +305,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
   const resetTimer = useCallback(() => {
     setTimerRunning(false);
-    const timeMap: Record<Phase, number> = { video: 60, exercise: 180, trick: 60, intro: 60, complete: 0 };
+    const timeMap: Record<Phase, number> = { video: 420, exercise: 420, expired: 0, intro: 420, complete: 0 };
     setTimeLeft(timeMap[phase]);
   }, [phase]);
 
@@ -319,7 +319,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       } else {
         setPhase("intro");
       }
-      setTimeLeft(60);
+      setTimeLeft(420);
       setTimerRunning(false);
       setAnswers({ answer1: "", answer2: "" });
       setValidated({ answer1: false, answer2: false });
@@ -340,19 +340,13 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       }
     }
     setPhase("video");
-    setTimeLeft(60);
+    setTimeLeft(420);
     setTimerRunning(true);
   }, [sessionStarted, completedFunctions, currentFunctionIndex, currentUser?.id]);
 
   const skipVideo = useCallback(() => {
     setPhase("exercise");
-    setTimeLeft(180);
-  }, []);
-
-  const goToTrick = useCallback(() => {
-    setPhase("trick");
-    setTimeLeft(60);
-    setTimerRunning(true);
+    setTimeLeft(420);
   }, []);
 
   const completeFunction = useCallback(() => {
@@ -398,7 +392,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
       intro: "0%",
       video: "25%",
       exercise: "50%",
-      trick: "75%",
+      expired: "50%",
       complete: "100%",
     };
     return progressMap[phase];
@@ -600,7 +594,6 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               validateAnswer={validateAnswer}
               startSession={startSession}
               skipVideo={skipVideo}
-              goToTrick={goToTrick}
               nextFunction={() => navigateFunction(1)}
               completeFunction={completeFunction}
               functionsLength={excelFunctions.length}
