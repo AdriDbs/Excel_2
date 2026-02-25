@@ -38,9 +38,8 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   } = useHackathon();
 
   // Hook de progression pour les étudiants
-  const progressManager = currentUser?.role === 'student'
-    ? useProgressManager({ userId: currentUser.id })
-    : null;
+  const progressManagerInstance = useProgressManager({ userId: currentUser?.id ?? "" });
+  const progressManager = currentUser?.role === 'student' ? progressManagerInstance : null;
 
   const { notifications, addNotification } = useProgressNotifications();
 
