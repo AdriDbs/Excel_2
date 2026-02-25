@@ -6,6 +6,7 @@ interface TimerProps {
   timerRunning: boolean;
   toggleTimer: () => void;
   resetTimer: () => void;
+  showControls?: boolean;
 }
 
 const Timer: React.FC<TimerProps> = memo(({
@@ -13,6 +14,7 @@ const Timer: React.FC<TimerProps> = memo(({
   timerRunning,
   toggleTimer,
   resetTimer,
+  showControls = true,
 }) => {
   const formattedTime = useMemo(() => {
     const mins = Math.floor(timeLeft / 60);
@@ -31,22 +33,24 @@ const Timer: React.FC<TimerProps> = memo(({
       >
         {formattedTime}
       </div>
-      <div className="flex gap-2">
-        <button
-          onClick={toggleTimer}
-          className="bg-bp-gray-100 hover:bg-bp-gray-200 text-bp-gray-500 rounded-full p-2 transition-colors"
-          aria-label={timerRunning ? "Pause" : "Play"}
-        >
-          {timerRunning ? <Pause size={20} /> : <Play size={20} />}
-        </button>
-        <button
-          onClick={resetTimer}
-          className="bg-bp-gray-100 hover:bg-bp-gray-200 text-bp-gray-500 rounded-full p-2 transition-colors"
-          aria-label="Reset"
-        >
-          <RotateCcw size={20} />
-        </button>
-      </div>
+      {showControls && (
+        <div className="flex gap-2">
+          <button
+            onClick={toggleTimer}
+            className="bg-bp-gray-100 hover:bg-bp-gray-200 text-bp-gray-500 rounded-full p-2 transition-colors"
+            aria-label={timerRunning ? "Pause" : "Play"}
+          >
+            {timerRunning ? <Pause size={20} /> : <Play size={20} />}
+          </button>
+          <button
+            onClick={resetTimer}
+            className="bg-bp-gray-100 hover:bg-bp-gray-200 text-bp-gray-500 rounded-full p-2 transition-colors"
+            aria-label="Reset"
+          >
+            <RotateCcw size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 });
