@@ -23,7 +23,6 @@ interface FunctionCardProps {
   validateAnswer: (field: string, isCorrect: boolean) => void;
   startSession: () => void;
   skipVideo: () => void;
-  goToTrick: () => void;
   nextFunction: () => void;
   completeFunction: () => void;
   functionsLength: number;
@@ -42,7 +41,6 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   validateAnswer,
   startSession,
   skipVideo,
-  goToTrick,
   nextFunction,
   completeFunction,
   functionsLength,
@@ -121,7 +119,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 text-bp-red-500">
             <Clock size={20} />
-            <span>1 minute</span>
+            <span>7 minutes</span>
           </div>
           <button
             onClick={skipVideo}
@@ -158,7 +156,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         </h3>
         <div className="flex items-center gap-2 text-bp-red-500">
           <Clock size={20} />
-          <span>3 minutes</span>
+          <span>7 minutes</span>
         </div>
       </div>
 
@@ -224,10 +222,10 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
                 Excellent ! Les 2 reponses sont correctes !
               </div>
               <button
-                onClick={goToTrick}
+                onClick={completeFunction}
                 className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
               >
-                Decouvrir l'astuce bonus
+                Terminer la fonction
                 <ChevronRight size={20} />
               </button>
             </div>
@@ -241,36 +239,31 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
     </div>
   );
 
-  const renderTrickPhase = () => (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold flex items-center gap-2">
-          <div className="bg-bp-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center">
-            3
-          </div>
-          Astuce bonus
-        </h3>
-        <div className="flex items-center gap-2 text-bp-red-600">
-          <Clock size={20} />
-          <span>1 minute</span>
-        </div>
-      </div>
-
-      <div className="bg-bp-red-50 border-2 border-bp-red-100 rounded-lg p-6">
-        <div className="flex items-start gap-4">
-          <div className="text-4xl">💡</div>
-          <div className="w-full">
-            <p className="text-lg whitespace-pre-line">{currentFunction.trick}</p>
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={completeFunction}
-                className="bg-bp-red-600 hover:bg-bp-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-bp transition-all duration-300"
-              >
-                J'ai compris l'astuce
-              </button>
-            </div>
-          </div>
-        </div>
+  const renderExpiredPhase = () => (
+    <div className="text-center py-8">
+      <div className="text-6xl mb-4">⏰</div>
+      <h3 className="text-2xl font-bold mb-2 text-bp-red-600">Le timer est écoulé !</h3>
+      <p className="text-lg text-bp-gray-500 mb-6">
+        Pas de problème, vous pourrez revenir sur cette fonction plus tard pour la compléter.
+      </p>
+      <div className="flex gap-4 justify-center">
+        {currentFunctionIndex < functionsLength - 1 ? (
+          <button
+            onClick={nextFunction}
+            className="bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
+          >
+            Fonction suivante
+            <ChevronRight size={20} />
+          </button>
+        ) : (
+          <button
+            onClick={togglePassport}
+            className="bg-bp-red-500 hover:bg-bp-red-600 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2 shadow-bp transition-all duration-300"
+          >
+            Voir mon passeport
+            <Award size={20} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -314,7 +307,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
           {phase === "intro" && renderIntroPhase()}
           {phase === "video" && renderVideoPhase()}
           {phase === "exercise" && renderExercisePhase()}
-          {phase === "trick" && renderTrickPhase()}
+          {phase === "expired" && renderExpiredPhase()}
           {phase === "complete" && renderCompletePhase()}
         </>
       )}

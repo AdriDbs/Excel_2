@@ -35,12 +35,12 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
 
         {/* Tabs navigation */}
         <div className="flex justify-center mb-6">
-          <div className="bg-bp-red-600 p-1 rounded-lg">
+          <div className="bg-bp-red-600 p-1 rounded-lg flex flex-wrap">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-5 py-2 rounded-md flex items-center gap-2 transition-all ${
+                className={`flex-1 min-w-[140px] px-5 py-2 rounded-md flex items-center justify-center gap-2 transition-all ${
                   activeTab === tab.id
                     ? "bg-white text-bp-red-700 font-bold"
                     : "text-white hover:bg-bp-red-500"
