@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Home,
   Award,
@@ -62,6 +62,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     timerRunning: boolean;
     departureTime?: number;
   }>>({});
+  const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
   const userName = useMemo(() => currentUser?.name ?? "Vous", [currentUser]);
 
@@ -69,6 +70,95 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   const progressManagerInstance = useProgressManager({ userId: currentUser?.id ?? "" });
 
   const { notifications, addNotification } = useProgressNotifications();
+
+  // Ref to always capture latest state values for the unmount cleanup
+  const latestStateRef = useRef({
+    functionStates,
+    currentFunctionIndex,
+    timeLeft,
+    phase,
+    answers,
+    validated,
+    timerRunning,
+  });
+  useEffect(() => {
+    latestStateRef.current = {
+      functionStates,
+      currentFunctionIndex,
+      timeLeft,
+      phase,
+      answers,
+      validated,
+      timerRunning,
+    };
+  });
+
+  // Restore timer state from localStorage on mount
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const saved = localStorage.getItem(`speedDating_state_${currentUser.id}`);
+    if (saved) {
+      try {
+        const { functionStates: savedStates, currentFunctionIndex: savedIndex } = JSON.parse(saved);
+
+        setFunctionStates(savedStates || {});
+        const idx = savedIndex ?? 0;
+        setCurrentFunctionIndex(idx);
+
+        const currentState = savedStates?.[idx];
+        if (currentState) {
+          let restoredTime = currentState.timeLeft;
+          // Recalculate elapsed time for students whose timer was running
+          if (isStudent && currentState.timerRunning && currentState.departureTime) {
+            const elapsed = Math.floor((Date.now() - currentState.departureTime) / 1000);
+            restoredTime = Math.max(0, currentState.timeLeft - elapsed);
+          }
+          // If time ran out while away and not already in a terminal phase, expire it
+          const restoredPhase: Phase =
+            isStudent && restoredTime <= 0 &&
+            currentState.phase !== "complete" &&
+            currentState.phase !== "intro"
+              ? "expired"
+              : (currentState.phase as Phase);
+          setTimeLeft(restoredTime);
+          setPhase(restoredPhase);
+          setTimerRunning(isStudent && currentState.timerRunning && restoredTime > 0);
+          setAnswers(currentState.answers || { answer1: "", answer2: "" });
+          setValidated(currentState.validated || { answer1: false, answer2: false });
+        }
+
+        setRestoredFromStorage(true);
+      } catch {
+        // Ignore parse errors — start fresh
+      }
+    }
+  }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save timer state to localStorage on unmount
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const userId = currentUser.id;
+    return () => {
+      const state = latestStateRef.current;
+      const now = Date.now();
+      const toSave = {
+        functionStates: {
+          ...state.functionStates,
+          [state.currentFunctionIndex]: {
+            timeLeft: state.timeLeft,
+            phase: state.phase,
+            answers: state.answers,
+            validated: state.validated,
+            timerRunning: state.timerRunning,
+            departureTime: state.timerRunning ? now : undefined,
+          },
+        },
+        currentFunctionIndex: state.currentFunctionIndex,
+      };
+      localStorage.setItem(`speedDating_state_${userId}`, JSON.stringify(toSave));
+    };
+  }, [currentUser?.id]);
 
   // Construire le leaderboard à partir de firebaseDataService et synchroniser avec Firebase
   const buildLeaderboardData = useCallback(async (): Promise<LeaderboardParticipant[]> => {
@@ -198,6 +288,9 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         .map((id) => parseInt(id) - 1);
       setCompletedFunctions(completedIds);
 
+      // Skip auto-navigation if we already restored position from localStorage
+      if (restoredFromStorage) return;
+
       // Au premier chargement, naviguer vers la premiere fonction non completee
       if (!initialLoadDone && completedIds.length > 0) {
         setInitialLoadDone(true);
@@ -215,7 +308,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         setPhase("complete");
       }
     }
-  }, [isStudent, progressManagerInstance.speedDatingProgress]);
+  }, [isStudent, progressManagerInstance.speedDatingProgress, restoredFromStorage]);
 
   // Phase timer effect — single shared timer per function, always expires to "expired"
   useEffect(() => {
@@ -247,6 +340,25 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   }, [globalTimerRunning]);
 
   const currentFunction = excelFunctions[currentFunctionIndex] ?? excelFunctions[0];
+
+  // A function is "finished" if it is completed (validated) or its timer has expired
+  const finishedFunctions = useMemo(() => {
+    const finished = new Set<number>(completedFunctions);
+    // Add functions whose saved state is "expired"
+    Object.entries(functionStates).forEach(([index, state]) => {
+      if (state.phase === "expired") {
+        finished.add(parseInt(index));
+      }
+    });
+    // Add current function if currently expired
+    if (phase === "expired") {
+      finished.add(currentFunctionIndex);
+    }
+    return finished;
+  }, [completedFunctions, functionStates, phase, currentFunctionIndex]);
+
+  // All functions are done when every function is either completed or expired
+  const allFunctionsDone = finishedFunctions.size === excelFunctions.length;
 
   const handleFunctionComplete = useCallback(async (
     functionId: number,
@@ -331,7 +443,8 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
 
       setCurrentFunctionIndex(newIndex);
 
-      if (completedFunctions.includes(newIndex)) {
+      // When all functions are done, allow free navigation (no lock on completed functions)
+      if (completedFunctions.includes(newIndex) && !allFunctionsDone) {
         setPhase("complete");
         setTimeLeft(0);
         setTimerRunning(false);
@@ -349,9 +462,17 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           const restoredPhase = restoredTime <= 0 ? "expired" : savedState.phase;
           setTimeLeft(restoredTime);
           setPhase(restoredPhase);
-          setTimerRunning(savedState.timerRunning && restoredTime > 0);
+          // In review mode (allFunctionsDone) or for instructors, don't restart the timer
+          setTimerRunning(savedState.timerRunning && restoredTime > 0 && isStudent && !allFunctionsDone);
           setAnswers(savedState.answers);
           setValidated(savedState.validated);
+        } else if (completedFunctions.includes(newIndex)) {
+          // Completed but no saved state (completed in a previous session) — review mode
+          setPhase("complete");
+          setTimeLeft(0);
+          setTimerRunning(false);
+          setAnswers({ answer1: "", answer2: "" });
+          setValidated({ answer1: false, answer2: false });
         } else {
           setPhase("intro");
           setTimeLeft(420);
@@ -361,11 +482,11 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         }
       }
     }
-  }, [currentFunctionIndex, completedFunctions, timeLeft, phase, answers, validated, functionStates, timerRunning]);
+  }, [currentFunctionIndex, completedFunctions, timeLeft, phase, answers, validated, functionStates, timerRunning, isStudent, allFunctionsDone]);
 
   const startSession = useCallback(() => {
-    // Empecher de recommencer une fonction deja completee
-    if (completedFunctions.includes(currentFunctionIndex)) {
+    // Students cannot redo a completed function unless all functions are done (review mode)
+    if (isStudent && !allFunctionsDone && completedFunctions.includes(currentFunctionIndex)) {
       return;
     }
     if (!sessionStarted) {
@@ -378,8 +499,12 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     }
     setPhase("video");
     setTimeLeft(420);
-    setTimerRunning(true);
-  }, [sessionStarted, completedFunctions, currentFunctionIndex, currentUser?.id]);
+    // Only start the countdown for students (instructors have no timer).
+    // In review mode (allFunctionsDone), the timer does not run either.
+    if (isStudent && !allFunctionsDone) {
+      setTimerRunning(true);
+    }
+  }, [sessionStarted, completedFunctions, currentFunctionIndex, currentUser?.id, isStudent, allFunctionsDone]);
 
   const skipVideo = useCallback(() => {
     setPhase("exercise");
@@ -621,12 +746,16 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
                 </div>
               </div>
 
-              <Timer
-                timeLeft={timeLeft}
-                timerRunning={timerRunning}
-                toggleTimer={toggleTimer}
-                resetTimer={resetTimer}
-              />
+              {/* Timer: only shown for students (instructors have no timer) */}
+              {isStudent && (
+                <Timer
+                  timeLeft={timeLeft}
+                  timerRunning={timerRunning}
+                  toggleTimer={toggleTimer}
+                  resetTimer={resetTimer}
+                  showControls={false}
+                />
+              )}
             </div>
 
             <FunctionCard
@@ -643,7 +772,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               functionsLength={excelFunctions.length}
               currentFunctionIndex={currentFunctionIndex}
               togglePassport={() => setShowPassport(true)}
-              isCompleted={completedFunctions.includes(currentFunctionIndex)}
+              isCompleted={isStudent && completedFunctions.includes(currentFunctionIndex) && !allFunctionsDone}
               completedScore={
                 progressManagerInstance.speedDatingProgress[currentFunctionIndex + 1]?.score
               }
