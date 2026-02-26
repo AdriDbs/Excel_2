@@ -89,14 +89,14 @@ export function getExpectedAnswer(
 
 function normalizeDateToISO(input: string): string | null {
   // Format JJ/MM/AAAA ou JJ-MM-AAAA
-  let match = input.match(/^(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})$/);
+  let match = input.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
   if (match) {
     const [, d, m, y] = match;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
 
   // Format AAAA-MM-JJ ou AAAA/MM/JJ
-  match = input.match(/^(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})$/);
+  match = input.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
   if (match) {
     const [, y, m, d] = match;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;

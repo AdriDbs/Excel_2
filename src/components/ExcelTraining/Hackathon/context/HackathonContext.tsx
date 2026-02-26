@@ -7,7 +7,7 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
-import { Team, Student, HackathonState } from "../types";
+import { Student, HackathonState } from "../types";
 import {
   syncTeamsData,
   fetchInitialState,
@@ -16,7 +16,6 @@ import {
   unregisterStudent,
 } from "../services/hackathonService";
 import {
-  saveHackathonSessionToFirebase,
   subscribeToHackathonSession,
   updateHackathonSession,
   updateTeamInFirebase,

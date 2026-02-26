@@ -412,7 +412,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         addNotification("Felicitations ! Toutes les fonctions maitrisees !", "milestone");
       }
     }
-  }, [isStudent, progressManagerInstance, currentFunctionIndex, currentFunction.name, addNotification, onProgressUpdate]);
+  }, [isStudent, progressManagerInstance, currentFunctionIndex, currentFunction.name, addNotification, onProgressUpdate, buildLeaderboardData]);
 
   const toggleTimer = useCallback(() => setTimerRunning((prev) => !prev), []);
 

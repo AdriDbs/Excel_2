@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   ArrowLeft,
   Search,
@@ -19,25 +19,29 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedFunction, setSelectedFunction] = useState<string | null>(null);
 
-  // Extraire toutes les catégories uniques
-  const allCategories = Array.from(
-    new Set(useCasesData.map((useCase) => useCase.category))
+  // Extraire toutes les catégories uniques — calculé une seule fois car useCasesData est statique
+  const allCategories = useMemo(
+    () => Array.from(new Set(useCasesData.map((useCase) => useCase.category))),
+    []
   );
 
-  // Extraire toutes les fonctions uniques
-  const allFunctions = Array.from(
-    new Set(
-      useCasesData.flatMap((useCase) =>
-        useCase.functions.map((func) => func.name)
-      )
-    )
-  ).sort();
+  // Extraire toutes les fonctions uniques — calculé une seule fois
+  const allFunctions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          useCasesData.flatMap((useCase) =>
+            useCase.functions.map((func) => func.name)
+          )
+        )
+      ).sort(),
+    []
+  );
 
-  // Fonction de recherche améliorée qui vérifie dans tous les champs pertinents
-  const searchInUseCase = (useCase: UseCase, term: string): boolean => {
+  // Fonction de recherche — stable, useCasesData est statique
+  const searchInUseCase = useCallback((useCase: UseCase, term: string): boolean => {
     const lowerTerm = term.toLowerCase();
 
-    // Recherche dans les champs principaux
     if (
       useCase.title.toLowerCase().includes(lowerTerm) ||
       useCase.description.toLowerCase().includes(lowerTerm) ||
@@ -49,7 +53,6 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
       return true;
     }
 
-    // Recherche dans les bénéfices
     if (
       useCase.benefits.some((benefit) =>
         benefit.toLowerCase().includes(lowerTerm)
@@ -58,7 +61,6 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
       return true;
     }
 
-    // Recherche dans les fonctions (nom, description et exemple)
     if (
       useCase.functions.some(
         (func) =>
@@ -70,24 +72,24 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
       return true;
     }
 
-    // Si aucune correspondance n'est trouvée
     return false;
-  };
+  }, []);
 
-  // Filtrer les cas d'utilisation selon les critères
-  const filteredUseCases = useCasesData.filter((useCase) => {
-    const matchesSearch =
-      searchTerm === "" || searchInUseCase(useCase, searchTerm);
-
-    const matchesCategory =
-      selectedCategory === null || useCase.category === selectedCategory;
-
-    const matchesFunction =
-      selectedFunction === null ||
-      useCase.functions.some((func) => func.name === selectedFunction);
-
-    return matchesSearch && matchesCategory && matchesFunction;
-  });
+  // Filtrer les cas d'utilisation — recalculé seulement quand les filtres changent
+  const filteredUseCases = useMemo(
+    () =>
+      useCasesData.filter((useCase) => {
+        const matchesSearch =
+          searchTerm === "" || searchInUseCase(useCase, searchTerm);
+        const matchesCategory =
+          selectedCategory === null || useCase.category === selectedCategory;
+        const matchesFunction =
+          selectedFunction === null ||
+          useCase.functions.some((func) => func.name === selectedFunction);
+        return matchesSearch && matchesCategory && matchesFunction;
+      }),
+    [searchTerm, selectedCategory, selectedFunction, searchInUseCase]
+  );
 
   // Function to get icon for category
   const getCategoryIcon = (category: string) => {
@@ -106,49 +108,23 @@ const UseCasesSection = ({ navigateTo }: NavigationProps) => {
     }
   };
 
-  // Vérifier si un terme de recherche met en évidence un cas d'usage spécifique
-  const getSearchMatchInfo = (useCase: UseCase): string | null => {
+  // Identifier dans quels champs la correspondance a été trouvée
+  const getSearchMatchInfo = useCallback((useCase: UseCase): string | null => {
     if (!searchTerm) return null;
 
     const lowerTerm = searchTerm.toLowerCase();
     const matchTypes: string[] = [];
 
-    if (useCase.title.toLowerCase().includes(lowerTerm)) {
-      matchTypes.push("titre");
-    }
-    if (useCase.description.toLowerCase().includes(lowerTerm)) {
-      matchTypes.push("description");
-    }
-    if (useCase.implementation.toLowerCase().includes(lowerTerm)) {
-      matchTypes.push("implémentation");
-    }
-    if (
-      useCase.benefits.some((benefit) =>
-        benefit.toLowerCase().includes(lowerTerm)
-      )
-    ) {
-      matchTypes.push("bénéfice");
-    }
-    if (
-      useCase.functions.some((func) =>
-        func.name.toLowerCase().includes(lowerTerm)
-      )
-    ) {
-      matchTypes.push("nom de fonction");
-    }
-    if (
-      useCase.functions.some((func) =>
-        func.description.toLowerCase().includes(lowerTerm)
-      )
-    ) {
-      matchTypes.push("description de fonction");
-    }
-    if (useCase.example.toLowerCase().includes(lowerTerm)) {
-      matchTypes.push("exemple");
-    }
+    if (useCase.title.toLowerCase().includes(lowerTerm)) matchTypes.push("titre");
+    if (useCase.description.toLowerCase().includes(lowerTerm)) matchTypes.push("description");
+    if (useCase.implementation.toLowerCase().includes(lowerTerm)) matchTypes.push("implémentation");
+    if (useCase.benefits.some((b) => b.toLowerCase().includes(lowerTerm))) matchTypes.push("bénéfice");
+    if (useCase.functions.some((f) => f.name.toLowerCase().includes(lowerTerm))) matchTypes.push("nom de fonction");
+    if (useCase.functions.some((f) => f.description.toLowerCase().includes(lowerTerm))) matchTypes.push("description de fonction");
+    if (useCase.example.toLowerCase().includes(lowerTerm)) matchTypes.push("exemple");
 
     return matchTypes.length > 0 ? matchTypes.join(", ") : null;
-  };
+  }, [searchTerm]);
 
   return (
     <div className="min-h-screen bg-bp-red-700 text-white p-4">

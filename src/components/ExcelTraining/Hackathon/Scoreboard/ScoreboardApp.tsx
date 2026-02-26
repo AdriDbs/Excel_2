@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Clock,
-  CheckCircle,
   Trophy,
   Users,
   ArrowLeft,
@@ -24,7 +23,6 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     state,
     setTimeLeftSeconds,
     setIsGlobalView,
-    setSessionId,
     endCurrentSession,
     setNotification,
     formatTime,
@@ -87,6 +85,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
     // Mettre à jour le classement précédent
     setPreviousRanking(sortedTeams.map((team) => team.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortedTeams.map((t) => t.score).join("-")]); // Se déclenche uniquement quand les scores changent
 
   // Vérifier si on est dans les 5 dernières minutes

@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState, useEffect } from "react";
-import { X, Trophy, Medal, Wifi, WifiOff, RefreshCw, Clock, Monitor, Smartphone, Tablet } from "lucide-react";
+import { X, Trophy, RefreshCw, Clock, Monitor, Smartphone, Tablet } from "lucide-react";
 import { ExcelFunction, LeaderboardParticipant } from "../types";
 import { firebaseDataService } from "../../../services/firebaseDataService";
 import { Student, DeviceInfo } from "../../../types/database";
@@ -78,7 +78,7 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
     // Rafraîchir toutes les 5 secondes
     const interval = setInterval(enrichData, 5000);
     return () => clearInterval(interval);
-  }, [leaderboardData]);
+  }, [leaderboardData, userName]);
 
   const sortedLeaderboard = useMemo(
     () => [...enhancedData].sort((a, b) => {
@@ -332,8 +332,6 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
                   const completedBy = sortedLeaderboard.filter(
                     p => (p.completedFunctions || []).includes(index)
                   );
-                  const onlineCompletedBy = completedBy.filter(p => p.isOnline);
-
                   return (
                     <div key={func.name} className="flex items-center gap-2 bg-white/50 p-2 rounded-lg">
                       <div className="text-xl">{func.avatar}</div>
