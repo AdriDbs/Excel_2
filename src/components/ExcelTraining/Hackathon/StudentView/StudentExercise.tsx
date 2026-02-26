@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Level, Team } from "../types";
 import { useHackathon } from "../context/HackathonContext";
+import { validateAnswer } from "../data/hackathonAnswers";
 
 interface StudentExerciseProps {
   teamData: Team;
@@ -103,25 +104,24 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
   const handleSubmitAnswer = () => {
     if (!teamData.id) return;
 
-    // Dans cette version de démo, toutes les réponses sont "BearingPoint"
-    if (answer.trim() === "BearingPoint") {
-      // Mettre à jour l'équipe
+    const exerciseId = currentLevelData.exerciseId;
+    if (!exerciseId) {
+      setNotification("Exercice non configuré.", "error");
+      return;
+    }
+
+    if (validateAnswer(exerciseId, answer)) {
       completeLevel(teamData.id, currentLevel);
 
-      // Ajouter le nombre de points correspondant au niveau
-      const pointsEarned = currentLevelData.pointsValue || 200;
+      const pointsEarned = currentLevelData.pointsValue || 0;
       updateTeamScore(teamData.id, "success", pointsEarned);
 
-      // Mettre à jour la progression à 100%
       updateLevelProgress(teamData.id, currentLevel, 100);
 
-      // Arrêter le timer
       setTimerRunning(false);
 
-      // Afficher la notification de succès
-      setNotification(`Niveau complété ! +${pointsEarned} points`, "success");
+      setNotification(`Exercice complété ! +${pointsEarned} points`, "success");
 
-      // Passer au niveau suivant si possible
       if (currentLevel < hackathonLevels.length - 1) {
         setTimeout(() => {
           setCurrentLevel(currentLevel + 1);
@@ -130,7 +130,6 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
         }, 2000);
       }
     } else {
-      // Réponse incorrecte
       setNotification("Réponse incorrecte. Essayez encore !", "error");
     }
   };
@@ -355,7 +354,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                   Astuce
                 </h3>
                 <p className="text-gray-300 text-sm">
-                  Pour la démo, toutes les réponses sont "BearingPoint".
+                  Utilisez le bouton « Débloquer » ci-dessous pour révéler l'indice (-25 pts).
                 </p>
               </div>
             </div>

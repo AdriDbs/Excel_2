@@ -315,16 +315,16 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 <div className="flex items-center gap-2">
                   <div className="bg-blue-500 w-3 h-3 rounded-full"></div>
                   <p>
-                    Phase 1: Data Cleaning ({hackathonLevels[0].timeAllocation}
+                    Phase 0 : Data Cleaning ({hackathonLevels[0].timeAllocation}
                     min)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="bg-green-500 w-3 h-3 rounded-full"></div>
                   <p>
-                    Phase 2: Data Analysis (
+                    Phases 1–5 : Analyse &amp; Formules avancées (
                     {hackathonLevels
-                      .slice(1, 6)
+                      .slice(1, 13)
                       .reduce((sum, level) => sum + level.timeAllocation, 0)}
                     min)
                   </p>
@@ -332,13 +332,16 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 <div className="flex items-center gap-2">
                   <div className="bg-bp-red-400 w-3 h-3 rounded-full"></div>
                   <p>
-                    Phase 3: Data Visualization (
-                    {hackathonLevels[6].timeAllocation}min)
+                    Phase 6 : Visualisation (
+                    {hackathonLevels
+                      .slice(13)
+                      .reduce((sum, level) => sum + level.timeAllocation, 0)}
+                    min)
                   </p>
                 </div>
               </div>
               <div className="mt-4 text-xs text-bp-red-200">
-                {hackathonLevels.length} niveaux au total à compléter
+                {hackathonLevels.length} exercices au total à compléter
               </div>
             </div>
 
@@ -350,19 +353,23 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
               </div>
               <ul className="space-y-2 text-bp-red-100">
                 <li className="flex justify-between">
-                  <span>Data Cleaning</span>
+                  <span>Phase 0 – Data Cleaning</span>
                   <span className="text-bp-red-200">
                     {hackathonLevels[0].pointsValue} pts
                   </span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Niveaux d'analyse</span>
-                  <span className="text-bp-red-200">200 pts/niveau</span>
+                  <span>Phases 1–4 – Formules Excel</span>
+                  <span className="text-bp-red-200">50–100 pts/exercice</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Tableau de bord final</span>
+                  <span>Phase 5 – Exercice Expert</span>
+                  <span className="text-bp-red-200">450 pts</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Phase 6 – Visualisation</span>
                   <span className="text-bp-red-200">
-                    {hackathonLevels[6].pointsValue} pts
+                    {hackathonLevels[hackathonLevels.length - 1].pointsValue} pts (dernier ex.)
                   </span>
                 </li>
                 <li className="flex justify-between text-red-300">
@@ -514,7 +521,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
           </div>
           <div className="text-center mt-4">
             <p className="text-bp-red-100 text-sm">
-              ... et 4 autres niveaux de difficulté croissante !
+              ... et {hackathonLevels.length - 3} autres exercices de difficulté croissante !
             </p>
           </div>
         </div>

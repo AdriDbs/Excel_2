@@ -4,7 +4,8 @@ import { NavigationProps } from "../../types";
 import { Student, Instructor } from "../../../../types/database";
 import { useProgressManager, useProgressNotifications } from "../../../../hooks/useProgressManager";
 import { useHackathon } from "../context/HackathonContext";
-import { registerStudent } from "../services/hackathonService";
+import { registerStudent, hackathonLevels } from "../services/hackathonService";
+import { validateAnswer as validateHackathonAnswer } from "../data/hackathonAnswers";
 import WaitingScreen from "./WaitingScreen";
 import DownloadFilesOverlay from "./DownloadFilesOverlay";
 
@@ -26,6 +27,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLeavingTeam, setIsLeavingTeam] = useState(false);
   const [isLoadingRegistration, setIsLoadingRegistration] = useState(true);
+  const [exerciseAnswer, setExerciseAnswer] = useState("");
 
   // Context du hackathon
   const {
@@ -143,7 +145,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   };
 
   const validateAnswer = (levelId: number, answer: string): boolean => {
-    return answer.toLowerCase().includes("bearingpoint");
+    const level = hackathonLevels[levelId];
+    if (!level?.exerciseId) return false;
+    return validateHackathonAnswer(level.exerciseId, answer);
   };
 
   const calculateTimeBonus = (levelId: number): number => {
@@ -437,11 +441,16 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      value={exerciseAnswer}
+                      onChange={(e) => setExerciseAnswer(e.target.value)}
                       placeholder="Saisissez votre réponse..."
                       className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
                     />
                     <button
-                      onClick={() => handleLevelValidation(progressStats?.currentLevel || 0, "BearingPoint")}
+                      onClick={() => {
+                        handleLevelValidation(progressStats?.currentLevel || 0, exerciseAnswer);
+                        setExerciseAnswer("");
+                      }}
                       className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
                     >
                       <CheckCircle size={20} />

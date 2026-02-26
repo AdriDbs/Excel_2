@@ -15,122 +15,309 @@ import {
   getRegisteredStudentFromFirebase,
 } from "../../../../config/firebase";
 
-// Définition des niveaux du jeu basés sur le scénario détaillé
+// Définition des 16 exercices du hackathon "Le Dossier Perdu"
+// Répartis en 7 phases — total 1 600 points
 export const hackathonLevels: Level[] = [
+  // ── Phase 0 : Data Cleaning (1 exercice) ────────────────────────────────
   {
     id: 0,
-    name: "Préparation des données",
+    exerciseId: "data-cleaning",
+    name: "Phase 0 – Nettoyage des données",
     description:
-      "Nettoyez et préparez les données brutes dispersées et incohérentes",
-    instruction: "Consigne en cours de rédaction",
+      "Nettoyez et préparez les données brutes pour créer Table_Donnees_Propres",
+    instruction:
+      "Importez les données brutes dans Excel et utilisez Power Query pour les nettoyer : supprimez les doublons, standardisez les formats (TRIM, CLEAN, PROPER) et nommez la table finale « Table_Donnees_Propres ».",
     exerciseDescription:
-      "Pour commencer, vous devez fusionner et nettoyer les données provenant de trois sources différentes: un fichier CSV des commandes, un fichier Excel des stocks et un fichier texte des fournisseurs.",
+      "Vous commencez le hackathon en préparant les données brutes. Utilisez Power Query pour importer, dédupliquer et normaliser les données avant de créer la table de travail.",
     exerciseQuestion:
-      "Combien de produits sont en rupture de stock ET ont une demande prioritaire?",
-    answerFormat: "Nombre entier (ex: 12)",
-    hint: "Utilisez Power Query pour importer les différentes sources. Ensuite, utilisez des formules comme TRIM, CLEAN et PROPER pour standardiser les formats. N'oubliez pas de vérifier les valeurs aberrantes.",
+      "Quel est le nom exact de la table de données nettoyée que vous avez créée ?",
+    answerFormat: "Nom de table (ex: Table_Donnees_Propres)",
+    hint: "Après nettoyage via Power Query, nommez votre table exactement « Table_Donnees_Propres » dans le gestionnaire des noms ou via l'onglet Conception du tableau.",
     functionRequired: ["Power Query", "TRIM", "CLEAN", "PROPER"],
     timeAllocation: 20,
-    pointsValue: 300,
+    pointsValue: 100,
   },
+
+  // ── Phase 1 : Fonctions de Base (3 exercices) ────────────────────────────
   {
     id: 1,
-    name: "Accès au serveur",
+    exerciseId: "p1-ex1-count",
+    name: "Phase 1 – Ex1 : Compter les commandes",
     description:
-      "Retrouvez les identifiants de connexion au serveur de l'entreprise",
-    instruction: "Consigne en cours de rédaction",
+      "Utilisez COUNTIF pour compter les commandes d'un client spécifique",
+    instruction:
+      "Dans Table_Donnees_Propres, utilisez COUNTIF pour compter le nombre de commandes du client « Client_015 » dans la colonne Contact.",
     exerciseDescription:
-      "Les identifiants pour accéder au serveur sont cachés dans les données. Vous devez identifier les produits en rupture de stock avec une demande élevée, puis extraire les identifiants correspondants.",
+      "Vous devez analyser la table de données pour identifier combien de fois un client spécifique apparaît dans les enregistrements.",
     exerciseQuestion:
-      "Quel est le code d'accès formé par la combinaison des fournisseurs des produits critiques?",
-    answerFormat: "Format texte avec tirets (ex: ALPHA-BETA-GAMMA)",
-    hint: "Utilisez XLOOKUP pour rechercher les informations des produits en rupture, puis FILTER pour ne garder que ceux avec une demande supérieure à 100 unités. Enfin, utilisez UNIQUE pour extraire les fournisseurs sans doublon.",
-    functionRequired: ["XLOOKUP", "FILTER", "UNIQUE"],
-    timeAllocation: 15,
-    pointsValue: 200,
+      "Combien de commandes a passé le client « Client_015 » ? (formule : =COUNTIF(Table_Donnees_Propres[Contact]; \"Client_015\"))",
+    answerFormat: "Nombre entier (ex: 15)",
+    hint: "Utilisez : =COUNTIF(Table_Donnees_Propres[Contact]; \"Client_015\")",
+    functionRequired: ["COUNTIF"],
+    timeAllocation: 10,
+    pointsValue: 50,
   },
   {
     id: 2,
-    name: "Reconstruction des données",
+    exerciseId: "p1-ex2-filter",
+    name: "Phase 1 – Ex2 : Produits critiques",
     description:
-      "Réorganisez les données client dispersées pour reconstituer la base",
-    instruction: "Consigne en cours de rédaction",
+      "Utilisez FILTER pour identifier la commande en rupture critique",
+    instruction:
+      "Filtrez les commandes où Stock_Actuel < 50 ET Demande_Prevue > 100. Notez l'identifiant de commande (ID_Commande) du résultat.",
     exerciseDescription:
-      "La base de données clients est fragmentée et désorganisée. Vous devez la reconstruire en réorganisant les informations et en créant une structure cohérente.",
+      "Parmi toutes les commandes, identifiez celle qui correspond à un produit en rupture critique : stock actuel inférieur à 50 unités et demande prévue supérieure à 100 unités.",
     exerciseQuestion:
-      "Combien de clients prioritaires avez-vous identifiés dans la région Nord après reconstruction?",
-    answerFormat: "Nombre entier (ex: 8)",
-    hint: "Utilisez SEQUENCE pour générer des identifiants séquentiels, CHOOSECOLS pour sélectionner uniquement les colonnes pertinentes, et BYROW pour appliquer une logique par ligne qui identifie les clients prioritaires.",
-    functionRequired: ["SEQUENCE", "CHOOSECOLS", "BYROW", "BYCOL"],
+      "Quel est l'identifiant de commande (ID_Commande) du produit critique ? (formule : =FILTER(Table_Donnees_Propres; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100)))",
+    answerFormat: "Code commande (ex: CMD1191)",
+    hint: "Utilisez : =FILTER(Table_Donnees_Propres; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100)) puis notez l'ID_Commande.",
+    functionRequired: ["FILTER"],
     timeAllocation: 15,
-    pointsValue: 200,
+    pointsValue: 75,
   },
   {
     id: 3,
-    name: "Analyse des tendances",
-    description: "Transformez les données pour faire apparaître les tendances",
-    instruction: "Consigne en cours de rédaction",
+    exerciseId: "p1-ex3-unique",
+    name: "Phase 1 – Ex3 : Fournisseurs concernés",
+    description:
+      "Utilisez UNIQUE et FILTER pour compter les fournisseurs distincts",
+    instruction:
+      "Combinez UNIQUE et FILTER pour lister les ID_Fournisseur distincts liés aux produits critiques, puis comptez-les.",
     exerciseDescription:
-      "Les données des tendances de vente sont mal orientées et contiennent des informations parasites. Vous devez les transformer pour identifier clairement les tendances par catégorie.",
+      "En partant du filtre de l'exercice précédent, vous devez identifier combien de fournisseurs différents sont concernés par les produits critiques.",
     exerciseQuestion:
-      "Quel est le taux de croissance (en %) de la catégorie 'Électronique' sur la période analysée?",
-    answerFormat: "Pourcentage avec 2 décimales (ex: 12.45)",
-    hint: "Utilisez DROP pour supprimer les colonnes inutiles, TAKE pour sélectionner les périodes pertinentes, puis TRANSPOSE pour réorienter les données. Ensuite, utilisez MAP avec LET pour calculer les taux de croissance de chaque catégorie.",
-    functionRequired: ["DROP", "TAKE", "TRANSPOSE", "LET", "MAP"],
+      "Combien de fournisseurs uniques (ID_Fournisseur) sont liés aux produits critiques ? (formule : =ROWS(UNIQUE(FILTER(Table_Donnees_Propres[ID_Fournisseur]; ...))))",
+    answerFormat: "Nombre entier (ex: 3)",
+    hint: "Utilisez : =ROWS(UNIQUE(FILTER(Table_Donnees_Propres[ID_Fournisseur]; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100))))",
+    functionRequired: ["UNIQUE", "FILTER", "ROWS"],
     timeAllocation: 15,
-    pointsValue: 200,
+    pointsValue: 75,
   },
+
+  // ── Phase 2 : Manipulation Avancée (2 exercices) ─────────────────────────
   {
     id: 4,
-    name: "Consolidation du rapport",
-    description: "Assemblez et consolidez les différentes parties du rapport",
-    instruction: "Consigne en cours de rédaction",
+    exerciseId: "p2-ex1-choosecols",
+    name: "Phase 2 – Ex1 : Réorganiser les colonnes",
+    description:
+      "Utilisez CHOOSECOLS pour sélectionner et réorganiser les colonnes",
+    instruction:
+      "Utilisez CHOOSECOLS pour créer une vue de Table_Donnees_Propres ne conservant que les colonnes 3, 4, 5, 6, 7, 8, 10 et 12.",
     exerciseDescription:
-      "Vous devez consolider les données des quatre régions en un rapport unifié. Cela implique de fusionner verticalement et horizontalement les données, puis de les pivoter pour une vue synthétique.",
+      "Vous devez réorganiser les données en ne gardant que les colonnes pertinentes pour l'analyse.",
     exerciseQuestion:
-      "Quelle région présente le meilleur ratio ventes/stock après consolidation?",
-    answerFormat: "Nom de région (ex: Est)",
-    hint: "Utilisez VSTACK pour combiner verticalement les tableaux régionaux, puis GROUPBY pour agréger les données par région et catégorie. Enfin, créez des ratios avec les valeurs agrégées pour identifier la région la plus performante.",
-    functionRequired: ["VSTACK", "HSTACK", "GROUPBY", "PIVOTBY"],
+      "Avez-vous réorganisé les colonnes avec CHOOSECOLS ? Entrez « Done » une fois l'opération réalisée. (formule : =CHOOSECOLS(Table_Donnees_Propres; 3; 4; 5; 6; 7; 8; 10; 12))",
+    answerFormat: "Entrez : Done",
+    hint: "Utilisez : =CHOOSECOLS(Table_Donnees_Propres; 3; 4; 5; 6; 7; 8; 10; 12)",
+    functionRequired: ["CHOOSECOLS"],
     timeAllocation: 15,
-    pointsValue: 200,
+    pointsValue: 100,
   },
   {
     id: 5,
-    name: "Finalisation de l'analyse",
+    exerciseId: "p2-ex2-byrow",
+    name: "Phase 2 – Ex2 : CA par ligne (BYROW)",
     description:
-      "Finalisez l'analyse et préparez les données pour la visualisation",
-    instruction: "Consigne en cours de rédaction",
+      "Utilisez BYROW avec LAMBDA pour calculer le CA ligne par ligne",
+    instruction:
+      "Appliquez BYROW sur les colonnes Quantite et Prix_Unitaire pour calculer le montant par ligne, puis faites la somme totale.",
     exerciseDescription:
-      "Vous devez finaliser l'analyse avec des calculs de métriques avancées et préparer les projections pour le tableau de bord.",
+      "Utilisez BYROW avec une fonction LAMBDA pour calculer le chiffre d'affaires (Quantite × Prix_Unitaire) de chaque commande, puis additionnez le tout.",
     exerciseQuestion:
-      "Quelle est la prévision de croissance (en %) pour le prochain trimestre selon votre analyse?",
-    answerFormat: "Pourcentage avec 1 décimale (ex: 8.5)",
-    hint: "Utilisez SCAN pour calculer des cumuls progressifs, REDUCE pour construire une structure de projection, et OFFSET pour créer des fenêtres glissantes d'analyse. L'objectif est d'identifier les tendances et de les projeter pour le trimestre suivant.",
-    functionRequired: ["REDUCE", "SCAN", "TOCOL", "TOROW", "OFFSET"],
+      "Quelle est la somme totale du CA calculé par BYROW ? (formule : =SUM(BYROW(CHOOSECOLS(Table_Donnees_Propres; 4; 5); LAMBDA(row; INDEX(row;1)*INDEX(row;2)))))",
+    answerFormat: "Nombre décimal (ex: 1800838.1)",
+    hint: "Utilisez : =SUM(BYROW(CHOOSECOLS(Table_Donnees_Propres; 4; 5); LAMBDA(row; INDEX(row;1)*INDEX(row;2))))",
+    functionRequired: ["BYROW", "LAMBDA", "CHOOSECOLS", "SUM"],
     timeAllocation: 15,
-    pointsValue: 200,
+    pointsValue: 100,
   },
+
+  // ── Phase 3 : Extraction de Données (3 exercices) ────────────────────────
   {
     id: 6,
-    name: "Création du tableau de bord",
+    exerciseId: "p3-ex1-take",
+    name: "Phase 3 – Ex1 : Dernières commandes (TAKE)",
     description:
-      "Créez un tableau de bord impactant et interactif pour la présentation",
-    instruction: "Consigne en cours de rédaction",
+      "Utilisez TAKE pour extraire et analyser les 100 dernières commandes",
+    instruction:
+      "Utilisez TAKE avec -100 pour récupérer les 100 dernières lignes, puis calculez la moyenne du Montant_Total.",
     exerciseDescription:
-      "Vous devez transformer toutes vos analyses en un tableau de bord visuellement impactant et interactif pour la présentation au conseil d'administration de Nexus.",
+      "Vous devez analyser les tendances récentes en travaillant uniquement sur les 100 dernières commandes de la table.",
     exerciseQuestion:
-      "Quel est le principal insight stratégique que vous avez identifié suite à votre analyse complète?",
-    answerFormat: "Phrase concise résumant l'insight clé",
-    hint: "Commencez par identifier 3-5 messages clés que vous voulez communiquer. Pour chacun, choisissez la visualisation la plus appropriée (graphique à barres, ligne, secteurs, etc.) et créez un layout cohérent. N'oubliez pas d'ajouter des filtres interactifs avec les segments (slicers).",
-    functionRequired: [
-      "Tableaux croisés dynamiques",
-      "Graphiques",
-      "Segments",
-      "Mise en forme conditionnelle",
-    ],
-    timeAllocation: 25,
-    pointsValue: 300,
+      "Quelle est la valeur moyenne du Montant_Total des 100 dernières commandes ? (formule : =AVERAGE(TAKE(Table_Donnees_Propres[Montant_Total]; -100)))",
+    answerFormat: "Nombre décimal (ex: 378.7)",
+    hint: "Utilisez : =AVERAGE(TAKE(Table_Donnees_Propres[Montant_Total]; -100)). TAKE avec un nombre négatif prend les dernières lignes.",
+    functionRequired: ["TAKE", "AVERAGE"],
+    timeAllocation: 15,
+    pointsValue: 75,
+  },
+  {
+    id: 7,
+    exerciseId: "p3-ex2-drop",
+    name: "Phase 3 – Ex2 : Retirer les données de test (DROP)",
+    description:
+      "Utilisez DROP pour supprimer les premières lignes de test",
+    instruction:
+      "Les 30 premières lignes sont des données de test à exclure. Utilisez DROP pour les supprimer et comptez les lignes restantes.",
+    exerciseDescription:
+      "Les 30 premières commandes sont des données de test qui doivent être exclues avant toute analyse réelle.",
+    exerciseQuestion:
+      "Combien de lignes reste-t-il après avoir retiré les 30 premières commandes ? (formule : =ROWS(DROP(Table_Donnees_Propres; 30)))",
+    answerFormat: "Nombre entier (ex: 5781)",
+    hint: "Utilisez : =ROWS(DROP(Table_Donnees_Propres; 30))",
+    functionRequired: ["DROP", "ROWS"],
+    timeAllocation: 15,
+    pointsValue: 75,
+  },
+  {
+    id: 8,
+    exerciseId: "p3-ex3-map",
+    name: "Phase 3 – Ex3 : Augmentation de prix 5% (MAP)",
+    description:
+      "Utilisez MAP avec LAMBDA pour simuler une hausse tarifaire de 5%",
+    instruction:
+      "Utilisez MAP pour appliquer une augmentation de 5% à chaque Prix_Unitaire, puis calculez la somme totale.",
+    exerciseDescription:
+      "Simulez une augmentation tarifaire de 5% sur tous les prix unitaires pour estimer l'impact sur le budget.",
+    exerciseQuestion:
+      "Quelle est la somme totale des prix unitaires après +5% ? (formule : =SUM(MAP(Table_Donnees_Propres[Prix_Unitaire]; LAMBDA(x; x*1,05))))",
+    answerFormat: "Nombre décimal (ex: 179190.6)",
+    hint: "Utilisez : =SUM(MAP(Table_Donnees_Propres[Prix_Unitaire]; LAMBDA(x; x*1,05)))",
+    functionRequired: ["MAP", "LAMBDA", "SUM"],
+    timeAllocation: 15,
+    pointsValue: 100,
+  },
+
+  // ── Phase 4 : Combinaison de Tables (3 exercices) ────────────────────────
+  {
+    id: 9,
+    exerciseId: "p4-ex1-vstack",
+    name: "Phase 4 – Ex1 : Empiler les données (VSTACK)",
+    description:
+      "Utilisez VSTACK pour combiner Table_Donnees_Propres et Table_Nouvelles_Commandes",
+    instruction:
+      "De nouvelles commandes sont arrivées. Empilez-les sous les données existantes avec VSTACK.",
+    exerciseDescription:
+      "De nouvelles commandes sont arrivées et doivent être intégrées à votre table principale.",
+    exerciseQuestion:
+      "Avez-vous combiné les deux tables avec VSTACK ? Entrez « Done » une fois l'opération réalisée. (formule : =VSTACK(Table_Donnees_Propres; Table_Nouvelles_Commandes))",
+    answerFormat: "Entrez : Done",
+    hint: "Utilisez : =VSTACK(Table_Donnees_Propres; Table_Nouvelles_Commandes)",
+    functionRequired: ["VSTACK"],
+    timeAllocation: 15,
+    pointsValue: 100,
+  },
+  {
+    id: 10,
+    exerciseId: "p4-ex2-hstack",
+    name: "Phase 4 – Ex2 : Ajouter les infos produits (HSTACK)",
+    description:
+      "Utilisez HSTACK et XLOOKUP pour enrichir la table avec les infos produits",
+    instruction:
+      "Enrichissez Table_Donnees_Propres en ajoutant les colonnes Categorie et Marge_Pct depuis Table_Infos_Produits via XLOOKUP, le tout avec HSTACK.",
+    exerciseDescription:
+      "Vous devez enrichir vos données de commandes avec les informations produits (catégorie, marge) pour une analyse plus complète.",
+    exerciseQuestion:
+      "Avez-vous enrichi la table avec HSTACK et XLOOKUP ? Entrez « Done » une fois l'opération réalisée.",
+    answerFormat: "Entrez : Done",
+    hint: "Utilisez : =HSTACK(Table_Donnees_Propres; XLOOKUP(Table_Donnees_Propres[ID_Produit]; Table_Infos_Produits[Produit]; Table_Infos_Produits[[Categorie]:[Marge_Pct]]))",
+    functionRequired: ["HSTACK", "XLOOKUP"],
+    timeAllocation: 15,
+    pointsValue: 100,
+  },
+  {
+    id: 11,
+    exerciseId: "p4-ex3-groupby",
+    name: "Phase 4 – Ex3 : CA par fournisseur (GROUPBY)",
+    description:
+      "Utilisez GROUPBY pour calculer le CA total par fournisseur",
+    instruction:
+      "Utilisez GROUPBY sur ID_Fournisseur avec SUM du Montant_Total, puis trouvez la valeur maximale.",
+    exerciseDescription:
+      "Analysez les performances commerciales de chaque fournisseur en calculant leur chiffre d'affaires total.",
+    exerciseQuestion:
+      "Quelle est la valeur du CA du fournisseur le plus performant (MAX) ? (formule : =MAX(GROUPBY(Table_Donnees_Propres[ID_Fournisseur]; Table_Donnees_Propres[Montant_Total]; SUM)))",
+    answerFormat: "Nombre décimal (ex: 1049830.11)",
+    hint: "Utilisez : =MAX(GROUPBY(Table_Donnees_Propres[ID_Fournisseur]; Table_Donnees_Propres[Montant_Total]; SUM))",
+    functionRequired: ["GROUPBY", "MAX"],
+    timeAllocation: 15,
+    pointsValue: 100,
+  },
+
+  // ── Phase 5 : Exercice Expert (1 exercice) ───────────────────────────────
+  {
+    id: 12,
+    exerciseId: "p5-expert",
+    name: "Phase 5 – Exercice Expert",
+    description:
+      "Analyse experte : identifiez le client le plus rentable",
+    instruction:
+      "En combinant plusieurs fonctions avancées (GROUPBY, XLOOKUP, FILTER…), identifiez l'identifiant du client générant le chiffre d'affaires total le plus élevé.",
+    exerciseDescription:
+      "Cet exercice expert demande une analyse approfondie pour identifier le client le plus rentable de toute la base de données.",
+    exerciseQuestion:
+      "Quel est l'identifiant du client (Contact) le plus rentable selon le CA total ?",
+    answerFormat: "Identifiant client (ex: Client_009)",
+    hint: "Utilisez GROUPBY sur la colonne Contact avec SUM du Montant_Total, puis identifiez le Contact correspondant au MAX.",
+    functionRequired: ["GROUPBY", "XLOOKUP", "FILTER", "UNIQUE", "LAMBDA"],
+    timeAllocation: 20,
+    pointsValue: 450,
+  },
+
+  // ── Phase 6 : Visualisation (3 exercices) ────────────────────────────────
+  {
+    id: 13,
+    exerciseId: "p6-ex1-tcd",
+    name: "Phase 6 – Ex1 : Tableau croisé dynamique",
+    description:
+      "Créez un tableau croisé dynamique pour visualiser les ventes",
+    instruction:
+      "Insérez un tableau croisé dynamique résumant les ventes par catégorie et par fournisseur.",
+    exerciseDescription:
+      "Le tableau de bord commence par un tableau croisé dynamique interactif résumant les ventes.",
+    exerciseQuestion:
+      "Créez le TCD puis entrez le 1er mot du message de validation (le message est « Vous avez terminé »).",
+    answerFormat: "Premier mot du message (ex: Vous)",
+    hint: "Insérez un TCD depuis Insertion > Tableau croisé dynamique. Le premier mot du message de validation est « Vous ».",
+    functionRequired: ["Tableaux croisés dynamiques"],
+    timeAllocation: 10,
+    pointsValue: 25,
+  },
+  {
+    id: 14,
+    exerciseId: "p6-ex2-graph",
+    name: "Phase 6 – Ex2 : Graphique dynamique",
+    description:
+      "Créez un graphique croisé dynamique connecté au TCD",
+    instruction:
+      "À partir de votre TCD, insérez un graphique croisé dynamique pour visualiser les tendances.",
+    exerciseDescription:
+      "Ajoutez un graphique dynamique pour rendre le tableau de bord plus visuel et interactif.",
+    exerciseQuestion:
+      "Créez le graphique puis entrez le 2ème mot du message de validation (le message est « Vous avez terminé »).",
+    answerFormat: "Deuxième mot du message (ex: avez)",
+    hint: "Insérez un graphique croisé dynamique depuis Insertion > Graphique croisé dynamique. Le deuxième mot est « avez ».",
+    functionRequired: ["Graphiques croisés dynamiques"],
+    timeAllocation: 15,
+    pointsValue: 100,
+  },
+  {
+    id: 15,
+    exerciseId: "p6-ex3-format",
+    name: "Phase 6 – Ex3 : Mise en forme conditionnelle",
+    description:
+      "Ajoutez une mise en forme conditionnelle pour mettre en valeur les KPIs",
+    instruction:
+      "Appliquez une mise en forme conditionnelle sur vos données pour mettre en évidence les valeurs remarquables.",
+    exerciseDescription:
+      "Finalisez votre tableau de bord avec une mise en forme conditionnelle dynamique et des segments (slicers).",
+    exerciseQuestion:
+      "Appliquez la mise en forme puis entrez le 3ème mot du message de validation (le message est « Vous avez terminé »).",
+    answerFormat: "Troisième mot du message (ex: terminé)",
+    hint: "Utilisez Accueil > Mise en forme conditionnelle. Le troisième mot est « terminé ».",
+    functionRequired: ["Mise en forme conditionnelle", "Segments"],
+    timeAllocation: 15,
+    pointsValue: 75,
   },
 ];
 
