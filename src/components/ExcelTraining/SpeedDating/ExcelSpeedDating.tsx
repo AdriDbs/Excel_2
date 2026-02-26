@@ -327,6 +327,16 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     return () => clearInterval(interval);
   }, [timerRunning, timeLeft]);
 
+  // Notification quand le timer expire — redirige l'utilisateur vers la fiche
+  useEffect(() => {
+    if (phase === "expired") {
+      addNotification(
+        "⏱️ Temps écoulé ! Consultez la fiche fonction pour réviser.",
+        "warning"
+      );
+    }
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Global timer effect
   useEffect(() => {
     if (!globalTimerRunning) return;
