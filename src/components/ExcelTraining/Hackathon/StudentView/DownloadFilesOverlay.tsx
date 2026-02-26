@@ -17,7 +17,7 @@ const availableFiles = [
   {
     id: "hackathon-excel",
     name: "Hackathon Excel – Le Dossier Perdu",
-    filename: "Hackathon_Excel_Le_Dossier_Perdu(1).xlsx",
+    filename: "Hackathon_Excel_Le_Dossier_Perdu.xlsx",
     description: "Fichier Excel du hackathon « Le Dossier Perdu »",
     type: "excel",
   },
@@ -102,5 +102,6 @@ const DownloadFilesOverlay: React.FC<DownloadFilesOverlayProps> = ({ onClose }) 
     </div>
   );
 };
+
 
 export default DownloadFilesOverlay;
