@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Clock, Users, Trophy, Target, Star, CheckCircle, AlertCircle, LogOut, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Users,
+  Trophy,
+  Target,
+  Star,
+  CheckCircle,
+  LogOut,
+  RefreshCw,
+  Database,
+  Filter,
+  Layers,
+  BarChart,
+  Zap,
+} from "lucide-react";
 import { NavigationProps } from "../../types";
 import { Student, Instructor } from "../../../../types/database";
-import { useProgressManager, useProgressNotifications } from "../../../../hooks/useProgressManager";
+import { useProgressNotifications } from "../../../../hooks/useProgressManager";
 import { useHackathon } from "../context/HackathonContext";
 import { registerStudent, hackathonLevels } from "../services/hackathonService";
-import { validateAnswer as validateHackathonAnswer } from "../data/hackathonAnswers";
+import StudentExercise from "./StudentExercise";
 import WaitingScreen from "./WaitingScreen";
 import DownloadFilesOverlay from "./DownloadFilesOverlay";
 
@@ -15,11 +30,22 @@ interface StudentInterfaceProps extends NavigationProps {
   onLevelComplete?: (level: number, score: number, timeSpent: number) => void;
 }
 
+// Icônes par phase pour la navigation entre exercices
+const getLevelIcon = (levelId: number): React.FC<React.ComponentProps<typeof CheckCircle>> => {
+  if (levelId === 0) return Database as React.FC<any>;      // Phase 0 : Nettoyage
+  if (levelId <= 3) return Target as React.FC<any>;         // Phase 1 : Fonctions de base
+  if (levelId <= 5) return Zap as React.FC<any>;            // Phase 2 : Manipulation avancée
+  if (levelId <= 8) return Filter as React.FC<any>;         // Phase 3 : Extraction
+  if (levelId <= 11) return Layers as React.FC<any>;        // Phase 4 : Combinaison
+  if (levelId === 12) return Star as React.FC<any>;         // Phase 5 : Expert
+  return BarChart as React.FC<any>;                         // Phase 6 : Visualisation
+};
+
 const StudentInterface: React.FC<StudentInterfaceProps> = ({
   navigateTo,
   goBackToLanding,
   currentUser,
-  onLevelComplete
+  onLevelComplete,
 }) => {
   const [studentName, setStudentName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
@@ -27,28 +53,23 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLeavingTeam, setIsLeavingTeam] = useState(false);
   const [isLoadingRegistration, setIsLoadingRegistration] = useState(true);
-  const [exerciseAnswer, setExerciseAnswer] = useState("");
 
-  // Context du hackathon
+  // Contexte hackathon
   const {
     state: { teams, timeLeftSeconds, sessionId, isSessionStarted, registeredStudent },
     setRegisteredStudent,
     leaveTeam,
     loadStudentFromFirebase,
     setNotification,
-    formatTime: formatHackathonTime
+    formatTime: formatHackathonTime,
   } = useHackathon();
-
-  // Hook de progression pour les étudiants
-  const progressManagerInstance = useProgressManager({ userId: currentUser?.id ?? "" });
-  const progressManager = currentUser?.role === 'student' ? progressManagerInstance : null;
 
   const { notifications, addNotification } = useProgressNotifications();
 
   // Charger l'enregistrement existant depuis Firebase au montage
   useEffect(() => {
     const checkExistingRegistration = async () => {
-      if (currentUser && currentUser.role === 'student' && sessionId) {
+      if (currentUser && currentUser.role === "student" && sessionId) {
         setIsLoadingRegistration(true);
         try {
           const existingStudent = await loadStudentFromFirebase(sessionId, currentUser.id);
@@ -66,16 +87,15 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     };
 
     checkExistingRegistration();
-  }, [currentUser?.id, sessionId]);
+  }, [currentUser?.id, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialiser le nom avec l'utilisateur connecté
   useEffect(() => {
-    if (currentUser && currentUser.role === 'student') {
+    if (currentUser && currentUser.role === "student") {
       setStudentName(currentUser.name);
     }
   }, [currentUser]);
 
-  // Détermine si l'étudiant est déjà enregistré dans une équipe
   const isRegistered = registeredStudent !== null && registeredStudent.teamId > 0;
 
   const handleRegisterStudent = async () => {
@@ -86,7 +106,10 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
       const userId = currentUser?.id || `temp_${Date.now()}`;
       const student = await registerStudent(studentName, selectedTeamId, sessionId, userId);
       setRegisteredStudent(student);
-      addNotification(`Bienvenue dans l'équipe ${teams.find(t => t.id === selectedTeamId)?.name} !`, "success");
+      addNotification(
+        `Bienvenue dans l'équipe ${teams.find((t) => t.id === selectedTeamId)?.name} !`,
+        "success"
+      );
     } catch (error) {
       console.error("Error registering student:", error);
       setNotification("Erreur lors de l'inscription", "error");
@@ -95,7 +118,6 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     }
   };
 
-  // Quitter l'équipe
   const handleLeaveTeam = async () => {
     if (!window.confirm("Êtes-vous sûr de vouloir quitter votre équipe ?")) return;
 
@@ -116,70 +138,20 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     }
   };
 
-  // Fonction pour gérer la validation d'une réponse/niveau
-  const handleLevelValidation = async (levelId: number, answer: string) => {
-    const isCorrect = validateAnswer(levelId, answer);
-
-    if (isCorrect && progressManager && onLevelComplete) {
-      const baseScore = 200;
-      const timeBonus = calculateTimeBonus(levelId);
-      const finalScore = baseScore + timeBonus;
-      const timeSpent = calculateTimeSpent(levelId);
-
-      await onLevelComplete(levelId, finalScore, timeSpent);
-
-      addNotification(
-        `Niveau ${levelId + 1} complété ! +${finalScore} points`,
-        "achievement"
-      );
-
-      const hackathonCompletion = progressManager.getHackathonCompletion();
-      if (hackathonCompletion.currentLevel === 3) {
-        addNotification("Milestone : 3 niveaux complétés !", "milestone");
-      } else if (hackathonCompletion.currentLevel === 6) {
-        addNotification("Presque fini ! 6 niveaux complétés !", "milestone");
-      } else if (hackathonCompletion.currentLevel === 7) {
-        addNotification("Félicitations ! Hackathon terminé !", "milestone");
-      }
+  // Callback de completion de niveau
+  const handleLevelComplete = async (levelId: number, points: number, timeSpent: number) => {
+    addNotification(`Exercice complété ! +${points} points`, "achievement");
+    if (onLevelComplete) {
+      await onLevelComplete(levelId, points, timeSpent);
     }
-  };
-
-  const validateAnswer = (levelId: number, answer: string): boolean => {
-    const level = hackathonLevels[levelId];
-    if (!level?.exerciseId) return false;
-    return validateHackathonAnswer(level.exerciseId, answer);
-  };
-
-  const calculateTimeBonus = (levelId: number): number => {
-    return Math.max(0, 50 - levelId * 5);
-  };
-
-  const calculateTimeSpent = (levelId: number): number => {
-    return (levelId + 1) * 300;
   };
 
   const isUrgent = timeLeftSeconds < 600;
 
-  // Trouver les données de l'équipe
   const activeTeamId = registeredStudent?.teamId || selectedTeamId;
-  const teamData = teams.find(team => team.id === activeTeamId);
+  const teamData = teams.find((team) => team.id === activeTeamId);
 
-  // Statistiques de progression
-  const getProgressStats = () => {
-    if (!progressManager) return null;
-
-    const hackathonCompletion = progressManager.getHackathonCompletion();
-    return {
-      currentLevel: hackathonCompletion.currentLevel,
-      maxLevel: hackathonCompletion.maxLevel,
-      totalScore: progressManager.hackathonProgress.totalScore,
-      levelsCompleted: progressManager.hackathonProgress.levelsCompleted.length
-    };
-  };
-
-  const progressStats = getProgressStats();
-
-  // Écran de chargement pendant la vérification de l'enregistrement
+  // ─── Écran de chargement ───────────────────────────────────────────────────
   if (isLoadingRegistration) {
     return (
       <div className="bg-gray-900 min-h-screen text-white p-6 flex items-center justify-center">
@@ -191,12 +163,11 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     );
   }
 
-  // Afficher l'écran d'inscription si pas encore enregistré
+  // ─── Écran d'inscription ──────────────────────────────────────────────────
   if (!isRegistered) {
     return (
       <div className="bg-gray-900 min-h-screen text-white p-6">
         <div className="max-w-4xl mx-auto">
-          {/* Bouton retour */}
           <button
             onClick={goBackToLanding}
             className="mb-8 bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md"
@@ -210,12 +181,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
               Rejoindre le <span className="text-bp-red-400">Hackathon</span>
             </h1>
 
-            {/* Saisie du nom (seulement si pas d'utilisateur connecté) */}
             {!currentUser && (
               <div className="mb-6">
-                <label className="block text-lg font-semibold mb-2">
-                  Votre nom complet
-                </label>
+                <label className="block text-lg font-semibold mb-2">Votre nom complet</label>
                 <input
                   type="text"
                   value={studentName}
@@ -227,7 +195,6 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
               </div>
             )}
 
-            {/* Sélection d'équipe */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Choisissez votre équipe</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -256,9 +223,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Participants:</span>
-                        <span className="font-medium">
-                          {team.studentIds?.length || 0}
-                        </span>
+                        <span className="font-medium">{team.studentIds?.length || 0}</span>
                       </div>
                     </div>
                   </button>
@@ -293,7 +258,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     );
   }
 
-  // Afficher l'écran d'attente si la session n'a pas commencé
+  // ─── Écran d'attente (session non démarrée) ───────────────────────────────
   if (isRegistered && !isSessionStarted) {
     return (
       <WaitingScreen
@@ -306,7 +271,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     );
   }
 
-  // Interface principale du hackathon
+  // ─── Interface principale du hackathon ────────────────────────────────────
   return (
     <div className="bg-gray-900 min-h-screen text-white p-6">
       {/* Notifications de progression */}
@@ -316,10 +281,11 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
             <div
               key={notification.id}
               className={`px-4 py-3 rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 animate-slide-in-right ${
-                notification.type === 'achievement' ? 'bg-green-500 bg-opacity-90 border-l-4 border-green-300' :
-                notification.type === 'milestone' ? 'bg-bp-red-400 bg-opacity-90 border-l-4 border-bp-red-200' :
-                notification.type === 'warning' ? 'bg-yellow-500 bg-opacity-90 border-l-4 border-yellow-300' :
-                'bg-bp-red-400 bg-opacity-90 border-l-4 border-blue-300'
+                notification.type === "achievement"
+                  ? "bg-green-500 bg-opacity-90 border-l-4 border-green-300"
+                  : notification.type === "milestone"
+                  ? "bg-bp-red-400 bg-opacity-90 border-l-4 border-bp-red-200"
+                  : "bg-blue-500 bg-opacity-90 border-l-4 border-blue-300"
               }`}
             >
               <p className="text-white font-medium text-sm">{notification.message}</p>
@@ -340,40 +306,41 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
       {/* Fond avec effet grille */}
       <div className="fixed inset-0 bg-grid opacity-20 z-0"></div>
 
-      {/* En-tête et chronomètre */}
+      {/* En-tête */}
       <div className="text-center mb-6 relative z-10 pt-12">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-bp-red-400 bg-clip-text text-transparent mb-2">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-bp-red-400 bg-clip-text text-transparent mb-1">
           Escape Excel: Le Dossier Perdu 2.0
         </h1>
-        <h2 className="text-xl text-gray-300 mb-4">
-          Interface Étudiant - {registeredStudent?.name || studentName} - {teamData?.name}
+        <h2 className="text-lg text-gray-300 mb-4">
+          {registeredStudent?.name || studentName} — {teamData?.name}
         </h2>
 
-        {/* Chronomètre et statistiques */}
-        <div className="flex justify-center items-center gap-6 mb-6">
-          {/* Timer */}
-          <div className={`
-            flex items-center bg-gray-800 rounded-lg px-4 py-2 border shadow-lg
-            ${isUrgent ? "border-red-500 animate-pulse shadow-red-500/30" : "border-cyan-500"}
-          `}>
-            <Clock className={`mr-2 ${isUrgent ? "text-red-500" : "text-cyan-400"}`} size={24} />
+        {/* Timer + stats équipe */}
+        <div className="flex flex-wrap justify-center items-center gap-4 mb-4">
+          {/* Timer global */}
+          <div
+            className={`flex items-center bg-gray-800 rounded-lg px-4 py-2 border shadow-lg ${
+              isUrgent ? "border-red-500 animate-pulse shadow-red-500/30" : "border-cyan-500"
+            }`}
+          >
+            <Clock className={`mr-2 ${isUrgent ? "text-red-500" : "text-cyan-400"}`} size={22} />
             <div>
-              <div className={`text-2xl font-bold ${isUrgent ? "text-red-400" : "text-cyan-400"}`}>
+              <div className={`text-2xl font-bold font-mono ${isUrgent ? "text-red-400" : "text-cyan-400"}`}>
                 {formatHackathonTime(timeLeftSeconds)}
               </div>
               <div className="text-xs text-gray-400">Temps restant</div>
             </div>
           </div>
 
-          {/* Statistiques de progression */}
-          {progressStats && (
+          {/* Score équipe (mis à jour en temps réel) */}
+          {teamData && (
             <div className="flex gap-4">
               <div className="bg-gray-800 rounded-lg px-4 py-2 border border-bp-red-400">
                 <div className="flex items-center gap-2">
                   <Trophy className="text-bp-red-400" size={20} />
                   <div>
-                    <div className="text-lg font-bold">{progressStats.totalScore}</div>
-                    <div className="text-xs text-gray-400">Points</div>
+                    <div className="text-lg font-bold">{teamData.score}</div>
+                    <div className="text-xs text-gray-400">Points équipe</div>
                   </div>
                 </div>
               </div>
@@ -382,140 +349,65 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
                 <div className="flex items-center gap-2">
                   <Target className="text-green-400" size={20} />
                   <div>
-                    <div className="text-lg font-bold">{progressStats.currentLevel}</div>
-                    <div className="text-xs text-gray-400">Niveau</div>
+                    <div className="text-lg font-bold">{teamData.completedLevels?.length || 0}/16</div>
+                    <div className="text-xs text-gray-400">Exercices</div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-gray-800 rounded-lg px-4 py-2 border border-blue-500">
                 <div className="flex items-center gap-2">
-                  <Star className="text-blue-400" size={20} />
+                  <Users className="text-blue-400" size={20} />
                   <div>
-                    <div className="text-lg font-bold">{progressStats.levelsCompleted}</div>
-                    <div className="text-xs text-gray-400">Complétés</div>
+                    <div className="text-lg font-bold">{teamData.studentIds?.length || 0}</div>
+                    <div className="text-xs text-gray-400">Membres</div>
                   </div>
                 </div>
               </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Barre de progression */}
-        {progressStats && (
-          <div className="max-w-md mx-auto">
-            <div className="w-full bg-gray-700 rounded-full h-3 mb-2">
-              <div
-                className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${(progressStats.currentLevel / progressStats.maxLevel) * 100}%` }}
-              ></div>
-            </div>
-            <div className="text-sm text-gray-400">
-              Progression: {progressStats.currentLevel}/{progressStats.maxLevel} niveaux
-            </div>
+      {/* Interface d'exercices (vraies questions, sync équipe en temps réel) */}
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {teamData ? (
+          <StudentExercise
+            teamData={teamData}
+            getLevelIcon={getLevelIcon}
+            hackathonLevels={hackathonLevels}
+            sessionId={sessionId}
+            userId={currentUser?.id || registeredStudent?.id || ""}
+            onLevelComplete={handleLevelComplete}
+          />
+        ) : (
+          <div className="text-center text-gray-400 py-12">
+            <RefreshCw size={32} className="mx-auto mb-4 animate-spin" />
+            <p>Chargement des données de l'équipe...</p>
           </div>
         )}
       </div>
 
-      {/* Interface de hackathon - contenu principal */}
-      <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Zone principale de travail */}
-          <div className="lg:col-span-2">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <AlertCircle className="text-orange-400" size={24} />
-                Niveau Actuel: {progressStats?.currentLevel || 0}
-              </h3>
+      {/* Actions bas de page */}
+      <div className="relative z-10 max-w-6xl mx-auto mt-6 flex flex-wrap justify-center gap-3">
+        <button
+          onClick={() => setShowDownloadOverlay(true)}
+          className="bg-bp-red-400 hover:bg-bp-red-500 px-5 py-2 rounded-lg font-medium transition-colors duration-200"
+        >
+          Télécharger les fichiers Excel
+        </button>
 
-              {/* Contenu du niveau actuel */}
-              <div className="bg-gray-900/50 rounded-lg p-6 mb-4">
-                <h4 className="text-lg font-semibold mb-2">Défi à résoudre:</h4>
-                <p className="text-gray-300 mb-4">
-                  Utilisez les fonctions Excel avancées pour résoudre cette énigme...
-                </p>
-
-                {/* Zone de réponse */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2">Votre réponse:</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={exerciseAnswer}
-                      onChange={(e) => setExerciseAnswer(e.target.value)}
-                      placeholder="Saisissez votre réponse..."
-                      className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
-                    />
-                    <button
-                      onClick={() => {
-                        handleLevelValidation(progressStats?.currentLevel || 0, exerciseAnswer);
-                        setExerciseAnswer("");
-                      }}
-                      className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-                    >
-                      <CheckCircle size={20} />
-                      Valider
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Panneau latéral */}
-          <div className="space-y-4">
-            {/* Équipe */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-              <h4 className="font-bold mb-2 flex items-center gap-2">
-                <Users size={20} />
-                {teamData?.name}
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Score équipe:</span>
-                  <span className="font-medium">{teamData?.score} pts</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Niveau équipe:</span>
-                  <span className="font-medium">{teamData?.currentLevel}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <button
-                onClick={() => setShowDownloadOverlay(true)}
-                className="w-full bg-bp-red-400 hover:bg-bp-red-500 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                Télécharger les fichiers
-              </button>
-
-              <button
-                className="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                Demander un indice (-25 pts)
-              </button>
-
-              {/* Bouton quitter l'équipe */}
-              <button
-                onClick={handleLeaveTeam}
-                disabled={isLeavingTeam}
-                className="w-full bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                {isLeavingTeam ? (
-                  <RefreshCw size={16} className="animate-spin" />
-                ) : (
-                  <LogOut size={16} />
-                )}
-                {isLeavingTeam ? "Départ en cours..." : "Quitter l'équipe"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={handleLeaveTeam}
+          disabled={isLeavingTeam}
+          className="bg-red-700 hover:bg-red-800 px-5 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+        >
+          {isLeavingTeam ? <RefreshCw size={16} className="animate-spin" /> : <LogOut size={16} />}
+          {isLeavingTeam ? "Départ en cours..." : "Quitter l'équipe"}
+        </button>
       </div>
 
-      {/* CSS pour l'effet de grille */}
+      {/* CSS */}
       <style>
         {`
         .bg-grid {
@@ -525,14 +417,8 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
           background-size: 30px 30px;
         }
         @keyframes slide-in-right {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
         .animate-slide-in-right {
           animation: slide-in-right 0.3s ease-out;

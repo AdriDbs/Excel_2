@@ -19,6 +19,7 @@ import {
   saveHackathonSessionToFirebase,
   subscribeToHackathonSession,
   updateHackathonSession,
+  updateTeamInFirebase,
 } from "../../../../config/firebase";
 
 const TOTAL_DURATION_SECONDS = 120 * 60; // 120 minutes en secondes
@@ -269,65 +270,74 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     actionType: "success" | "hint",
     points?: number
   ) => {
-    setState((prevState) => {
-      const updatedTeams = prevState.teams.map((team) => {
-        if (team.id === teamId) {
-          let newScore = team.score;
-          if (actionType === "success") {
-            newScore += points || 200;
-          } else if (actionType === "hint") {
-            newScore -= 25;
-          }
-          return { ...team, score: newScore };
-        }
-        return team;
-      });
+    const teamIndex = state.teams.findIndex((t) => t.id === teamId);
+    if (teamIndex === -1) return;
 
-      const message =
-        actionType === "success"
-          ? `${
-              updatedTeams.find((t) => t.id === teamId)?.name
-            } a validé une question ! +${points || 200} points`
-          : `${
-              updatedTeams.find((t) => t.id === teamId)?.name
-            } a utilisé un indice. -25 points`;
+    const team = state.teams[teamIndex];
+    let newScore = team.score;
+    if (actionType === "success") {
+      newScore += points || 200;
+    } else if (actionType === "hint") {
+      newScore = Math.max(0, newScore - 25);
+    }
 
-      setNotification(message, actionType);
+    setState((prevState) => ({
+      ...prevState,
+      teams: prevState.teams.map((t) =>
+        t.id === teamId ? { ...t, score: newScore } : t
+      ),
+    }));
 
-      return {
-        ...prevState,
-        teams: updatedTeams,
-      };
-    });
+    // Écriture directe Firebase (path-specific) pour éviter les conflits entre équipes
+    if (state.sessionId) {
+      updateTeamInFirebase(state.sessionId, teamIndex, { score: newScore });
+    }
+
+    const message =
+      actionType === "success"
+        ? `${team.name} a validé une question ! +${points || 200} points`
+        : `${team.name} a utilisé un indice. -25 points`;
+    setNotification(message, actionType);
   };
 
   const completeLevel = (teamId: number, levelId: number) => {
-    setState((prevState) => {
-      const updatedTeams = prevState.teams.map((team) => {
-        if (team.id === teamId) {
-          const newCompletedLevels = [...(team.completedLevels || [])];
-          if (!newCompletedLevels.includes(levelId)) {
-            newCompletedLevels.push(levelId);
-          }
-          return {
-            ...team,
-            completedLevels: newCompletedLevels,
-            currentLevel: levelId + 1,
-            progress: {
-              ...team.progress,
-              [levelId]: 100,
-              [levelId + 1]: 0,
-            },
-          };
-        }
-        return team;
-      });
+    const teamIndex = state.teams.findIndex((t) => t.id === teamId);
+    if (teamIndex === -1) return;
 
-      return {
-        ...prevState,
-        teams: updatedTeams,
-      };
-    });
+    const team = state.teams[teamIndex];
+    const newCompletedLevels = [...(team.completedLevels || [])];
+    if (!newCompletedLevels.includes(levelId)) {
+      newCompletedLevels.push(levelId);
+    }
+    const newCurrentLevel = levelId + 1;
+    const newProgress = {
+      ...team.progress,
+      [levelId]: 100,
+      [newCurrentLevel]: 0,
+    };
+
+    setState((prevState) => ({
+      ...prevState,
+      teams: prevState.teams.map((t) =>
+        t.id === teamId
+          ? {
+              ...t,
+              completedLevels: newCompletedLevels,
+              currentLevel: newCurrentLevel,
+              progress: newProgress,
+            }
+          : t
+      ),
+    }));
+
+    // Écriture directe Firebase (path-specific) pour une synchronisation immédiate
+    if (state.sessionId) {
+      updateTeamInFirebase(state.sessionId, teamIndex, {
+        completedLevels: newCompletedLevels,
+        currentLevel: newCurrentLevel,
+        progress: newProgress,
+      });
+    }
   };
 
   const updateLevelProgress = (

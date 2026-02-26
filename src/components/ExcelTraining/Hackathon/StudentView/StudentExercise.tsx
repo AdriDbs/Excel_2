@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   CheckCircle,
   ChevronRight,
   ChevronLeft,
   Lightbulb,
   Lock,
-  Unlock,
   Play,
   Pause,
   RotateCcw,
@@ -15,17 +14,24 @@ import {
 import { Level, Team } from "../types";
 import { useHackathon } from "../context/HackathonContext";
 import { validateAnswer } from "../data/hackathonAnswers";
+import { updateStudentAnswerInFirebase } from "../../../../config/firebase";
 
 interface StudentExerciseProps {
   teamData: Team;
   getLevelIcon: (levelId: number) => React.FC<React.ComponentProps<typeof CheckCircle>>;
   hackathonLevels: Level[];
+  sessionId?: string;
+  userId?: string;
+  onLevelComplete?: (levelId: number, points: number, timeSpent: number) => void;
 }
 
-const StudentExercise: React.FC<StudentExerciseProps> = ({ 
-  teamData, 
+const StudentExercise: React.FC<StudentExerciseProps> = ({
+  teamData,
   getLevelIcon,
-  hackathonLevels
+  hackathonLevels,
+  sessionId,
+  userId,
+  onLevelComplete,
 }) => {
   const {
     updateTeamScore,
@@ -40,9 +46,12 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [exerciseDuration, setExerciseDuration] = useState(0);
+  // Suivi du niveau affiché pour éviter les sauvegardes multiples
+  const lastSyncedLevelRef = useRef<number>(teamData.currentLevel || 0);
 
-  // Obtenir le niveau actuel
-  const currentLevelData = hackathonLevels[currentLevel];
+  // Obtenir le niveau actuel (borné à la taille du tableau)
+  const safeCurrentLevel = Math.min(currentLevel, hackathonLevels.length - 1);
+  const currentLevelData = hackathonLevels[safeCurrentLevel];
 
   // Réinitialiser le timer lors du changement de niveau
   useEffect(() => {
@@ -50,15 +59,18 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     setTimerRunning(false);
   }, [currentLevel]);
 
-  // Réinitialiser l'état lorsque l'équipe change
+  // Synchronisation automatique quand le niveau de l'équipe avance (coéquipier qui valide)
+  // Dépend uniquement de teamData.currentLevel (pas de l'objet entier) pour éviter des resets intempestifs
   useEffect(() => {
-    // Initialiser le niveau actuel
-    setCurrentLevel(teamData.currentLevel || 0);
-    // Réinitialiser l'indice
-    setShowHint(false);
-    // Réinitialiser la réponse
-    setAnswer("");
-  }, [teamData]);
+    const teamLevel = teamData.currentLevel || 0;
+    // Avancer uniquement si l'équipe a progressé au-delà du niveau local
+    if (teamLevel > currentLevel) {
+      setCurrentLevel(teamLevel);
+      setAnswer("");
+      setShowHint(false);
+      lastSyncedLevelRef.current = teamLevel;
+    }
+  }, [teamData.currentLevel]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Démarrer un timer local pour le niveau actuel
   useEffect(() => {
@@ -111,22 +123,37 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     }
 
     if (validateAnswer(exerciseId, answer)) {
-      completeLevel(teamData.id, currentLevel);
-
       const pointsEarned = currentLevelData.pointsValue || 0;
+
+      // 1. Mettre à jour le niveau et les niveaux complétés de l'équipe (sync Firebase immédiate)
+      completeLevel(teamData.id, safeCurrentLevel);
+
+      // 2. Mettre à jour le score de l'équipe (sync Firebase immédiate)
       updateTeamScore(teamData.id, "success", pointsEarned);
 
-      updateLevelProgress(teamData.id, currentLevel, 100);
+      // 3. Marquer la progression à 100%
+      updateLevelProgress(teamData.id, safeCurrentLevel, 100);
+
+      // 4. Sauvegarder la réponse de l'étudiant dans Firebase
+      if (sessionId && userId && exerciseId) {
+        updateStudentAnswerInFirebase(sessionId, userId, exerciseId, answer);
+      }
+
+      // 5. Notifier la progression individuelle si callback fourni
+      if (onLevelComplete) {
+        onLevelComplete(safeCurrentLevel, pointsEarned, exerciseDuration);
+      }
 
       setTimerRunning(false);
-
       setNotification(`Exercice complété ! +${pointsEarned} points`, "success");
 
-      if (currentLevel < hackathonLevels.length - 1) {
+      // 6. Avancer automatiquement à l'exercice suivant après 2 secondes
+      if (safeCurrentLevel < hackathonLevels.length - 1) {
         setTimeout(() => {
-          setCurrentLevel(currentLevel + 1);
+          setCurrentLevel(safeCurrentLevel + 1);
           setAnswer("");
           setShowHint(false);
+          lastSyncedLevelRef.current = safeCurrentLevel + 1;
         }, 2000);
       }
     } else {
@@ -138,7 +165,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
   const handleRequestHint = () => {
     if (!teamData.id) return;
 
-    // Pénalité de 25 points pour l'utilisation d'un indice
+    // Pénalité de 25 points pour l'utilisation d'un indice (sync Firebase immédiate)
     updateTeamScore(teamData.id, "hint");
 
     // Afficher l'indice
@@ -147,8 +174,8 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
 
   // Passer au niveau précédent si possible
   const goToPreviousLevel = () => {
-    if (currentLevel > 0) {
-      setCurrentLevel(currentLevel - 1);
+    if (safeCurrentLevel > 0) {
+      setCurrentLevel(safeCurrentLevel - 1);
       setAnswer("");
       setShowHint(false);
     }
@@ -157,10 +184,10 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
   // Passer au niveau suivant si possible
   const goToNextLevel = () => {
     if (
-      currentLevel < hackathonLevels.length - 1 &&
-      teamData.completedLevels?.includes(currentLevel)
+      safeCurrentLevel < hackathonLevels.length - 1 &&
+      teamData.completedLevels?.includes(safeCurrentLevel)
     ) {
-      setCurrentLevel(currentLevel + 1);
+      setCurrentLevel(safeCurrentLevel + 1);
       setAnswer("");
       setShowHint(false);
     }
@@ -199,7 +226,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               className={`
                 relative p-2 rounded-lg cursor-pointer transition-all duration-300
                 ${
-                  currentLevel === index
+                  safeCurrentLevel === index
                     ? "bg-indigo-700 ring-2 ring-indigo-300"
                     : isLevelCompleted(index)
                     ? "bg-green-700"
@@ -240,14 +267,14 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                   <LevelIcon
                     size={24}
                     className={
-                      currentLevel === index
+                      safeCurrentLevel === index
                         ? "text-indigo-300"
                         : "text-gray-400"
                     }
                   />
                 )}
               </div>
-              {currentLevel === index && (
+              {safeCurrentLevel === index && (
                 <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-indigo-300 rounded-full"></div>
               )}
             </div>
@@ -281,7 +308,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               <div className="flex items-center gap-3">
                 <div className="bg-indigo-700 p-2 rounded-lg">
                   {(() => {
-                    const LevelIcon = getLevelIcon(currentLevel);
+                    const LevelIcon = getLevelIcon(safeCurrentLevel);
                     return <LevelIcon className="text-indigo-300" size={24} />;
                   })()}
                 </div>
@@ -370,9 +397,9 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               <div className="flex gap-2">
                 <button
                   onClick={goToPreviousLevel}
-                  disabled={currentLevel === 0}
+                  disabled={safeCurrentLevel === 0}
                   className={`p-2 rounded-lg ${
-                    currentLevel === 0
+                    safeCurrentLevel === 0
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-gray-600 hover:bg-gray-500 text-white"
                   }`}
@@ -383,12 +410,12 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                 <button
                   onClick={goToNextLevel}
                   disabled={
-                    currentLevel === hackathonLevels.length - 1 ||
-                    !isLevelCompleted(currentLevel)
+                    safeCurrentLevel === hackathonLevels.length - 1 ||
+                    !isLevelCompleted(safeCurrentLevel)
                   }
                   className={`p-2 rounded-lg ${
-                    currentLevel === hackathonLevels.length - 1 ||
-                    !isLevelCompleted(currentLevel)
+                    safeCurrentLevel === hackathonLevels.length - 1 ||
+                    !isLevelCompleted(safeCurrentLevel)
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-gray-600 hover:bg-gray-500 text-white"
                   }`}
@@ -433,20 +460,21 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                       id="answer"
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !isLevelCompleted(safeCurrentLevel)) handleSubmitAnswer(); }}
                       className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Saisissez votre réponse..."
-                      disabled={isLevelCompleted(currentLevel)}
+                      disabled={isLevelCompleted(safeCurrentLevel)}
                     />
                     <button
                       onClick={handleSubmitAnswer}
-                      disabled={isLevelCompleted(currentLevel)}
+                      disabled={isLevelCompleted(safeCurrentLevel)}
                       className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        isLevelCompleted(currentLevel)
+                        isLevelCompleted(safeCurrentLevel)
                           ? "bg-green-700 text-white cursor-not-allowed"
                           : "bg-indigo-600 hover:bg-indigo-700 text-white"
                       }`}
                     >
-                      {isLevelCompleted(currentLevel) ? (
+                      {isLevelCompleted(safeCurrentLevel) ? (
                         <>
                           <CheckCircle size={18} />
                           Complété
@@ -467,7 +495,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                     Indice
                   </h3>
 
-                  {!isHintUsed() && !isLevelCompleted(currentLevel) && (
+                  {!isHintUsed() && !isLevelCompleted(safeCurrentLevel) && (
                     <button
                       onClick={handleRequestHint}
                       className="px-3 py-1 bg-yellow-700/50 hover:bg-yellow-700 text-bp-red-200 rounded-lg text-sm flex items-center gap-1"

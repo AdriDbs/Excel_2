@@ -366,6 +366,48 @@ export const subscribeToRegisteredStudents = (
   });
 };
 
+// Mettre à jour des champs spécifiques d'une équipe (path-specific, évite les conflits entre équipes)
+export const updateTeamInFirebase = async (
+  sessionId: string,
+  teamIndex: number,
+  updates: Partial<{
+    score: number;
+    currentLevel: number;
+    completedLevels: number[];
+    progress: Record<number, number>;
+  }>
+): Promise<boolean> => {
+  const sessionRef = getHackathonSessionRef(sessionId);
+  try {
+    const flatUpdates: Record<string, any> = { lastUpdated: serverTimestamp() };
+    Object.entries(updates).forEach(([key, value]) => {
+      flatUpdates[`teams/${teamIndex}/${key}`] = value;
+    });
+    await update(sessionRef, flatUpdates);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour ciblée de l'équipe:", error);
+    return false;
+  }
+};
+
+// Sauvegarder la réponse d'un étudiant dans Firebase
+export const updateStudentAnswerInFirebase = async (
+  sessionId: string,
+  userId: string,
+  exerciseId: string,
+  answer: string
+): Promise<boolean> => {
+  const studentRef = getHackathonRegisteredStudentRef(sessionId, userId);
+  try {
+    await update(studentRef, { [`answers/${exerciseId}`]: answer });
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde de la réponse étudiant:", error);
+    return false;
+  }
+};
+
 // Sauvegarder le timestamp de démarrage de session Speed Dating
 export const setSpeedDatingSessionStartTime = async (
   userId: string,
