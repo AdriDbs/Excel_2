@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Lock,
   Trophy,
+  AlertCircle,
 } from "lucide-react";
 import { ExcelFunction } from "../types";
 import { getExpectedAnswer, validateSpeedDatingAnswer } from "./utils";
@@ -256,13 +257,45 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   );
 
   const renderExpiredPhase = () => (
-    <div className="text-center py-8">
-      <div className="text-6xl mb-4">⏰</div>
-      <h3 className="text-2xl font-bold mb-2 text-bp-red-600">Le timer est écoulé !</h3>
-      <p className="text-lg text-bp-gray-500 mb-6">
-        Pas de problème, vous pourrez revenir sur cette fonction plus tard pour la compléter.
-      </p>
-      <div className="flex gap-4 justify-center">
+    <div>
+      {/* En-tête avec message d'expiration */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          <div className="bg-bp-red-400 text-white rounded-full w-8 h-8 flex items-center justify-center">
+            1
+          </div>
+          Découverte de la fonction
+        </h3>
+        <div className="flex items-center gap-2 text-orange-500 bg-orange-50 border border-orange-200 rounded-lg px-3 py-1">
+          <AlertCircle size={16} />
+          <span className="text-sm font-medium">⏱️ Temps écoulé</span>
+        </div>
+      </div>
+
+      {/* Fiche fonction — toujours accessible en lecture */}
+      <div className="bg-gradient-to-br from-bp-gray-50 to-white rounded-lg border-2 border-bp-red-100 p-6 max-h-[55vh] overflow-y-auto mb-4">
+        <div className="flex items-center gap-3 mb-4">
+          <BookOpen size={24} className="text-bp-red-400" />
+          <h4 className="text-lg font-bold text-bp-red-600">
+            Fiche fonction : {currentFunction.name}
+          </h4>
+        </div>
+        <div className="text-gray-700 leading-relaxed whitespace-pre-line text-sm">
+          {currentFunction.presentation}
+        </div>
+      </div>
+
+      {/* Bouton exercice désactivé */}
+      <div className="flex flex-col items-center gap-3 mt-2">
+        <button
+          disabled
+          className="bg-gray-200 text-gray-400 cursor-not-allowed font-medium py-2 px-6 rounded-lg flex items-center gap-2 opacity-70 transition-all duration-300"
+          title="Le temps imparti pour l'exercice est écoulé"
+        >
+          <Clock size={16} />
+          ⏱️ Temps écoulé — Exercice non disponible
+        </button>
+
         {currentFunctionIndex < functionsLength - 1 ? (
           <button
             onClick={nextFunction}

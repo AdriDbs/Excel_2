@@ -44,13 +44,13 @@ export const hackathonLevels: Level[] = [
     exerciseId: "p1-ex1-count",
     name: "Phase 1 – Ex1 : Compter les commandes",
     description:
-      "Utilisez COUNTIF pour compter les commandes d'un client spécifique",
+      "Compter les commandes d'un client spécifique",
     instruction:
-      "Dans Table_Donnees_Propres, utilisez COUNTIF pour compter le nombre de commandes du client « Client_015 » dans la colonne Contact.",
+      "Dans Table_Donnees_Propres, comptez le nombre de commandes du client « Client_015 » dans la colonne Contact.",
     exerciseDescription:
       "Vous devez analyser la table de données pour identifier combien de fois un client spécifique apparaît dans les enregistrements.",
     exerciseQuestion:
-      "Combien de commandes a passé le client « Client_015 » ? (formule : =COUNTIF(Table_Donnees_Propres[Contact]; \"Client_015\"))",
+      "Combien de commandes a passé le client « Client_015 » ?",
     answerFormat: "Nombre entier (ex: 15)",
     hint: "Utilisez : =COUNTIF(Table_Donnees_Propres[Contact]; \"Client_015\")",
     functionRequired: ["COUNTIF"],
@@ -62,13 +62,13 @@ export const hackathonLevels: Level[] = [
     exerciseId: "p1-ex2-filter",
     name: "Phase 1 – Ex2 : Produits critiques",
     description:
-      "Utilisez FILTER pour identifier la commande en rupture critique",
+      "Identifier la commande en rupture critique",
     instruction:
       "Filtrez les commandes où Stock_Actuel < 50 ET Demande_Prevue > 100. Notez l'identifiant de commande (ID_Commande) du résultat.",
     exerciseDescription:
       "Parmi toutes les commandes, identifiez celle qui correspond à un produit en rupture critique : stock actuel inférieur à 50 unités et demande prévue supérieure à 100 unités.",
     exerciseQuestion:
-      "Quel est l'identifiant de commande (ID_Commande) du produit critique ? (formule : =FILTER(Table_Donnees_Propres; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100)))",
+      "Quel est l'identifiant de commande (ID_Commande) du produit critique (Stock_Actuel < 50 ET Demande_Prevue > 100) ?",
     answerFormat: "Code commande (ex: CMD1191)",
     hint: "Utilisez : =FILTER(Table_Donnees_Propres; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100)) puis notez l'ID_Commande.",
     functionRequired: ["FILTER"],
@@ -80,13 +80,13 @@ export const hackathonLevels: Level[] = [
     exerciseId: "p1-ex3-unique",
     name: "Phase 1 – Ex3 : Fournisseurs concernés",
     description:
-      "Utilisez UNIQUE et FILTER pour compter les fournisseurs distincts",
+      "Compter les fournisseurs distincts liés aux produits critiques",
     instruction:
-      "Combinez UNIQUE et FILTER pour lister les ID_Fournisseur distincts liés aux produits critiques, puis comptez-les.",
+      "Listez les ID_Fournisseur distincts liés aux produits critiques (Stock_Actuel < 50 ET Demande_Prevue > 100), puis comptez-les.",
     exerciseDescription:
       "En partant du filtre de l'exercice précédent, vous devez identifier combien de fournisseurs différents sont concernés par les produits critiques.",
     exerciseQuestion:
-      "Combien de fournisseurs uniques (ID_Fournisseur) sont liés aux produits critiques ? (formule : =ROWS(UNIQUE(FILTER(Table_Donnees_Propres[ID_Fournisseur]; ...))))",
+      "Combien de fournisseurs uniques (ID_Fournisseur) sont liés aux produits critiques (Stock_Actuel < 50 ET Demande_Prevue > 100) ?",
     answerFormat: "Nombre entier (ex: 3)",
     hint: "Utilisez : =ROWS(UNIQUE(FILTER(Table_Donnees_Propres[ID_Fournisseur]; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100))))",
     functionRequired: ["UNIQUE", "FILTER", "ROWS"],
@@ -100,13 +100,13 @@ export const hackathonLevels: Level[] = [
     exerciseId: "p2-ex1-choosecols",
     name: "Phase 2 – Ex1 : Réorganiser les colonnes",
     description:
-      "Utilisez CHOOSECOLS pour sélectionner et réorganiser les colonnes",
+      "Sélectionner et réorganiser les colonnes pertinentes",
     instruction:
-      "Utilisez CHOOSECOLS pour créer une vue de Table_Donnees_Propres ne conservant que les colonnes 3, 4, 5, 6, 7, 8, 10 et 12.",
+      "Créez une vue de Table_Donnees_Propres ne conservant que les colonnes 3, 4, 5, 6, 7, 8, 10 et 12 dans cet ordre.",
     exerciseDescription:
       "Vous devez réorganiser les données en ne gardant que les colonnes pertinentes pour l'analyse.",
     exerciseQuestion:
-      "Avez-vous réorganisé les colonnes avec CHOOSECOLS ? Entrez « Done » une fois l'opération réalisée. (formule : =CHOOSECOLS(Table_Donnees_Propres; 3; 4; 5; 6; 7; 8; 10; 12))",
+      "Avez-vous réorganisé les colonnes dans l'ordre demandé (colonnes 3, 4, 5, 6, 7, 8, 10 et 12) ? Entrez « Done » une fois l'opération réalisée.",
     answerFormat: "Entrez : Done",
     hint: "Utilisez : =CHOOSECOLS(Table_Donnees_Propres; 3; 4; 5; 6; 7; 8; 10; 12)",
     functionRequired: ["CHOOSECOLS"],
@@ -116,15 +116,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 5,
     exerciseId: "p2-ex2-byrow",
-    name: "Phase 2 – Ex2 : CA par ligne (BYROW)",
+    name: "Phase 2 – Ex2 : CA par ligne",
     description:
-      "Utilisez BYROW avec LAMBDA pour calculer le CA ligne par ligne",
+      "Calculer le chiffre d'affaires ligne par ligne puis faire la somme totale",
     instruction:
-      "Appliquez BYROW sur les colonnes Quantite et Prix_Unitaire pour calculer le montant par ligne, puis faites la somme totale.",
+      "Calculez le montant (Quantite × Prix_Unitaire) de chaque commande ligne par ligne, puis faites la somme totale.",
     exerciseDescription:
-      "Utilisez BYROW avec une fonction LAMBDA pour calculer le chiffre d'affaires (Quantite × Prix_Unitaire) de chaque commande, puis additionnez le tout.",
+      "Calculez le chiffre d'affaires (Quantite × Prix_Unitaire) de chaque commande, puis additionnez le tout.",
     exerciseQuestion:
-      "Quelle est la somme totale du CA calculé par BYROW ? (formule : =SUM(BYROW(CHOOSECOLS(Table_Donnees_Propres; 4; 5); LAMBDA(row; INDEX(row;1)*INDEX(row;2)))))",
+      "Quelle est la somme totale du chiffre d'affaires calculé ligne par ligne (Quantite × Prix_Unitaire) ?",
     answerFormat: "Nombre décimal (ex: 1800838.1)",
     hint: "Utilisez : =SUM(BYROW(CHOOSECOLS(Table_Donnees_Propres; 4; 5); LAMBDA(row; INDEX(row;1)*INDEX(row;2))))",
     functionRequired: ["BYROW", "LAMBDA", "CHOOSECOLS", "SUM"],
@@ -136,15 +136,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 6,
     exerciseId: "p3-ex1-take",
-    name: "Phase 3 – Ex1 : Dernières commandes (TAKE)",
+    name: "Phase 3 – Ex1 : Dernières commandes",
     description:
-      "Utilisez TAKE pour extraire et analyser les 100 dernières commandes",
+      "Extraire et analyser les 100 dernières commandes",
     instruction:
-      "Utilisez TAKE avec -100 pour récupérer les 100 dernières lignes, puis calculez la moyenne du Montant_Total.",
+      "Récupérez les 100 dernières lignes de Table_Donnees_Propres, puis calculez la moyenne du Montant_Total.",
     exerciseDescription:
       "Vous devez analyser les tendances récentes en travaillant uniquement sur les 100 dernières commandes de la table.",
     exerciseQuestion:
-      "Quelle est la valeur moyenne du Montant_Total des 100 dernières commandes ? (formule : =AVERAGE(TAKE(Table_Donnees_Propres[Montant_Total]; -100)))",
+      "Quelle est la valeur moyenne du Montant_Total des 100 dernières commandes ?",
     answerFormat: "Nombre décimal (ex: 378.7)",
     hint: "Utilisez : =AVERAGE(TAKE(Table_Donnees_Propres[Montant_Total]; -100)). TAKE avec un nombre négatif prend les dernières lignes.",
     functionRequired: ["TAKE", "AVERAGE"],
@@ -154,15 +154,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 7,
     exerciseId: "p3-ex2-drop",
-    name: "Phase 3 – Ex2 : Retirer les données de test (DROP)",
+    name: "Phase 3 – Ex2 : Retirer les données de test",
     description:
-      "Utilisez DROP pour supprimer les premières lignes de test",
+      "Supprimer les premières lignes de test et compter les lignes restantes",
     instruction:
-      "Les 30 premières lignes sont des données de test à exclure. Utilisez DROP pour les supprimer et comptez les lignes restantes.",
+      "Les 30 premières lignes sont des données de test à exclure. Supprimez-les et comptez les lignes restantes.",
     exerciseDescription:
       "Les 30 premières commandes sont des données de test qui doivent être exclues avant toute analyse réelle.",
     exerciseQuestion:
-      "Combien de lignes reste-t-il après avoir retiré les 30 premières commandes ? (formule : =ROWS(DROP(Table_Donnees_Propres; 30)))",
+      "Combien de lignes reste-t-il après avoir retiré les 30 premières commandes (données de test) ?",
     answerFormat: "Nombre entier (ex: 5781)",
     hint: "Utilisez : =ROWS(DROP(Table_Donnees_Propres; 30))",
     functionRequired: ["DROP", "ROWS"],
@@ -172,15 +172,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 8,
     exerciseId: "p3-ex3-map",
-    name: "Phase 3 – Ex3 : Augmentation de prix 5% (MAP)",
+    name: "Phase 3 – Ex3 : Augmentation de prix 5%",
     description:
-      "Utilisez MAP avec LAMBDA pour simuler une hausse tarifaire de 5%",
+      "Simuler une hausse tarifaire de 5% sur tous les prix unitaires",
     instruction:
-      "Utilisez MAP pour appliquer une augmentation de 5% à chaque Prix_Unitaire, puis calculez la somme totale.",
+      "Appliquez une augmentation de 5% à chaque Prix_Unitaire, puis calculez la somme totale.",
     exerciseDescription:
       "Simulez une augmentation tarifaire de 5% sur tous les prix unitaires pour estimer l'impact sur le budget.",
     exerciseQuestion:
-      "Quelle est la somme totale des prix unitaires après +5% ? (formule : =SUM(MAP(Table_Donnees_Propres[Prix_Unitaire]; LAMBDA(x; x*1,05))))",
+      "Quelle est la somme totale des prix unitaires après une augmentation de 5% ?",
     answerFormat: "Nombre décimal (ex: 179190.6)",
     hint: "Utilisez : =SUM(MAP(Table_Donnees_Propres[Prix_Unitaire]; LAMBDA(x; x*1,05)))",
     functionRequired: ["MAP", "LAMBDA", "SUM"],
@@ -192,15 +192,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 9,
     exerciseId: "p4-ex1-vstack",
-    name: "Phase 4 – Ex1 : Empiler les données (VSTACK)",
+    name: "Phase 4 – Ex1 : Empiler les données",
     description:
-      "Utilisez VSTACK pour combiner Table_Donnees_Propres et Table_Nouvelles_Commandes",
+      "Combiner Table_Donnees_Propres et Table_Nouvelles_Commandes verticalement",
     instruction:
-      "De nouvelles commandes sont arrivées. Empilez-les sous les données existantes avec VSTACK.",
+      "De nouvelles commandes sont arrivées. Empilez-les verticalement sous les données existantes.",
     exerciseDescription:
       "De nouvelles commandes sont arrivées et doivent être intégrées à votre table principale.",
     exerciseQuestion:
-      "Avez-vous combiné les deux tables avec VSTACK ? Entrez « Done » une fois l'opération réalisée. (formule : =VSTACK(Table_Donnees_Propres; Table_Nouvelles_Commandes))",
+      "Avez-vous empilé verticalement les données des deux tables (Table_Donnees_Propres et Table_Nouvelles_Commandes) ? Entrez « Done » une fois l'opération réalisée.",
     answerFormat: "Entrez : Done",
     hint: "Utilisez : =VSTACK(Table_Donnees_Propres; Table_Nouvelles_Commandes)",
     functionRequired: ["VSTACK"],
@@ -210,15 +210,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 10,
     exerciseId: "p4-ex2-hstack",
-    name: "Phase 4 – Ex2 : Ajouter les infos produits (HSTACK)",
+    name: "Phase 4 – Ex2 : Ajouter les infos produits",
     description:
-      "Utilisez HSTACK et XLOOKUP pour enrichir la table avec les infos produits",
+      "Enrichir la table avec les informations produits (catégorie, marge)",
     instruction:
-      "Enrichissez Table_Donnees_Propres en ajoutant les colonnes Categorie et Marge_Pct depuis Table_Infos_Produits via XLOOKUP, le tout avec HSTACK.",
+      "Enrichissez Table_Donnees_Propres en ajoutant les colonnes Categorie et Marge_Pct depuis Table_Infos_Produits.",
     exerciseDescription:
       "Vous devez enrichir vos données de commandes avec les informations produits (catégorie, marge) pour une analyse plus complète.",
     exerciseQuestion:
-      "Avez-vous enrichi la table avec HSTACK et XLOOKUP ? Entrez « Done » une fois l'opération réalisée.",
+      "Avez-vous enrichi la table avec les informations produits (Categorie et Marge_Pct) ? Entrez « Done » une fois l'opération réalisée.",
     answerFormat: "Entrez : Done",
     hint: "Utilisez : =HSTACK(Table_Donnees_Propres; XLOOKUP(Table_Donnees_Propres[ID_Produit]; Table_Infos_Produits[Produit]; Table_Infos_Produits[[Categorie]:[Marge_Pct]]))",
     functionRequired: ["HSTACK", "XLOOKUP"],
@@ -228,15 +228,15 @@ export const hackathonLevels: Level[] = [
   {
     id: 11,
     exerciseId: "p4-ex3-groupby",
-    name: "Phase 4 – Ex3 : CA par fournisseur (GROUPBY)",
+    name: "Phase 4 – Ex3 : CA par fournisseur",
     description:
-      "Utilisez GROUPBY pour calculer le CA total par fournisseur",
+      "Calculer le chiffre d'affaires total par fournisseur",
     instruction:
-      "Utilisez GROUPBY sur ID_Fournisseur avec SUM du Montant_Total, puis trouvez la valeur maximale.",
+      "Regroupez les données par ID_Fournisseur, calculez la somme du Montant_Total par fournisseur, puis trouvez la valeur maximale.",
     exerciseDescription:
       "Analysez les performances commerciales de chaque fournisseur en calculant leur chiffre d'affaires total.",
     exerciseQuestion:
-      "Quelle est la valeur du CA du fournisseur le plus performant (MAX) ? (formule : =MAX(GROUPBY(Table_Donnees_Propres[ID_Fournisseur]; Table_Donnees_Propres[Montant_Total]; SUM)))",
+      "Quelle est la valeur du chiffre d'affaires du fournisseur le plus performant ?",
     answerFormat: "Nombre décimal (ex: 1049830.11)",
     hint: "Utilisez : =MAX(GROUPBY(Table_Donnees_Propres[ID_Fournisseur]; Table_Donnees_Propres[Montant_Total]; SUM))",
     functionRequired: ["GROUPBY", "MAX"],
