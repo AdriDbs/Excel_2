@@ -1,7 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { CheckSquare, X } from "lucide-react";
 import { ExcelFunction } from "../types";
-import { BRAND } from "../../../constants/brand";
 
 interface PassportProps {
   excelFunctions: ExcelFunction[];

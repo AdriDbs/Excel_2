@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Settings,
   Users,
@@ -16,7 +16,6 @@ import {
   Monitor,
   Smartphone,
   Tablet,
-  Globe,
   Wifi,
   WifiOff,
   Eye,
@@ -26,7 +25,7 @@ import {
   History,
 } from "lucide-react";
 import { firebaseDataService } from "../../services/firebaseDataService";
-import { Student, Instructor, UserStats, DeviceInfo, ConnectionLog } from "../../types/database";
+import { Student, Instructor, UserStats, DeviceInfo } from "../../types/database";
 import { getAllRegisteredStudents, unregisterStudent } from "./Hackathon/services/hackathonService";
 
 interface InstructorDashboardProps {
@@ -53,37 +52,9 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
   const [hackathonProfiles, setHackathonProfiles] = useState<any[]>([]);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    refreshData();
-
-    // Synchronisation automatique toutes les 3 secondes
-    const interval = setInterval(() => {
-      refreshData();
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const refreshData = async () => {
-    setIsLoading(true);
-
-    // Définir les opérations avec leurs noms pour le suivi des erreurs
+  // Rafraîchit stats, classement et profils hackathon (pas les utilisateurs, gérés en temps réel)
+  const refreshStats = useCallback(async () => {
     const operations = [
-      {
-        name: "Synchronisation Firebase",
-        fn: () => firebaseDataService.forceSync(),
-        onSuccess: () => {},
-      },
-      {
-        name: "Mise à jour des statuts en ligne",
-        fn: () => firebaseDataService.updateOnlineStatuses(),
-        onSuccess: () => {},
-      },
-      {
-        name: "Chargement des utilisateurs",
-        fn: () => firebaseDataService.getAllUsers(),
-        onSuccess: (result: any) => setUsers(result),
-      },
       {
         name: "Chargement des statistiques",
         fn: () => firebaseDataService.getStats(),
@@ -101,58 +72,44 @@ const InstructorDashboard: React.FC<InstructorDashboardProps> = ({
       },
     ];
 
-    // Exécuter toutes les opérations en parallèle
     const results = await Promise.allSettled(operations.map((op) => op.fn()));
-
-    // Analyser les résultats
-    const errors: string[] = [];
-    let successCount = 0;
 
     results.forEach((result, index) => {
       const operation = operations[index];
-
       if (result.status === "fulfilled") {
-        successCount++;
-        // Appeler le callback onSuccess si l'opération a réussi
         operation.onSuccess(result.value);
       } else {
-        // Collecter les erreurs avec contexte
         const errorMessage = result.reason instanceof Error
           ? result.reason.message
           : String(result.reason);
-
-        errors.push(`${operation.name}: ${errorMessage}`);
-
-        console.error(`[InstructorDashboard] ${operation.name} failed:`, {
-          error: errorMessage,
-          operation: operation.name,
-        });
+        console.error(`[InstructorDashboard] ${operation.name} failed:`, errorMessage);
       }
     });
+  }, []);
 
-    // Afficher les notifications d'erreur si nécessaire
-    if (errors.length > 0) {
-      if (errors.length === operations.length) {
-        // Toutes les opérations ont échoué
-        showNotification(
-          "Échec complet du chargement des données. Vérifiez votre connexion.",
-          "error"
-        );
-      } else {
-        // Certaines opérations ont échoué
-        const errorSummary = `${successCount}/${operations.length} opérations réussies. Erreurs: ${errors.join("; ")}`;
-        console.warn("[InstructorDashboard] Partial data load:", errorSummary);
+  // Compatibilité avec les handlers qui appelaient refreshData
+  const refreshData = useCallback(async () => {
+    await refreshStats();
+  }, [refreshStats]);
 
-        // Afficher un message plus court à l'utilisateur
-        showNotification(
-          `Chargement partiel (${successCount}/${operations.length} réussis). Voir console pour détails.`,
-          "error"
-        );
-      }
-    }
+  useEffect(() => {
+    // Chargement initial
+    setIsLoading(true);
+    refreshStats().finally(() => setIsLoading(false));
 
-    setIsLoading(false);
-  };
+    // Abonnement temps réel aux utilisateurs (remplace le polling)
+    const unsubscribeUsers = firebaseDataService.subscribeToUsers((updatedUsers) => {
+      setUsers(updatedUsers);
+    });
+
+    // Rafraîchissement des statistiques toutes les 30 secondes
+    const interval = setInterval(refreshStats, 30000);
+
+    return () => {
+      unsubscribeUsers();
+      clearInterval(interval);
+    };
+  }, [refreshStats]);
 
   const showNotification = (
     message: string,

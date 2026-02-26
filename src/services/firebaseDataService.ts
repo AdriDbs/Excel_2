@@ -5,20 +5,13 @@ import {
   update,
   remove,
   onValue,
-  query,
-  orderByChild,
-  limitToLast,
   serverTimestamp,
-  push,
-  runTransaction,
 } from "firebase/database";
 import { database } from "../config/firebase";
 import {
   Student,
   Instructor,
   DatabaseState,
-  SpeedDatingProgress,
-  HackathonProgress,
   UserStats,
   DeviceInfo,
   ConnectionLog,
@@ -282,7 +275,9 @@ export class FirebaseDataService {
   }
 
   /**
-   * Mettre à jour la progression d'un utilisateur
+   * Mettre à jour la progression d'un utilisateur.
+   * Le progress passé est déjà mergé côté appelant (useProgressManager),
+   * donc on écrit directement sans lire l'état courant depuis Firebase.
    */
   public async updateUserProgress(
     userId: string,
@@ -290,11 +285,6 @@ export class FirebaseDataService {
     progress: any
   ): Promise<boolean> {
     try {
-      const user = await this.getUserById(userId);
-      if (!user || user.role !== "student") {
-        return false;
-      }
-
       const userRef = ref(database, `users/${userId}`);
       const updates: any = {
         lastActivity: new Date().toISOString(),
@@ -302,15 +292,9 @@ export class FirebaseDataService {
       };
 
       if (progressType === "speedDating") {
-        updates.speedDatingProgress = {
-          ...((user as Student).speedDatingProgress || {}),
-          ...progress,
-        };
+        updates.speedDatingProgress = progress;
       } else if (progressType === "hackathon") {
-        updates.hackathonProgress = {
-          ...((user as Student).hackathonProgress || {}),
-          ...progress,
-        };
+        updates.hackathonProgress = progress;
       }
 
       await update(userRef, updates);

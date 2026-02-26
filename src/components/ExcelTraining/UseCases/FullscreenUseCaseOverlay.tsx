@@ -3,15 +3,13 @@ import {
   X,
   Check,
   ExternalLink,
-  ChevronDown,
   TrendingUp,
   BarChart2,
   FileText,
   Database,
   Copy,
-  Download,
 } from "lucide-react";
-import { UseCase, Function } from "./types";
+import { UseCase } from "./types";
 
 interface FullscreenUseCaseOverlayProps {
   useCase: UseCase;

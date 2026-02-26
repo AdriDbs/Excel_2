@@ -287,36 +287,17 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       );
 
       if (success) {
-        // Rafraîchir les données utilisateur depuis Firebase
+        // Rafraîchir l'état local depuis Firebase
+        // (pas besoin de re-sauvegarder : updateUserProgress a déjà écrit dans Firebase)
         const updatedUser = await firebaseDataService.getUserById(currentUser.id);
         if (updatedUser) {
           setCurrentUser(updatedUser);
-
-          // Synchroniser avec Firebase (les données utilisateur et la présence)
-          if (isFirebaseConnected) {
-            const deviceInfo = getDeviceInfo();
-            const userData = {
-              name: updatedUser.name,
-              role: updatedUser.role,
-              createdAt: updatedUser.createdAt,
-              lastActivity: updatedUser.lastActivity,
-              deviceInfo,
-              speedDatingProgress: (updatedUser as Student).speedDatingProgress ?? {},
-              hackathonProgress: (updatedUser as Student).hackathonProgress ?? {
-                currentLevel: 0,
-                levelsCompleted: [],
-                totalScore: 0,
-                individualContributions: {},
-              },
-            };
-            await saveUserToFirebase(updatedUser.id, userData);
-          }
         }
       }
 
       return success;
     },
-    [currentUser, isFirebaseConnected]
+    [currentUser]
   );
 
   const refreshCurrentUser = useCallback(async () => {

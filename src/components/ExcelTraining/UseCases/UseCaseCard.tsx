@@ -4,7 +4,6 @@ import {
   ChevronDown,
   ChevronUp,
   Check,
-  ExternalLink,
   FileText,
   BarChart2,
   Database,
