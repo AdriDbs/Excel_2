@@ -22,6 +22,8 @@ export interface Level {
   functionRequired: string[];
   timeAllocation: number; // en minutes
   pointsValue?: number; // valeur en points du niveau
+  /** Identifiant liant ce niveau à sa réponse dans hackathonAnswers.ts */
+  exerciseId: string;
 }
 
 export interface Student {
