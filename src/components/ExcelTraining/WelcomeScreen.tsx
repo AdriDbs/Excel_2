@@ -201,19 +201,37 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </h3>
 
           {!selectedRole && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {roleButtons.map(({ role, icon: Icon, title, description, bgClass }) => (
+            <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {roleButtons.map(({ role, icon: Icon, title, description, bgClass }) => (
+                  <button
+                    key={role}
+                    onClick={() => handleRoleSelection(role)}
+                    disabled={isLoading}
+                    className={`${bgClass} text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bp transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <Icon size={48} className="mx-auto mb-4" />
+                    <h4 className="text-xl font-bold mb-2">{title}</h4>
+                    <p className="text-sm opacity-90">{description}</p>
+                  </button>
+                ))}
+              </div>
+
+              {/* Bouton accès visiteur — sans compte Firebase, accès limité aux ressources */}
+              <div className="border-t border-white/20 pt-6 text-center">
+                <p className="text-bp-gray-300 text-sm mb-3">
+                  Pas encore de compte ? Explorez les ressources en accès libre.
+                </p>
                 <button
-                  key={role}
-                  onClick={() => handleRoleSelection(role)}
+                  onClick={onViewAsGuest}
                   disabled={isLoading}
-                  className={`${bgClass} text-white p-6 rounded-xl transition-all duration-300 hover:shadow-bp transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-bp disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
-                  <Icon size={48} className="mx-auto mb-4" />
-                  <h4 className="text-xl font-bold mb-2">{title}</h4>
-                  <p className="text-sm opacity-90">{description}</p>
+                  <Users size={20} />
+                  Accès Visiteur
+                  <span className="text-xs text-bp-gray-300 ml-1">(Cas d'usage &amp; Bonnes pratiques)</span>
                 </button>
-              ))}
+              </div>
             </div>
           )}
 

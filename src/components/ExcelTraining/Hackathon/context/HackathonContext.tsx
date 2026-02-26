@@ -277,7 +277,9 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     if (actionType === "success") {
       newScore += points || 200;
     } else if (actionType === "hint") {
-      newScore = Math.max(0, newScore - 25);
+      // points contient la pénalité spécifique : -25 pour indice 1, -50 pour indice 2
+      const penalty = points || 25;
+      newScore = Math.max(0, newScore - penalty);
     }
 
     setState((prevState) => ({
@@ -292,10 +294,11 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       updateTeamInFirebase(state.sessionId, teamIndex, { score: newScore });
     }
 
+    const penalty = points || 25;
     const message =
       actionType === "success"
         ? `${team.name} a validé une question ! +${points || 200} points`
-        : `${team.name} a utilisé un indice. -25 points`;
+        : `${team.name} a utilisé un indice. -${penalty} points`;
     setNotification(message, actionType);
   };
 

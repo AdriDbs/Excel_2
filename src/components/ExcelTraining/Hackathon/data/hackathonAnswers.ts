@@ -38,7 +38,8 @@ export interface ExerciseAnswer {
  */
 export const EXERCISE_ANSWERS: ExerciseAnswer[] = [
   // ── Phase 0 : Data Cleaning ───────────────────────────────────────────────
-  { id: "data-cleaning",   type: "text",    expected: "Table_Donnees_Propres",  points: 100 },
+  // Bug fix : la réponse attendue est "done" (insensible à la casse), pas le nom de la table
+  { id: "data-cleaning",   type: "text",    expected: "done",                   points: 100 },
 
   // ── Phase 1 : Fonctions de Base ───────────────────────────────────────────
   { id: "p1-ex1-count",    type: "numeric", expected: 15,                       points:  50 },

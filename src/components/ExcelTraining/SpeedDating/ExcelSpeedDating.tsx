@@ -510,6 +510,11 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     // Timer continues without reset — single shared timer per function
   }, []);
 
+  // Retour à la fiche depuis l'exercice — le timer n'est PAS réinitialisé
+  const goBackToFiche = useCallback(() => {
+    setPhase("video");
+  }, []);
+
   const completeFunction = useCallback(() => {
     // If the countdown has expired, points cannot be awarded
     if (timeLeft <= 0) {
@@ -591,13 +596,12 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
           </div>
         )}
 
-        {/* Global Timer */}
-        <div className="absolute top-4 right-4 bg-bp-red-600 rounded-full px-4 py-2 flex items-center gap-2 shadow-bp">
-          <Clock size={20} />
-          <span className="font-mono text-lg">
-            {sessionStarted ? formatGlobalTime(globalTimer) : "00:00"}
-          </span>
-        </div>
+        {/* Timer global de session masqué en Speed Dating (le timer 7min par fonction est visible dans la carte)
+            Uncomment to restore: <div className="absolute top-4 right-4 bg-bp-red-600 rounded-full px-4 py-2 flex items-center gap-2 shadow-bp">
+              <Clock size={20} />
+              <span className="font-mono text-lg">{sessionStarted ? formatGlobalTime(globalTimer) : "00:00"}</span>
+            </div>
+        */}
 
         <header className="flex flex-col md:flex-row justify-between items-center mb-6">
           <div className="flex items-center gap-4">
@@ -775,6 +779,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               completedScore={
                 progressManagerInstance.speedDatingProgress[currentFunctionIndex + 1]?.score
               }
+              goBackToFiche={goBackToFiche}
             />
 
             <div className="h-2 bg-bp-gray-100 rounded-full">

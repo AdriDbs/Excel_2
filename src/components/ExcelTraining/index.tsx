@@ -13,6 +13,59 @@ import BestPracticesSection from "./BestPractices/BestPracticesSection";
 import UseCasesSection from "./UseCases/UseCasesSection";
 import HackathonContainer from "./Hackathon/HackathonContainer";
 
+// ── Menu visiteur (accès limité sans compte Firebase) ───────────────────────
+// Affiche uniquement les sections Cas d'usage et Bonnes pratiques.
+const GuestMenu: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-bp-gradient text-white p-6 flex items-center justify-center">
+      <div className="max-w-2xl w-full">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold mb-2">Formation Excel Avancé</h1>
+          <p className="text-bp-red-200 text-lg">BearingPoint — Accès Visiteur</p>
+          <p className="text-bp-gray-300 text-sm mt-2">
+            Explorez les ressources disponibles en accès libre.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <button
+            onClick={() => navigate("/visiteur/cas-usage")}
+            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl p-6 text-left transition-all duration-300 hover:shadow-bp"
+          >
+            <div className="text-3xl mb-3">📋</div>
+            <h3 className="text-xl font-bold mb-1">Cas d'Usage</h3>
+            <p className="text-bp-gray-300 text-sm">
+              Découvrez 5 cas d'usage métier issus de missions réelles BearingPoint.
+            </p>
+          </button>
+
+          <button
+            onClick={() => navigate("/visiteur/meilleures-pratiques")}
+            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl p-6 text-left transition-all duration-300 hover:shadow-bp"
+          >
+            <div className="text-3xl mb-3">📖</div>
+            <h3 className="text-xl font-bold mb-1">Bonnes Pratiques</h3>
+            <p className="text-bp-gray-300 text-sm">
+              Maîtrisez l'art de créer des fichiers Excel professionnels.
+            </p>
+          </button>
+        </div>
+
+        <div className="text-center">
+          <button
+            onClick={() => navigate("/accueil")}
+            className="bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300"
+          >
+            Se connecter pour accéder au hackathon et au Speed Dating
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Correspondance section → chemin URL
 const SECTION_TO_PATH: Record<SectionType, string> = {
   menu: "/mon_espace",
@@ -50,9 +103,9 @@ const ExcelTrainingRoutes: React.FC = () => {
     navigate("/mon_espace");
   };
 
-  const handleViewAsGuest = async () => {
-    await logoutUser();
-    navigate("/accueil");
+  // Accès visiteur — pas besoin de Firebase, navigation directe vers le menu visiteur
+  const handleViewAsGuest = () => {
+    navigate("/visiteur");
   };
 
   const handleLogout = async () => {
@@ -167,6 +220,31 @@ const ExcelTrainingRoutes: React.FC = () => {
               }
             />
           )
+        }
+      />
+
+      {/* ── Espace Visiteur (sans compte) — accès limité ── */}
+      <Route path="/visiteur" element={<GuestMenu />} />
+      <Route
+        path="/visiteur/cas-usage"
+        element={
+          <UseCasesSection
+            navigateTo={(section) => {
+              if (section === "menu") navigate("/visiteur");
+              else navigate(`/visiteur/${section}`);
+            }}
+          />
+        }
+      />
+      <Route
+        path="/visiteur/meilleures-pratiques"
+        element={
+          <BestPracticesSection
+            navigateTo={(section) => {
+              if (section === "menu") navigate("/visiteur");
+              else navigate(`/visiteur/${section}`);
+            }}
+          />
         }
       />
 
