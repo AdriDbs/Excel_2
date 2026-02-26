@@ -43,7 +43,9 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
   // État pour l'exercice
   const [currentLevel, setCurrentLevel] = useState(teamData.currentLevel || 0);
   const [answer, setAnswer] = useState("");
-  const [showHint, setShowHint] = useState(false);
+  // Deux indices séparés : indice 1 (-25 pts, aide générale) et indice 2 (-50 pts, aide technique)
+  const [hint1Shown, setHint1Shown] = useState(false);
+  const [hint2Shown, setHint2Shown] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [exerciseDuration, setExerciseDuration] = useState(0);
   // Suivi du niveau affiché pour éviter les sauvegardes multiples
@@ -53,10 +55,12 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
   const safeCurrentLevel = Math.min(currentLevel, hackathonLevels.length - 1);
   const currentLevelData = hackathonLevels[safeCurrentLevel];
 
-  // Réinitialiser le timer lors du changement de niveau
+  // Réinitialiser le timer et les indices lors du changement de niveau
   useEffect(() => {
     setExerciseDuration(0);
     setTimerRunning(false);
+    setHint1Shown(false);
+    setHint2Shown(false);
   }, [currentLevel]);
 
   // Synchronisation automatique quand le niveau de l'équipe avance (coéquipier qui valide)
@@ -67,7 +71,8 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     if (teamLevel > currentLevel) {
       setCurrentLevel(teamLevel);
       setAnswer("");
-      setShowHint(false);
+      setHint1Shown(false);
+      setHint2Shown(false);
       lastSyncedLevelRef.current = teamLevel;
     }
   }, [teamData.currentLevel]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -152,7 +157,8 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
         setTimeout(() => {
           setCurrentLevel(safeCurrentLevel + 1);
           setAnswer("");
-          setShowHint(false);
+          setHint1Shown(false);
+          setHint2Shown(false);
           lastSyncedLevelRef.current = safeCurrentLevel + 1;
         }, 2000);
       }
@@ -161,15 +167,20 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     }
   };
 
-  // Gérer la demande d'indice
-  const handleRequestHint = () => {
-    if (!teamData.id) return;
+  // Indice 1 : aide générale (-25 pts)
+  const handleRequestHint1 = () => {
+    if (!teamData.id || hint1Shown) return;
+    updateTeamScore(teamData.id, "hint", 25);
+    setHint1Shown(true);
+    setNotification("Indice 1 débloqué. -25 points", "hint");
+  };
 
-    // Pénalité de 25 points pour l'utilisation d'un indice (sync Firebase immédiate)
-    updateTeamScore(teamData.id, "hint");
-
-    // Afficher l'indice
-    setShowHint(true);
+  // Indice 2 : aide technique détaillée (-50 pts)
+  const handleRequestHint2 = () => {
+    if (!teamData.id || hint2Shown) return;
+    updateTeamScore(teamData.id, "hint", 50);
+    setHint2Shown(true);
+    setNotification("Indice 2 débloqué. -50 points supplémentaires", "hint");
   };
 
   // Passer au niveau précédent si possible
@@ -177,7 +188,8 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     if (safeCurrentLevel > 0) {
       setCurrentLevel(safeCurrentLevel - 1);
       setAnswer("");
-      setShowHint(false);
+      setHint1Shown(false);
+      setHint2Shown(false);
     }
   };
 
@@ -189,14 +201,9 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     ) {
       setCurrentLevel(safeCurrentLevel + 1);
       setAnswer("");
-      setShowHint(false);
+      setHint1Shown(false);
+      setHint2Shown(false);
     }
-  };
-
-  // Vérifier si l'indice a déjà été utilisé
-  const isHintUsed = () => {
-    // Dans cette démo, nous considérons que l'indice est utilisé si showHint est true
-    return showHint;
   };
 
   // Vérifier si le niveau est complété
@@ -256,7 +263,8 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                 ) {
                   setCurrentLevel(index);
                   setAnswer("");
-                  setShowHint(false);
+                  setHint1Shown(false);
+                  setHint2Shown(false);
                 }
               }}
             >
@@ -378,11 +386,12 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               <div className="mt-6 bg-gray-700/50 p-4 rounded-lg">
                 <h3 className="font-medium text-bp-red-200 flex items-center gap-2 mb-2">
                   <Lightbulb size={18} />
-                  Astuce
+                  Indices disponibles
                 </h3>
-                <p className="text-gray-300 text-sm">
-                  Utilisez le bouton « Débloquer » ci-dessous pour révéler l'indice (-25 pts).
-                </p>
+                <div className="text-gray-300 text-sm space-y-1">
+                  <p>• <span className="text-yellow-400">Indice 1</span> : aide générale — <strong>-25 pts</strong></p>
+                  <p>• <span className="text-orange-400">Indice 2</span> : formule technique — <strong>-50 pts</strong></p>
+                </div>
               </div>
             </div>
           </div>
@@ -487,40 +496,81 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                 </div>
               </div>
 
-              {/* Section Indice */}
+              {/* Section Indices — deux niveaux d'aide avec pénalités différentes */}
               <div className="mt-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-medium text-bp-red-400 flex items-center gap-2">
-                    <Lightbulb size={20} />
-                    Indice
-                  </h3>
+                <h3 className="text-lg font-medium text-bp-red-400 flex items-center gap-2 mb-3">
+                  <Lightbulb size={20} />
+                  Indices
+                </h3>
 
-                  {!isHintUsed() && !isLevelCompleted(safeCurrentLevel) && (
-                    <button
-                      onClick={handleRequestHint}
-                      className="px-3 py-1 bg-yellow-700/50 hover:bg-yellow-700 text-bp-red-200 rounded-lg text-sm flex items-center gap-1"
-                    >
-                      <Lightbulb size={14} />
-                      Débloquer (-25 pts)
-                    </button>
-                  )}
+                {/* Indice n°1 — aide générale (-25 pts) */}
+                <div className="mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-yellow-300">Indice n°1</span>
+                    {!hint1Shown && !isLevelCompleted(safeCurrentLevel) && (
+                      <button
+                        onClick={handleRequestHint1}
+                        className="px-3 py-1 bg-yellow-700/50 hover:bg-yellow-700 text-yellow-200 rounded-lg text-sm flex items-center gap-1 transition-colors"
+                      >
+                        <Lightbulb size={14} />
+                        Débloquer (-25 pts)
+                      </button>
+                    )}
+                    {hint1Shown && (
+                      <span className="text-xs text-yellow-500 italic">-25 pts appliqués</span>
+                    )}
+                  </div>
+                  <div
+                    className={`bg-yellow-900/20 border border-yellow-800/50 rounded-lg p-3 transition-all ${
+                      hint1Shown ? "opacity-100" : "opacity-40 blur-sm select-none"
+                    }`}
+                  >
+                    {hint1Shown ? (
+                      <p className="text-yellow-200 text-sm">
+                        Fonctions utiles pour cet exercice :{" "}
+                        <strong>{currentLevelData.functionRequired.join(", ")}</strong>.{" "}
+                        Relisez la consigne et vérifiez l'ordre des arguments.
+                      </p>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 text-yellow-600/50">
+                        <Lock size={14} />
+                        <span className="text-sm">Indice 1 verrouillé</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div
-                  className={`bg-yellow-900/20 border border-yellow-800/50 rounded-lg p-4 ${
-                    showHint || isHintUsed()
-                      ? "opacity-100"
-                      : "opacity-50 blur-sm"
-                  }`}
-                >
-                  {showHint || isHintUsed() ? (
-                    <p className="text-yellow-200">{currentLevelData.hint}</p>
-                ) : (
-                    <div className="flex items-center justify-center gap-2 text-bp-red-400/50">
-                      <Lock size={16} />
-                      <span>Indice verrouillé</span>
-                    </div>
-                  )}
+                {/* Indice n°2 — aide technique avec formule (-50 pts) */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-orange-300">Indice n°2</span>
+                    {!hint2Shown && !isLevelCompleted(safeCurrentLevel) && (
+                      <button
+                        onClick={handleRequestHint2}
+                        className="px-3 py-1 bg-orange-700/50 hover:bg-orange-700 text-orange-200 rounded-lg text-sm flex items-center gap-1 transition-colors"
+                      >
+                        <Lightbulb size={14} />
+                        Débloquer (-50 pts)
+                      </button>
+                    )}
+                    {hint2Shown && (
+                      <span className="text-xs text-orange-500 italic">-50 pts appliqués</span>
+                    )}
+                  </div>
+                  <div
+                    className={`bg-orange-900/20 border border-orange-800/50 rounded-lg p-3 transition-all ${
+                      hint2Shown ? "opacity-100" : "opacity-40 blur-sm select-none"
+                    }`}
+                  >
+                    {hint2Shown ? (
+                      <p className="text-orange-200 text-sm">{currentLevelData.hint}</p>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 text-orange-600/50">
+                        <Lock size={14} />
+                        <span className="text-sm">Indice 2 verrouillé</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

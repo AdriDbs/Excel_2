@@ -26,13 +26,13 @@ export const hackathonLevels: Level[] = [
     description:
       "Nettoyez et préparez les données brutes pour créer Table_Donnees_Propres",
     instruction:
-      "Importez les données brutes dans Excel et utilisez Power Query pour les nettoyer : supprimez les doublons, standardisez les formats (TRIM, CLEAN, PROPER) et nommez la table finale « Table_Donnees_Propres ».",
+      "Importez les données brutes dans Excel et utilisez Power Query pour les nettoyer : supprimez les doublons, standardisez les formats (TRIM, CLEAN, PROPER) et nommez la table finale « Table_Donnees_Propres ». Une fois terminé, tapez « done » pour valider.",
     exerciseDescription:
       "Vous commencez le hackathon en préparant les données brutes. Utilisez Power Query pour importer, dédupliquer et normaliser les données avant de créer la table de travail.",
     exerciseQuestion:
-      "Quel est le nom exact de la table de données nettoyée que vous avez créée ?",
-    answerFormat: "Nom de table (ex: Table_Donnees_Propres)",
-    hint: "Après nettoyage via Power Query, nommez votre table exactement « Table_Donnees_Propres » dans le gestionnaire des noms ou via l'onglet Conception du tableau.",
+      "Avez-vous créé et nettoyé la table Table_Donnees_Propres avec Power Query ? Tapez « done » pour valider.",
+    answerFormat: "Tapez : done",
+    hint: "Utilisez Power Query (Données > Obtenir et transformer) pour importer, nettoyer et fusionner les données brutes, puis nommez la table « Table_Donnees_Propres ».",
     functionRequired: ["Power Query", "TRIM", "CLEAN", "PROPER"],
     timeAllocation: 20,
     pointsValue: 100,

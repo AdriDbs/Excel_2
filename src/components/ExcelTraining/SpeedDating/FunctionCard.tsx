@@ -5,6 +5,7 @@ import {
   SkipForward,
   Clock,
   ChevronRight,
+  ChevronLeft,
   Award,
   BookOpen,
   CheckCircle,
@@ -30,6 +31,8 @@ interface FunctionCardProps {
   togglePassport: () => void;
   isCompleted?: boolean;
   completedScore?: number;
+  /** Revenir à la fiche sans réinitialiser le timer (Fix bug navigation) */
+  goBackToFiche?: () => void;
 }
 
 const FunctionCard: React.FC<FunctionCardProps> = memo(({
@@ -48,6 +51,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   togglePassport,
   isCompleted = false,
   completedScore,
+  goBackToFiche,
 }) => {
   const renderAlreadyCompletedPhase = () => (
     <div className="text-center py-8">
@@ -154,9 +158,21 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
           </div>
           Exercice pratique
         </h3>
-        <div className="flex items-center gap-2 text-bp-red-500">
-          <Clock size={20} />
-          <span>7 minutes</span>
+        <div className="flex items-center gap-3">
+          {/* Bouton retour à la fiche — le timer continue de tourner */}
+          {goBackToFiche && (
+            <button
+              onClick={goBackToFiche}
+              className="bg-bp-gray-100 text-bp-gray-600 px-3 py-1 rounded-lg flex items-center gap-1 hover:bg-bp-gray-200 transition-colors text-sm border border-bp-gray-200"
+            >
+              <ChevronLeft size={16} />
+              Retour à la fiche
+            </button>
+          )}
+          <div className="flex items-center gap-2 text-bp-red-500">
+            <Clock size={20} />
+            <span>7 minutes</span>
+          </div>
         </div>
       </div>
 
