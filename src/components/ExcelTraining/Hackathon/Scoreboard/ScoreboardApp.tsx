@@ -401,30 +401,10 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                 </div>
               </div>
 
-              {/* Barre de progression simplifiée */}
+              {/* Progression et erreurs */}
               <div className="p-4">
-                <div className="flex items-center mb-3">
-                  <div className="w-1/3 text-sm font-medium">
-                    Niveau actuel:
-                  </div>
-                  <div className="text-lg font-bold text-white">
-                    {team.currentLevel < hackathonLevels.length
-                      ? hackathonLevels[team.currentLevel].name
-                      : "Complété"}
-                  </div>
-                </div>
-
-                <div className="h-4 w-full bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-bp-red-400 rounded-full"
-                    style={{
-                      width: `${team.progress[team.currentLevel] || 0}%`,
-                    }}
-                  ></div>
-                </div>
-
-                {/* Indicateurs de niveau simplifiés */}
-                <div className="flex mt-4 space-x-1">
+                {/* Indicateurs de niveau */}
+                <div className="flex space-x-1 mb-4">
                   {hackathonLevels.map((level, index) => (
                     <div
                       key={index}
@@ -441,26 +421,20 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                   ))}
                 </div>
 
-                {/* Affichage des derniers niveaux complétés */}
-                {team.completedLevels && team.completedLevels.length > 0 && (
-                  <div className="mt-4 bg-gray-700/50 p-2 rounded-lg">
-                    <div className="text-xs text-gray-400">
-                      Derniers niveaux complétés:
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {team.completedLevels
-                        .slice(-3) // Affiche seulement les 3 derniers
-                        .map((levelId) => (
-                          <span
-                            key={levelId}
-                            className="px-2 py-1 bg-green-900/50 rounded text-xs text-green-300"
-                          >
-                            {hackathonLevels[levelId].name}
-                          </span>
-                        ))}
-                    </div>
+                {/* Nombre d'erreurs de l'équipe */}
+                <div className="bg-gray-700/50 p-3 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">Erreurs :</span>
+                    <span className={`font-bold text-lg ${(team.errors ?? 0) === 0 ? "text-green-400" : (team.errors ?? 0) < 5 ? "text-yellow-400" : "text-red-400"}`}>
+                      {team.errors ?? 0} ❌
+                    </span>
                   </div>
-                )}
+                  {team.completionTime && (
+                    <span className="text-xs text-green-400 flex items-center gap-1">
+                      ✓ Terminé
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))

@@ -14,6 +14,7 @@ import {
   Layers,
   BarChart,
   Zap,
+  XCircle,
 } from "lucide-react";
 import { NavigationProps } from "../../types";
 import { Student, Instructor } from "../../../../types/database";
@@ -271,6 +272,135 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     );
   }
 
+  // ─── Page de fin pour une équipe ayant complété tous les exercices ──────────
+  const isTeamCompleted = (teamData?.completedLevels?.length ?? 0) >= hackathonLevels.length;
+  if (isRegistered && isSessionStarted && isTeamCompleted && teamData) {
+    const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+    const teamRank = sortedTeams.findIndex((t) => t.id === teamData.id) + 1;
+    const completionDate = teamData.completionTime
+      ? new Date(teamData.completionTime).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      : null;
+
+    return (
+      <div className="bg-gray-900 min-h-screen text-white p-6">
+        <div className="max-w-4xl mx-auto pt-8">
+          {/* Bannière de félicitations */}
+          <div className="text-center mb-10">
+            <div className="text-7xl mb-4 animate-bounce">🎉</div>
+            <h1 className="text-4xl font-bold text-yellow-400 mb-2">Félicitations !</h1>
+            <p className="text-xl text-gray-300 mb-6">
+              L'équipe <strong className="text-white">{teamData.name}</strong> a terminé le hackathon !
+            </p>
+            {completionDate && (
+              <p className="text-gray-400 text-sm mb-6">Terminé à {completionDate}</p>
+            )}
+            <div className="flex flex-wrap justify-center gap-4">
+              <div className="bg-green-900/50 border border-green-500 rounded-xl px-8 py-4 text-center">
+                <div className="text-3xl font-bold text-green-400">{teamData.score}</div>
+                <div className="text-sm text-gray-400 mt-1">Points</div>
+              </div>
+              <div className="bg-red-900/50 border border-red-500 rounded-xl px-8 py-4 text-center">
+                <div className="text-3xl font-bold text-red-400">{teamData.errors ?? 0}</div>
+                <div className="text-sm text-gray-400 mt-1">Erreurs</div>
+              </div>
+              <div className="bg-yellow-900/50 border border-yellow-500 rounded-xl px-8 py-4 text-center">
+                <div className="text-3xl font-bold text-yellow-400">#{teamRank}</div>
+                <div className="text-sm text-gray-400 mt-1">Classement</div>
+              </div>
+              <div className="bg-blue-900/50 border border-blue-500 rounded-xl px-8 py-4 text-center">
+                <div className="text-3xl font-bold text-blue-400">{teamData.completedLevels?.length ?? 0}/16</div>
+                <div className="text-sm text-gray-400 mt-1">Exercices</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Leaderboard en direct */}
+          <div className="bg-gray-800 rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-3 mb-5">
+              <Trophy className="text-yellow-400" size={24} />
+              <h2 className="text-xl font-bold">Classement en direct</h2>
+              <span className="text-xs text-green-400 bg-green-900/40 px-2 py-1 rounded-full">● Live</span>
+            </div>
+            <div className="space-y-3">
+              {sortedTeams.map((team, index) => (
+                <div
+                  key={team.id}
+                  className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
+                    team.id === teamData.id
+                      ? "bg-yellow-900/30 border border-yellow-500"
+                      : "bg-gray-700/40 border border-transparent"
+                  }`}
+                >
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${
+                      index === 0
+                        ? "bg-yellow-500 text-gray-900"
+                        : index === 1
+                        ? "bg-gray-400 text-gray-900"
+                        : index === 2
+                        ? "bg-amber-700 text-white"
+                        : "bg-gray-600 text-white"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold">
+                      {team.name}
+                      {team.id === teamData.id && (
+                        <span className="ml-2 text-yellow-400 text-xs">(votre équipe)</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {team.completedLevels?.length ?? 0}/16 exercices
+                      {team.completionTime && (
+                        <span className="ml-2 text-green-400">✓ Terminé</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-cyan-400 text-lg">{team.score} pts</div>
+                    <div className="text-xs text-red-400">{team.errors ?? 0} erreur{(team.errors ?? 0) !== 1 ? "s" : ""}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => setShowDownloadOverlay(true)}
+              className="bg-bp-red-400 hover:bg-bp-red-500 px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              Télécharger les fichiers Excel
+            </button>
+            <button
+              onClick={handleLeaveTeam}
+              disabled={isLeavingTeam}
+              className="bg-red-700 hover:bg-red-800 px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+            >
+              {isLeavingTeam ? <RefreshCw size={16} className="animate-spin" /> : <LogOut size={16} />}
+              {isLeavingTeam ? "Départ en cours..." : "Quitter l'équipe"}
+            </button>
+          </div>
+        </div>
+
+        {showDownloadOverlay && (
+          <DownloadFilesOverlay onClose={() => setShowDownloadOverlay(false)} />
+        )}
+
+        <style>{`
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+          }
+          .animate-bounce { animation: bounce 1.2s ease-in-out infinite; }
+        `}</style>
+      </div>
+    );
+  }
+
   // ─── Interface principale du hackathon ────────────────────────────────────
   return (
     <div className="bg-gray-900 min-h-screen text-white p-6">
@@ -361,6 +491,16 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
                   <div>
                     <div className="text-lg font-bold">{teamData.studentIds?.length || 0}</div>
                     <div className="text-xs text-gray-400">Membres</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg px-4 py-2 border border-red-500">
+                <div className="flex items-center gap-2">
+                  <XCircle className="text-red-400" size={20} />
+                  <div>
+                    <div className="text-lg font-bold">{teamData.errors ?? 0}</div>
+                    <div className="text-xs text-gray-400">Erreurs</div>
                   </div>
                 </div>
               </div>

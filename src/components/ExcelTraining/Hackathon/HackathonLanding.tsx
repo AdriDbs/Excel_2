@@ -12,6 +12,7 @@ import {
   Star,
   Calendar,
   Power,
+  Clock,
 } from "lucide-react";
 import { NavigationProps } from "../types";
 import { Student, Instructor } from "../../../types/database";
@@ -37,8 +38,9 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
     state: hackathonState,
     endCurrentSession,
     setNotification,
+    formatTime,
   } = useHackathon();
-  const { sessionId, sessionActive } = hackathonState;
+  const { sessionId, sessionActive, isSessionStarted, timeLeftSeconds } = hackathonState;
 
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [isEndingSession, setIsEndingSession] = useState(false);
@@ -214,8 +216,8 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
           )}
 
           {sessionId && (
-            <div className="mt-4 flex items-center justify-center gap-4">
-              <div className="bg-bp-red-600 inline-block px-4 py-2 rounded-lg flex items-center gap-2">
+            <div className="mt-4 flex flex-col items-center gap-3">
+              <div className="bg-bp-red-600 inline-flex px-4 py-2 rounded-lg items-center gap-2">
                 <span
                   className={sessionActive ? "text-green-400" : "text-red-400"}
                 >
@@ -226,6 +228,22 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                   {sessionId.substring(0, 10)}...
                 </span>
               </div>
+              {isSessionStarted ? (
+                <div className={`flex items-center gap-3 bg-gray-800 rounded-lg px-5 py-3 border shadow-lg ${timeLeftSeconds < 300 ? "border-red-500 animate-pulse shadow-red-500/30" : "border-green-500 shadow-green-500/20"}`}>
+                  <Clock size={20} className={timeLeftSeconds < 300 ? "text-red-400" : "text-green-400"} />
+                  <div>
+                    <div className={`text-xl font-bold font-mono ${timeLeftSeconds < 300 ? "text-red-400" : "text-green-400"}`}>
+                      {formatTime(timeLeftSeconds)}
+                    </div>
+                    <div className="text-xs text-gray-400">Temps restant</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-yellow-300 text-sm flex items-center gap-2">
+                  <Clock size={16} />
+                  Session créée — en attente de démarrage par l'instructeur
+                </div>
+              )}
             </div>
           )}
 
