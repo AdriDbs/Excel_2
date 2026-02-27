@@ -33,6 +33,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [nameConflictUser, setNameConflictUser] = useState<Student | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -80,8 +81,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
         const existingStudent = await firebaseDataService.getUserByName(name.trim());
         if (existingStudent && existingStudent.role === "student") {
-          user = existingStudent as Student;
-          await firebaseDataService.updateLastActivity(existingStudent.id, true);
+          // Nom déjà utilisé : afficher un avertissement au lieu de se connecter silencieusement
+          setNameConflictUser(existingStudent as Student);
+          setIsLoading(false);
+          return;
         } else {
           user = await firebaseDataService.addUser(name.trim(), "student");
         }
@@ -111,6 +114,21 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
     await firebaseDataService.updateLastActivity(user.id, true);
     onUserSelected(user);
   }, [onUserSelected]);
+
+  // Connexion avec le profil existant en cas de conflit de nom
+  const handleLoginWithConflictUser = useCallback(async () => {
+    if (!nameConflictUser) return;
+    setIsLoading(true);
+    await firebaseDataService.updateLastActivity(nameConflictUser.id, true);
+    onUserSelected(nameConflictUser);
+  }, [nameConflictUser, onUserSelected]);
+
+  // Choisir un autre nom (réinitialiser le conflit)
+  const handleChooseNewName = useCallback(() => {
+    setNameConflictUser(null);
+    setStudentName("");
+    setError("");
+  }, []);
 
   const handleStudentSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -282,7 +300,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           )}
 
           {/* Formulaire nouveau participant */}
-          {selectedRole === "student" && loginMode === "new" && (
+          {selectedRole === "student" && loginMode === "new" && !nameConflictUser && (
             <form onSubmit={handleStudentSubmit} className="max-w-md mx-auto animate-slide-up">
               <div className="mb-6">
                 <label
@@ -303,7 +321,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   autoFocus
                 />
                 <p className="text-bp-gray-300 text-sm mt-2">
-                  Si ce nom existe déjà, vous reprendrez votre progression existante.
+                  Chaque participant reçoit un identifiant de session unique.
                 </p>
               </div>
 
@@ -339,6 +357,50 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 </button>
               </div>
             </form>
+          )}
+
+          {/* Avertissement : conflit de nom */}
+          {selectedRole === "student" && loginMode === "new" && nameConflictUser && (
+            <div className="max-w-md mx-auto animate-slide-up">
+              <div className="bg-yellow-500/20 border border-yellow-400 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">⚠️</span>
+                  <h4 className="text-white text-lg font-bold">Ce nom est déjà utilisé</h4>
+                </div>
+                <p className="text-yellow-100 text-sm mb-2">
+                  Un profil existe déjà pour <strong>"{nameConflictUser.name}"</strong>.
+                </p>
+                <p className="text-yellow-200 text-sm">
+                  Vous pouvez vous connecter avec ce profil existant ou choisir un autre nom pour créer un nouveau profil.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleLoginWithConflictUser}
+                  disabled={isLoading}
+                  className="w-full bg-bp-red-400 hover:bg-bp-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-bp disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  ) : (
+                    <>
+                      <LogIn size={20} />
+                      Se connecter avec le profil "{nameConflictUser.name}"
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleChooseNewName}
+                  disabled={isLoading}
+                  className="w-full bg-bp-gray-500 hover:bg-bp-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <User size={20} />
+                  Choisir un autre nom
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Sélection utilisateur existant */}

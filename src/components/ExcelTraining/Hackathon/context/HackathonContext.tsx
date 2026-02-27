@@ -39,12 +39,32 @@ const defaultState: HackathonState = {
   isSessionStarted: false,
 };
 
+// Barèmes de bonus finaux
+export const SPEED_BONUS_SCALE = [300, 200, 100, 75, 50];
+export const ACCURACY_BONUS_SCALE = [200, 150, 100, 75, 50];
+
+export interface BonusResult {
+  teamId: number;
+  teamName: string;
+  bonus: number;
+  rank: number;
+}
+
+export interface AccuracyBonusResult extends BonusResult {
+  errors: number;
+}
+
+export interface FinalBonuses {
+  speedBonuses: BonusResult[];
+  accuracyBonuses: AccuracyBonusResult[];
+}
+
 // Interface pour les fonctions du contexte
 interface HackathonContextType {
   state: HackathonState;
   updateTeamScore: (
     teamId: number,
-    actionType: "success" | "hint",
+    actionType: "success" | "hint" | "wrong",
     points?: number
   ) => void;
   setTimeLeftSeconds: (seconds: number) => void;
@@ -71,6 +91,7 @@ interface HackathonContextType {
   formatTime: (totalSeconds: number) => string;
   leaveTeam: () => Promise<boolean>;
   loadStudentFromFirebase: (sessionId: string, userId: string) => Promise<Student | null>;
+  applyFinalBonuses: () => FinalBonuses;
 }
 
 // Création du contexte
@@ -178,6 +199,8 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
               completedLevels: team.completedLevels || [],
               currentLevel: team.currentLevel ?? 0,
               studentIds: team.studentIds || [],
+              errors: team.errors ?? 0,
+              completionTime: team.completionTime ?? undefined,
             }))
           : prevState.teams;
 
@@ -266,7 +289,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateTeamScore = (
     teamId: number,
-    actionType: "success" | "hint",
+    actionType: "success" | "hint" | "wrong",
     points?: number
   ) => {
     const teamIndex = state.teams.findIndex((t) => t.id === teamId);
@@ -274,33 +297,49 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
 
     const team = state.teams[teamIndex];
     let newScore = team.score;
+    let newErrors = team.errors ?? 0;
+
     if (actionType === "success") {
       newScore += points || 200;
     } else if (actionType === "hint") {
       // points contient la pénalité spécifique : -25 pour indice 1, -50 pour indice 2
       const penalty = points || 25;
       newScore = Math.max(0, newScore - penalty);
+    } else if (actionType === "wrong") {
+      // Pénalité de -10 pts par mauvaise réponse
+      newScore = Math.max(0, newScore - 10);
+      newErrors += 1;
     }
 
     setState((prevState) => ({
       ...prevState,
       teams: prevState.teams.map((t) =>
-        t.id === teamId ? { ...t, score: newScore } : t
+        t.id === teamId ? { ...t, score: newScore, errors: newErrors } : t
       ),
     }));
 
     // Écriture directe Firebase (path-specific) pour éviter les conflits entre équipes
     if (state.sessionId) {
-      updateTeamInFirebase(state.sessionId, teamIndex, { score: newScore });
+      updateTeamInFirebase(state.sessionId, teamIndex, { score: newScore, errors: newErrors });
     }
 
-    const penalty = points || 25;
-    const message =
-      actionType === "success"
-        ? `${team.name} a validé une question ! +${points || 200} points`
-        : `${team.name} a utilisé un indice. -${penalty} points`;
-    setNotification(message, actionType);
+    let message: string;
+    let notifType: "success" | "hint" | "error";
+    if (actionType === "success") {
+      message = `${team.name} a validé une question ! +${points || 200} points`;
+      notifType = "success";
+    } else if (actionType === "hint") {
+      const penalty = points || 25;
+      message = `${team.name} a utilisé un indice. -${penalty} points`;
+      notifType = "hint";
+    } else {
+      message = `Réponse incorrecte. -10 points (${newErrors} erreur${newErrors > 1 ? "s" : ""})`;
+      notifType = "error";
+    }
+    setNotification(message, notifType);
   };
+
+  const TOTAL_LEVELS = 16; // Nombre total d'exercices du hackathon
 
   const completeLevel = (teamId: number, levelId: number) => {
     const teamIndex = state.teams.findIndex((t) => t.id === teamId);
@@ -318,6 +357,10 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       [newCurrentLevel]: 0,
     };
 
+    // Enregistrer l'heure de fin si tous les niveaux sont complétés
+    const isFullyCompleted = newCompletedLevels.length >= TOTAL_LEVELS;
+    const newCompletionTime = isFullyCompleted && !team.completionTime ? Date.now() : team.completionTime;
+
     setState((prevState) => ({
       ...prevState,
       teams: prevState.teams.map((t) =>
@@ -327,6 +370,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
               completedLevels: newCompletedLevels,
               currentLevel: newCurrentLevel,
               progress: newProgress,
+              ...(newCompletionTime !== t.completionTime ? { completionTime: newCompletionTime } : {}),
             }
           : t
       ),
@@ -334,11 +378,15 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
 
     // Écriture directe Firebase (path-specific) pour une synchronisation immédiate
     if (state.sessionId) {
-      updateTeamInFirebase(state.sessionId, teamIndex, {
+      const firebaseUpdate: any = {
         completedLevels: newCompletedLevels,
         currentLevel: newCurrentLevel,
         progress: newProgress,
-      });
+      };
+      if (newCompletionTime && newCompletionTime !== team.completionTime) {
+        firebaseUpdate.completionTime = newCompletionTime;
+      }
+      updateTeamInFirebase(state.sessionId, teamIndex, firebaseUpdate);
     }
   };
 
@@ -543,6 +591,68 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // ── Calcul et application des bonus finaux ────────────────────────────────
+  const applyFinalBonuses = (): FinalBonuses => {
+    const totalLevels = TOTAL_LEVELS;
+
+    // Bonus rapidité : uniquement les équipes ayant terminé tous les niveaux
+    const finishedTeams = state.teams
+      .filter((t) => (t.completedLevels?.length ?? 0) >= totalLevels && t.completionTime)
+      .sort((a, b) => (a.completionTime ?? 0) - (b.completionTime ?? 0));
+
+    // Bonus précision : toutes les équipes, par nombre d'erreurs croissant
+    const allTeamsByErrors = [...state.teams].sort(
+      (a, b) => (a.errors ?? 0) - (b.errors ?? 0)
+    );
+
+    const speedBonuses: BonusResult[] = finishedTeams.map((team, index) => ({
+      teamId: team.id,
+      teamName: team.name,
+      bonus: SPEED_BONUS_SCALE[index] ?? SPEED_BONUS_SCALE[SPEED_BONUS_SCALE.length - 1],
+      rank: index + 1,
+    }));
+
+    const accuracyBonuses: AccuracyBonusResult[] = allTeamsByErrors.map((team, index) => ({
+      teamId: team.id,
+      teamName: team.name,
+      bonus: ACCURACY_BONUS_SCALE[index] ?? ACCURACY_BONUS_SCALE[ACCURACY_BONUS_SCALE.length - 1],
+      rank: index + 1,
+      errors: team.errors ?? 0,
+    }));
+
+    // Agréger les bonus par équipe
+    const bonusByTeam: { [teamId: number]: number } = {};
+    speedBonuses.forEach((b) => {
+      bonusByTeam[b.teamId] = (bonusByTeam[b.teamId] ?? 0) + b.bonus;
+    });
+    accuracyBonuses.forEach((b) => {
+      bonusByTeam[b.teamId] = (bonusByTeam[b.teamId] ?? 0) + b.bonus;
+    });
+
+    // Mettre à jour l'état local
+    setState((prevState) => ({
+      ...prevState,
+      teams: prevState.teams.map((t) => ({
+        ...t,
+        score: t.score + (bonusByTeam[t.id] ?? 0),
+      })),
+    }));
+
+    // Écriture Firebase pour chaque équipe
+    if (state.sessionId) {
+      state.teams.forEach((team, index) => {
+        const bonus = bonusByTeam[team.id] ?? 0;
+        if (bonus > 0) {
+          updateTeamInFirebase(state.sessionId, index, {
+            score: team.score + bonus,
+          });
+        }
+      });
+    }
+
+    return { speedBonuses, accuracyBonuses };
+  };
+
   return (
     <HackathonContext.Provider
       value={{
@@ -565,6 +675,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
         formatTime,
         leaveTeam,
         loadStudentFromFirebase,
+        applyFinalBonuses,
       }}
     >
       {children}
