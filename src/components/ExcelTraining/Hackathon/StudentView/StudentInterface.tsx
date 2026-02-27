@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -15,6 +15,7 @@ import {
   BarChart,
   Zap,
   XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { NavigationProps } from "../../types";
 import { Student, Instructor } from "../../../../types/database";
@@ -24,6 +25,7 @@ import { registerStudent, hackathonLevels } from "../services/hackathonService";
 import StudentExercise from "./StudentExercise";
 import WaitingScreen from "./WaitingScreen";
 import DownloadFilesOverlay from "./DownloadFilesOverlay";
+import TeamChat from "../TeamChat";
 
 interface StudentInterfaceProps extends NavigationProps {
   goBackToLanding: () => void;
@@ -54,6 +56,13 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLeavingTeam, setIsLeavingTeam] = useState(false);
   const [isLoadingRegistration, setIsLoadingRegistration] = useState(true);
+  // Notification visible de perte de points (visible par tous les membres de l'équipe)
+  const [wrongAnswerBanner, setWrongAnswerBanner] = useState<{
+    visible: boolean;
+    errors: number;
+  }>({ visible: false, errors: 0 });
+  const prevErrorsRef = useRef<number>(-1);
+  const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Contexte hackathon
   const {
@@ -96,6 +105,29 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
       setStudentName(currentUser.name);
     }
   }, [currentUser]);
+
+  // Détecter les nouvelles erreurs de l'équipe (synchro Firebase) → bannière visible par tous
+  useEffect(() => {
+    if (!teamData) return;
+    const currentErrors = teamData.errors ?? 0;
+
+    if (prevErrorsRef.current === -1) {
+      // Premier chargement : initialiser sans déclencher de notification
+      prevErrorsRef.current = currentErrors;
+      return;
+    }
+
+    if (currentErrors > prevErrorsRef.current) {
+      // Une nouvelle erreur est arrivée — l'afficher à tous les membres
+      if (bannerTimeoutRef.current) clearTimeout(bannerTimeoutRef.current);
+      setWrongAnswerBanner({ visible: true, errors: currentErrors });
+      bannerTimeoutRef.current = setTimeout(() => {
+        setWrongAnswerBanner((prev) => ({ ...prev, visible: false }));
+      }, 3500);
+    }
+
+    prevErrorsRef.current = currentErrors;
+  }, [teamData?.errors]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isRegistered = registeredStudent !== null && registeredStudent.teamId > 0;
 
@@ -261,13 +293,19 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
 
   // ─── Écran d'attente (session non démarrée) ───────────────────────────────
   if (isRegistered && !isSessionStarted) {
+    const waitingUserId = currentUser?.id || registeredStudent?.id || "";
+    const waitingUserName = studentName || registeredStudent?.name || "";
     return (
       <WaitingScreen
         teamName={teamData?.name || ""}
-        studentName={studentName || registeredStudent?.name || ""}
+        studentName={waitingUserName}
         goBackToLanding={goBackToLanding}
         onLeaveTeam={handleLeaveTeam}
         isLeavingTeam={isLeavingTeam}
+        sessionId={sessionId}
+        teamId={registeredStudent?.teamId}
+        userId={waitingUserId}
+        userName={waitingUserName}
       />
     );
   }
@@ -404,6 +442,24 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   // ─── Interface principale du hackathon ────────────────────────────────────
   return (
     <div className="bg-gray-900 min-h-screen text-white p-6">
+      {/* ── Bannière de perte de points (visible par tous les membres) ─────── */}
+      {wrongAnswerBanner.visible && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 py-4 px-6 bg-red-700 border-b-4 border-red-500 shadow-lg animate-slide-down"
+          role="alert"
+        >
+          <AlertTriangle size={24} className="text-red-200 shrink-0" />
+          <div className="text-center">
+            <span className="text-lg font-bold text-white">
+              ❌ Mauvaise réponse ! -10 points
+            </span>
+            <span className="ml-3 text-red-200 text-sm">
+              ({wrongAnswerBanner.errors} erreur{wrongAnswerBanner.errors > 1 ? "s" : ""} au total)
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Notifications de progression */}
       {notifications.length > 0 && (
         <div className="fixed top-4 right-4 z-50 space-y-2">
@@ -547,6 +603,17 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
         </button>
       </div>
 
+      {/* Chat d'équipe (bulle flottante) */}
+      {sessionId && registeredStudent && (
+        <TeamChat
+          sessionId={sessionId}
+          teamId={registeredStudent.teamId}
+          teamName={teamData?.name || ""}
+          userId={currentUser?.id || registeredStudent.id || ""}
+          userName={registeredStudent.name || studentName}
+        />
+      )}
+
       {/* CSS */}
       <style>
         {`
@@ -562,6 +629,13 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
         }
         .animate-slide-in-right {
           animation: slide-in-right 0.3s ease-out;
+        }
+        @keyframes slide-down {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-down {
+          animation: slide-down 0.35s ease-out;
         }
         `}
       </style>

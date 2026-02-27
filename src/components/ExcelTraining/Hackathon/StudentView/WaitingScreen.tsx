@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import DownloadFilesOverlay from "./DownloadFilesOverlay";
+import TeamChat from "../TeamChat";
 
 interface WaitingScreenProps {
   teamName: string;
@@ -20,6 +21,11 @@ interface WaitingScreenProps {
   goBackToLanding: () => void;
   onLeaveTeam?: () => void;
   isLeavingTeam?: boolean;
+  // Props chat
+  sessionId?: string;
+  teamId?: number;
+  userId?: string;
+  userName?: string;
 }
 
 const WaitingScreen: React.FC<WaitingScreenProps> = ({
@@ -28,6 +34,10 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
   goBackToLanding,
   onLeaveTeam,
   isLeavingTeam = false,
+  sessionId,
+  teamId,
+  userId,
+  userName,
 }) => {
   const [showDownloadOverlay, setShowDownloadOverlay] = useState(false);
 
@@ -228,6 +238,17 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({
       {/* Overlay de téléchargement de fichiers */}
       {showDownloadOverlay && (
         <DownloadFilesOverlay onClose={() => setShowDownloadOverlay(false)} />
+      )}
+
+      {/* Chat d'équipe (disponible dès qu'une session existe) */}
+      {sessionId && teamId && userId && userName && (
+        <TeamChat
+          sessionId={sessionId}
+          teamId={teamId}
+          teamName={teamName}
+          userId={userId}
+          userName={userName}
+        />
       )}
     </div>
   );
