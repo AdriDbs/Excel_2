@@ -61,3 +61,13 @@ export interface HackathonSession {
   endTime?: number; // Quand la session a été terminée
   isActive: boolean;
 }
+
+export interface ChatMessage {
+  id?: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  timestamp: number;
+  type: "user" | "broadcast" | "system";
+  teamId?: number;
+}

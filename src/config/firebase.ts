@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, Auth, User as FirebaseUser } from "firebase/auth";
-import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, serverTimestamp, Database } from "firebase/database";
+import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, serverTimestamp, Database, push, query, limitToLast } from "firebase/database";
 
 // Configuration Firebase fournie
 const firebaseConfig = {
@@ -437,6 +437,88 @@ export const getSpeedDatingSessionStartTime = async (
     console.error("Erreur lors de la récupération du startTime Speed Dating:", error);
     return null;
   }
+};
+
+// ── Chat Hackathon ────────────────────────────────────────────────────────────
+
+import type { ChatMessage } from "../components/ExcelTraining/Hackathon/types";
+
+// Références chat
+const getTeamChatRef = (sessionId: string, teamId: number) =>
+  ref(database, `hackathonSessions/${sessionId}/chat/teams/${teamId}/messages`);
+
+const getBroadcastChatRef = (sessionId: string) =>
+  ref(database, `hackathonSessions/${sessionId}/chat/broadcast/messages`);
+
+// Envoyer un message dans le chat d'équipe
+export const sendTeamChatMessage = async (
+  sessionId: string,
+  teamId: number,
+  message: { senderId: string; senderName: string; text: string }
+): Promise<boolean> => {
+  try {
+    await push(getTeamChatRef(sessionId, teamId), {
+      ...message,
+      timestamp: Date.now(),
+      type: "user",
+    });
+    return true;
+  } catch (error) {
+    console.error("Erreur envoi message équipe:", error);
+    return false;
+  }
+};
+
+// Envoyer un message broadcast (formateur → toutes les équipes)
+export const sendBroadcastMessage = async (
+  sessionId: string,
+  message: { senderName: string; text: string }
+): Promise<boolean> => {
+  try {
+    await push(getBroadcastChatRef(sessionId), {
+      ...message,
+      senderId: "instructor",
+      timestamp: Date.now(),
+      type: "broadcast",
+    });
+    return true;
+  } catch (error) {
+    console.error("Erreur envoi broadcast:", error);
+    return false;
+  }
+};
+
+// S'abonner au chat d'une équipe (50 derniers messages)
+export const subscribeToTeamChat = (
+  sessionId: string,
+  teamId: number,
+  callback: (messages: ChatMessage[]) => void
+): (() => void) => {
+  const chatQuery = query(getTeamChatRef(sessionId, teamId), limitToLast(50));
+  return onValue(chatQuery, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) { callback([]); return; }
+    const messages: ChatMessage[] = Object.entries(data)
+      .map(([id, msg]: [string, any]) => ({ id, ...msg }))
+      .sort((a, b) => a.timestamp - b.timestamp);
+    callback(messages);
+  });
+};
+
+// S'abonner aux messages broadcast (50 derniers)
+export const subscribeToBroadcastChat = (
+  sessionId: string,
+  callback: (messages: ChatMessage[]) => void
+): (() => void) => {
+  const broadcastQuery = query(getBroadcastChatRef(sessionId), limitToLast(50));
+  return onValue(broadcastQuery, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) { callback([]); return; }
+    const messages: ChatMessage[] = Object.entries(data)
+      .map(([id, msg]: [string, any]) => ({ id, ...msg }))
+      .sort((a, b) => a.timestamp - b.timestamp);
+    callback(messages);
+  });
 };
 
 export { app };

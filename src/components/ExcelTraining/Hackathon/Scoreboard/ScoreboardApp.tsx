@@ -10,11 +10,13 @@ import {
   Zap,
   Target,
   X,
+  MessageCircle,
 } from "lucide-react";
 import { NavigationProps } from "../../types";
 import { useHackathon, FinalBonuses, SPEED_BONUS_SCALE, ACCURACY_BONUS_SCALE } from "../context/HackathonContext";
 import { hackathonLevels } from "../services/hackathonService";
 import SessionControlOverlay from "./SessionControlOverlay";
+import InstructorChatPanel from "./InstructorChatPanel";
 
 interface ScoreboardProps extends NavigationProps {
   goBackToLanding: () => void;
@@ -53,6 +55,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusPreview, setBonusPreview] = useState<FinalBonuses | null>(null);
   const [bonusApplied, setBonusApplied] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(false);
 
   // Trier les équipes par score
   const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
@@ -461,6 +464,14 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         </button>
 
         <button
+          onClick={() => setShowChatPanel(true)}
+          className="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg border border-indigo-600 transition-colors shadow-lg flex items-center gap-2"
+        >
+          <MessageCircle size={20} />
+          Chat des équipes
+        </button>
+
+        <button
           onClick={setToFiveMinutes}
           className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg border border-gray-700 transition-colors shadow-lg"
         >
@@ -584,6 +595,15 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
       {/* Overlay de contrôle de session */}
       {showControlOverlay && (
         <SessionControlOverlay onClose={() => setShowControlOverlay(false)} />
+      )}
+
+      {/* Panel chat formateur */}
+      {showChatPanel && sessionId && (
+        <InstructorChatPanel
+          sessionId={sessionId}
+          teams={teams}
+          onClose={() => setShowChatPanel(false)}
+        />
       )}
 
       {/* Modal des bonus finaux */}
