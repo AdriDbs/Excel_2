@@ -17,6 +17,7 @@ import {
 } from "../services/hackathonService";
 import {
   subscribeToHackathonSession,
+  subscribeToAllHackathonSessions,
   updateHackathonSession,
   updateTeamInFirebase,
 } from "../../../../config/firebase";
@@ -105,8 +106,14 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [state, setState] = useState<HackathonState>(defaultState);
   const firebaseUnsubRef = useRef<(() => void) | null>(null);
+  const allSessionsUnsubRef = useRef<(() => void) | null>(null);
   const isFirebaseSyncingRef = useRef(false);
   const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref to track current sessionId inside callbacks (avoids stale closure)
+  const sessionIdRef = useRef(state.sessionId);
+  useEffect(() => {
+    sessionIdRef.current = state.sessionId;
+  }, [state.sessionId]);
 
   // Formater le temps: HH:MM:SS
   const formatTime = useCallback((totalSeconds: number): string => {
@@ -245,6 +252,93 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       }
     };
   }, [state.sessionId]);
+
+  // Écouter toutes les sessions quand aucune session n'est active (auto-refresh)
+  useEffect(() => {
+    if (state.sessionId) {
+      // Une session est déjà active, pas besoin d'écouter toutes les sessions
+      if (allSessionsUnsubRef.current) {
+        allSessionsUnsubRef.current();
+        allSessionsUnsubRef.current = null;
+      }
+      return;
+    }
+
+    const unsubscribe = subscribeToAllHackathonSessions((allSessions) => {
+      // Si une session a été définie entre temps, ignorer
+      if (sessionIdRef.current) return;
+      if (!allSessions) return;
+
+      // Trouver la session active la plus récente
+      let activeSession: any = null;
+      let activeSessionId = "";
+
+      for (const [id, session] of Object.entries(allSessions)) {
+        if (session && session.sessionActive !== false && session.isActive !== false) {
+          if (
+            !activeSession ||
+            (session.sessionCreationTime || 0) > (activeSession.sessionCreationTime || 0)
+          ) {
+            activeSession = session;
+            activeSessionId = id;
+          }
+        }
+      }
+
+      if (!activeSession || !activeSessionId) return;
+
+      isFirebaseSyncingRef.current = true;
+
+      const rawTeams = activeSession.teams || [];
+      const teams = rawTeams
+        .filter(Boolean)
+        .map((team: any) => ({
+          ...team,
+          progress: team.progress || {},
+          completedLevels: team.completedLevels || [],
+          currentLevel: team.currentLevel ?? 0,
+          studentIds: team.studentIds || [],
+          errors: team.errors ?? 0,
+          completionTime: team.completionTime ?? undefined,
+        }));
+
+      const isStarted =
+        activeSession.isSessionStarted !== undefined
+          ? activeSession.isSessionStarted
+          : activeSession.startTime != null;
+
+      let timeLeftSeconds = TOTAL_DURATION_SECONDS;
+      if (activeSession.startTime && isStarted) {
+        const elapsed = (Date.now() - activeSession.startTime) / 1000;
+        timeLeftSeconds = Math.max(0, Math.floor(TOTAL_DURATION_SECONDS - elapsed));
+      }
+
+      setState((prevState) => {
+        if (prevState.sessionId) return prevState; // Session déjà définie, ne pas écraser
+        return {
+          ...prevState,
+          teams,
+          sessionId: activeSessionId,
+          sessionActive: true,
+          isSessionStarted: isStarted,
+          timeLeftSeconds,
+        };
+      });
+
+      setTimeout(() => {
+        isFirebaseSyncingRef.current = false;
+      }, 500);
+    });
+
+    allSessionsUnsubRef.current = unsubscribe;
+
+    return () => {
+      if (allSessionsUnsubRef.current) {
+        allSessionsUnsubRef.current();
+        allSessionsUnsubRef.current = null;
+      }
+    };
+  }, [state.sessionId]); // Se déclenche quand sessionId passe de "" à une valeur (et vice versa)
 
   // Charger un étudiant depuis Firebase
   const loadStudentFromFirebase = async (
