@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, Auth, User as FirebaseUser } from "firebase/auth";
 import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, serverTimestamp, Database, push, query, limitToLast } from "firebase/database";
+import type { ChatMessage } from "../components/ExcelTraining/Hackathon/types";
 
 // Configuration Firebase fournie
 const firebaseConfig = {
@@ -440,8 +441,6 @@ export const getSpeedDatingSessionStartTime = async (
 };
 
 // ── Chat Hackathon ────────────────────────────────────────────────────────────
-
-import type { ChatMessage } from "../components/ExcelTraining/Hackathon/types";
 
 // Références chat
 const getTeamChatRef = (sessionId: string, teamId: number) =>
