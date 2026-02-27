@@ -10,6 +10,16 @@ export interface Team {
   studentIds?: string[];
   errors?: number;          // Nombre de mauvaises réponses
   completionTime?: number;  // Timestamp (ms) quand tous les niveaux sont complétés
+  phaseStartTimestamps?: { [phaseId: number]: number }; // Timestamp d'entrée dans chaque phase
+}
+
+export interface TeamAlert {
+  id: string;
+  teamId: number;
+  teamName: string;
+  phaseId: number;
+  type: 'overtime_exercise' | 'phase_ending';
+  message: string;
 }
 
 export interface Level {
@@ -51,6 +61,9 @@ export interface HackathonState {
   registeredStudent: Student | null;
   sessionActive: boolean;
   isSessionStarted: boolean;
+  bonusApplied: boolean;
+  bonusAppliedAt: number | null;
+  timerStopped: boolean;
 }
 
 export interface HackathonSession {
