@@ -375,6 +375,8 @@ export const updateTeamInFirebase = async (
     currentLevel: number;
     completedLevels: number[];
     progress: Record<number, number>;
+    errors: number;
+    completionTime: number;
   }>
 ): Promise<boolean> => {
   const sessionRef = getHackathonSessionRef(sessionId);
