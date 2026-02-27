@@ -106,6 +106,9 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
     }
   }, [currentUser]);
 
+  const activeTeamId = registeredStudent?.teamId || selectedTeamId;
+  const teamData = teams.find((team) => team.id === activeTeamId);
+
   // Détecter les nouvelles erreurs de l'équipe (synchro Firebase) → bannière visible par tous
   useEffect(() => {
     if (!teamData) return;
@@ -180,9 +183,6 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
   };
 
   const isUrgent = timeLeftSeconds < 600;
-
-  const activeTeamId = registeredStudent?.teamId || selectedTeamId;
-  const teamData = teams.find((team) => team.id === activeTeamId);
 
   // ─── Écran de chargement ───────────────────────────────────────────────────
   if (isLoadingRegistration) {
