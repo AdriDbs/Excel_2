@@ -7,9 +7,12 @@ import {
   RefreshCw,
   AlertCircle,
   Settings,
+  Zap,
+  Target,
+  X,
 } from "lucide-react";
 import { NavigationProps } from "../../types";
-import { useHackathon } from "../context/HackathonContext";
+import { useHackathon, FinalBonuses, SPEED_BONUS_SCALE, ACCURACY_BONUS_SCALE } from "../context/HackathonContext";
 import { hackathonLevels } from "../services/hackathonService";
 import SessionControlOverlay from "./SessionControlOverlay";
 
@@ -26,6 +29,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     endCurrentSession,
     setNotification,
     formatTime,
+    applyFinalBonuses,
   } = useHackathon();
 
   const {
@@ -46,6 +50,9 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
   // État pour afficher/masquer l'overlay de contrôle de session
   const [showControlOverlay, setShowControlOverlay] = useState(false);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [bonusPreview, setBonusPreview] = useState<FinalBonuses | null>(null);
+  const [bonusApplied, setBonusApplied] = useState(false);
 
   // Trier les équipes par score
   const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
@@ -138,6 +145,41 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         setIsEndingSession(false);
       }
     }
+  };
+
+  // Prévisualiser et appliquer les bonus finaux
+  const handlePreviewBonuses = () => {
+    // Calculer les bonus sans les appliquer (lecture seule pour preview)
+    const totalLevels = 16;
+    const finishedTeams = [...teams]
+      .filter((t) => (t.completedLevels?.length ?? 0) >= totalLevels && t.completionTime)
+      .sort((a, b) => (a.completionTime ?? 0) - (b.completionTime ?? 0));
+    const allTeamsByErrors = [...teams].sort((a, b) => (a.errors ?? 0) - (b.errors ?? 0));
+
+    const preview: FinalBonuses = {
+      speedBonuses: finishedTeams.map((team, index) => ({
+        teamId: team.id,
+        teamName: team.name,
+        bonus: SPEED_BONUS_SCALE[index] ?? SPEED_BONUS_SCALE[SPEED_BONUS_SCALE.length - 1],
+        rank: index + 1,
+      })),
+      accuracyBonuses: allTeamsByErrors.map((team, index) => ({
+        teamId: team.id,
+        teamName: team.name,
+        bonus: ACCURACY_BONUS_SCALE[index] ?? ACCURACY_BONUS_SCALE[ACCURACY_BONUS_SCALE.length - 1],
+        rank: index + 1,
+        errors: team.errors ?? 0,
+      })),
+    };
+    setBonusPreview(preview);
+    setShowBonusModal(true);
+  };
+
+  const handleApplyBonuses = () => {
+    applyFinalBonuses();
+    setBonusApplied(true);
+    setShowBonusModal(false);
+    setNotification("Bonus finaux appliqués avec succès !", "success");
   };
 
   // Si aucune session n'est active
@@ -244,9 +286,10 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-400 mb-2 px-4">
           <div className="col-span-1">#</div>
-          <div className="col-span-5">Équipe</div>
+          <div className="col-span-4">Équipe</div>
           <div className="col-span-2 text-right">Score</div>
-          <div className="col-span-4">Progression</div>
+          <div className="col-span-2 text-center">Erreurs</div>
+          <div className="col-span-3">Progression</div>
         </div>
 
         {sortedTeams.length > 0 ? (
@@ -281,7 +324,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                 </div>
               </div>
 
-              <div className="col-span-5 font-medium text-white">
+              <div className="col-span-4 font-medium text-white">
                 {team.name}
                 {rankChanges[team.id] === "rank-up" && (
                   <span className="ml-2 text-green-400 text-sm animate-bounce">
@@ -299,7 +342,13 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                 {team.score}
               </div>
 
-              <div className="col-span-4">
+              <div className="col-span-2 text-center">
+                <span className={`font-bold text-sm ${(team.errors ?? 0) === 0 ? "text-green-400" : (team.errors ?? 0) < 5 ? "text-yellow-400" : "text-red-400"}`}>
+                  {team.errors ?? 0} ❌
+                </span>
+              </div>
+
+              <div className="col-span-3">
                 <div className="flex h-3 space-x-1">
                   {hackathonLevels.map((_, levelIndex) => (
                     <div
@@ -445,6 +494,19 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         </button>
 
         <button
+          onClick={handlePreviewBonuses}
+          disabled={bonusApplied}
+          className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
+            bonusApplied
+              ? "bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed"
+              : "bg-yellow-700 hover:bg-yellow-600 border-yellow-600 text-white"
+          }`}
+        >
+          <Trophy size={20} />
+          {bonusApplied ? "Bonus appliqués ✓" : "Appliquer les bonus finaux"}
+        </button>
+
+        <button
           onClick={handleEndSession}
           disabled={isEndingSession}
           className="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg border border-red-700 transition-colors shadow-lg flex items-center gap-2"
@@ -548,6 +610,100 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
       {/* Overlay de contrôle de session */}
       {showControlOverlay && (
         <SessionControlOverlay onClose={() => setShowControlOverlay(false)} />
+      )}
+
+      {/* Modal des bonus finaux */}
+      {showBonusModal && bonusPreview && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <Trophy className="text-yellow-400" size={28} />
+                Bonus Finaux
+              </h2>
+              <button
+                onClick={() => setShowBonusModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Bonus rapidité */}
+              <div>
+                <h3 className="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-3">
+                  <Zap size={20} />
+                  Bonus Rapidité (équipes ayant tout terminé)
+                </h3>
+                {bonusPreview.speedBonuses.length === 0 ? (
+                  <p className="text-gray-400 text-sm italic">
+                    Aucune équipe n'a complété tous les exercices.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {bonusPreview.speedBonuses.map((b) => (
+                      <div key={b.teamId} className="flex justify-between items-center bg-gray-800 rounded-lg px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${b.rank === 1 ? "bg-yellow-500 text-gray-900" : b.rank === 2 ? "bg-gray-400 text-gray-900" : b.rank === 3 ? "bg-amber-700 text-white" : "bg-gray-600 text-white"}`}>
+                            {b.rank}
+                          </span>
+                          <span className="text-white font-medium">{b.teamName}</span>
+                        </div>
+                        <span className="text-cyan-400 font-bold">+{b.bonus} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Bonus précision */}
+              <div>
+                <h3 className="text-lg font-semibold text-green-400 flex items-center gap-2 mb-3">
+                  <Target size={20} />
+                  Bonus Précision (moins d'erreurs)
+                </h3>
+                <div className="space-y-2">
+                  {bonusPreview.accuracyBonuses.map((b) => (
+                    <div key={b.teamId} className="flex justify-between items-center bg-gray-800 rounded-lg px-4 py-2">
+                      <div className="flex items-center gap-3">
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${b.rank === 1 ? "bg-yellow-500 text-gray-900" : b.rank === 2 ? "bg-gray-400 text-gray-900" : b.rank === 3 ? "bg-amber-700 text-white" : "bg-gray-600 text-white"}`}>
+                          {b.rank}
+                        </span>
+                        <span className="text-white font-medium">{b.teamName}</span>
+                        <span className="text-gray-400 text-sm">({b.errors} erreur{b.errors !== 1 ? "s" : ""})</span>
+                      </div>
+                      <span className="text-green-400 font-bold">+{b.bonus} pts</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Barème explicatif */}
+              <div className="bg-gray-800/50 rounded-lg p-4 text-sm text-gray-400">
+                <p className="font-medium text-gray-300 mb-2">Barème des bonus :</p>
+                <p>Rapidité (1er→{SPEED_BONUS_SCALE[0]}, 2e→{SPEED_BONUS_SCALE[1]}, 3e→{SPEED_BONUS_SCALE[2]}, 4e→{SPEED_BONUS_SCALE[3]}, 5e+→{SPEED_BONUS_SCALE[4]} pts)</p>
+                <p className="mt-1">Précision (1er→{ACCURACY_BONUS_SCALE[0]}, 2e→{ACCURACY_BONUS_SCALE[1]}, 3e→{ACCURACY_BONUS_SCALE[2]}, 4e→{ACCURACY_BONUS_SCALE[3]}, 5e+→{ACCURACY_BONUS_SCALE[4]} pts)</p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowBonusModal(false)}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleApplyBonuses}
+                  className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trophy size={20} />
+                  Appliquer les bonus
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

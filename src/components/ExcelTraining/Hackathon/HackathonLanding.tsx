@@ -372,9 +372,28 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                     {hackathonLevels[hackathonLevels.length - 1].pointsValue} pts (dernier ex.)
                   </span>
                 </li>
+                <li className="border-t border-white/20 pt-2 mt-2"></li>
                 <li className="flex justify-between text-red-300">
-                  <span>Utilisation d'indice</span>
+                  <span>Mauvaise réponse</span>
+                  <span>-10 pts</span>
+                </li>
+                <li className="flex justify-between text-red-300">
+                  <span>Indice n°1</span>
                   <span>-25 pts</span>
+                </li>
+                <li className="flex justify-between text-red-300">
+                  <span>Indice n°2</span>
+                  <span>-50 pts supplémentaires</span>
+                </li>
+                <li className="border-t border-white/20 pt-2 mt-2"></li>
+                <li className="text-xs text-bp-red-200 font-semibold uppercase tracking-wide">Bonus finaux (fin de session) :</li>
+                <li className="flex justify-between text-green-300 text-sm">
+                  <span>🏅 Précision — 1er / 2e / 3e / 4e+</span>
+                  <span>+200 / +150 / +100 / +75 pts</span>
+                </li>
+                <li className="flex justify-between text-cyan-300 text-sm">
+                  <span>⚡ Rapidité — 1er / 2e / 3e / 4e+</span>
+                  <span>+300 / +200 / +100 / +75 pts</span>
                 </li>
               </ul>
             </div>

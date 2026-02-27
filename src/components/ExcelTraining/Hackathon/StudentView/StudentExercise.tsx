@@ -158,7 +158,8 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
         }, 2000);
       }
     } else {
-      setNotification("Réponse incorrecte. Essayez encore !", "error");
+      // Pénalité de -10 pts par mauvaise réponse
+      updateTeamScore(teamData.id, "wrong");
     }
   };
 

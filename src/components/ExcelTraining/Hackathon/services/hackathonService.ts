@@ -394,6 +394,8 @@ export const fetchInitialState = async (): Promise<InitialHackathonState> => {
         completedLevels: team.completedLevels || [],
         currentLevel: team.currentLevel ?? 0,
         studentIds: team.studentIds || [],
+        errors: team.errors ?? 0,
+        completionTime: team.completionTime ?? undefined,
       };
     }).filter(Boolean);
 
@@ -549,6 +551,7 @@ export const createNewSession = async (
     progress: { ...initialProgress },
     completedLevels: [],
     studentIds: [],
+    errors: 0,
   }));
 
   // Désactiver toutes les sessions actives existantes dans Firebase

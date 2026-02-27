@@ -8,6 +8,8 @@ export interface Team {
   progress: { [key: number]: number };
   completedLevels?: number[];
   studentIds?: string[];
+  errors?: number;          // Nombre de mauvaises réponses
+  completionTime?: number;  // Timestamp (ms) quand tous les niveaux sont complétés
 }
 
 export interface Level {
