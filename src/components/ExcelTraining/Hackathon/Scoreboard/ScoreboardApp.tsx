@@ -11,19 +11,24 @@ import {
   Target,
   X,
   MessageCircle,
+  Bell,
+  BellOff,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { NavigationProps } from "../../types";
 import { useHackathon, FinalBonuses, SPEED_BONUS_SCALE, ACCURACY_BONUS_SCALE } from "../context/HackathonContext";
 import { hackathonLevels } from "../services/hackathonService";
 import SessionControlOverlay from "./SessionControlOverlay";
 import InstructorChatPanel from "./InstructorChatPanel";
+import LeaderboardAnimation from "./LeaderboardAnimation";
+import { useTeamAlerts } from "../hooks/useTeamAlerts";
 
 interface ScoreboardProps extends NavigationProps {
   goBackToLanding: () => void;
 }
 
 const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
-  // Utiliser le contexte Hackathon
   const {
     state,
     setTimeLeftSeconds,
@@ -41,7 +46,12 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     sessionId,
     sessionActive,
     isSessionStarted,
+    bonusApplied,
+    bonusAppliedAt,
   } = state;
+
+  // Alertes en temps réel
+  const { alerts, dismissAlert, dismissAllAlerts, soundEnabled, setSoundEnabled } = useTeamAlerts();
 
   // État pour le classement précédent (pour les animations)
   const [previousRanking, setPreviousRanking] = useState<number[]>([]);
@@ -50,12 +60,13 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   const [isEndingSession, setIsEndingSession] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // État pour afficher/masquer l'overlay de contrôle de session
+  // UI panels
   const [showControlOverlay, setShowControlOverlay] = useState(false);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusPreview, setBonusPreview] = useState<FinalBonuses | null>(null);
-  const [bonusApplied, setBonusApplied] = useState(false);
   const [showChatPanel, setShowChatPanel] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [alertsCollapsed, setAlertsCollapsed] = useState(false);
 
   // Trier les équipes par score
   const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
@@ -63,10 +74,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   // Définir la vue comme globale
   useEffect(() => {
     setIsGlobalView(true);
-
-    return () => {
-      setIsGlobalView(false);
-    };
+    return () => { setIsGlobalView(false); };
   }, [setIsGlobalView]);
 
   // Vérifier les changements de classement et mettre à jour les animations
@@ -78,25 +86,18 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
       currentRanking.forEach((teamId, index) => {
         const prevIndex = previousRanking.indexOf(teamId);
         if (prevIndex !== -1 && prevIndex > index) {
-          // L'équipe est montée dans le classement
           changes[teamId] = "rank-up";
         }
       });
 
       if (Object.keys(changes).length > 0) {
         setRankChanges(changes);
-
-        // Réinitialiser les animations après 3 secondes
-        setTimeout(() => {
-          setRankChanges({});
-        }, 3000);
+        setTimeout(() => setRankChanges({}), 3000);
       }
     }
-
-    // Mettre à jour le classement précédent
     setPreviousRanking(sortedTeams.map((team) => team.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortedTeams.map((t) => t.score).join("-")]); // Se déclenche uniquement quand les scores changent
+  }, [sortedTeams.map((t) => t.score).join("-")]);
 
   // Vérifier si on est dans les 5 dernières minutes
   useEffect(() => {
@@ -118,8 +119,6 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   // Fonction pour rafraîchir manuellement les données
   const refreshData = () => {
     setIsRefreshing(true);
-
-    // Simuler un rafraîchissement (en réalité, les données sont mises à jour via le contexte)
     setTimeout(() => {
       setNotification("Données rafraîchies", "success");
       setIsRefreshing(false);
@@ -129,18 +128,11 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   // Fonction pour terminer la session
   const handleEndSession = async () => {
     if (!sessionId) return;
-
-    if (
-      window.confirm(
-        "Êtes-vous sûr de vouloir terminer cette session ? Cette action est irréversible."
-      )
-    ) {
+    if (window.confirm("Êtes-vous sûr de vouloir terminer cette session ? Cette action est irréversible.")) {
       setIsEndingSession(true);
       try {
         const result = await endCurrentSession();
-        if (result) {
-          goBackToLanding();
-        }
+        if (result) goBackToLanding();
       } catch (error) {
         console.error("Error ending session:", error);
         setNotification("Erreur lors de la terminaison de la session", "error");
@@ -150,9 +142,8 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     }
   };
 
-  // Prévisualiser et appliquer les bonus finaux
+  // Prévisualiser les bonus finaux (sans les appliquer)
   const handlePreviewBonuses = () => {
-    // Calculer les bonus sans les appliquer (lecture seule pour preview)
     const totalLevels = 16;
     const finishedTeams = [...teams]
       .filter((t) => (t.completedLevels?.length ?? 0) >= totalLevels && t.completionTime)
@@ -180,9 +171,8 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
 
   const handleApplyBonuses = () => {
     applyFinalBonuses();
-    setBonusApplied(true);
     setShowBonusModal(false);
-    setNotification("Bonus finaux appliqués avec succès !", "success");
+    setNotification("Bonus finaux appliqués avec succès ! Timer arrêté.", "success");
   };
 
   // Si aucune session n'est active
@@ -193,8 +183,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           <AlertCircle size={48} className="mx-auto mb-4 text-bp-red-400" />
           <h2 className="text-2xl font-bold mb-4">Aucune session active</h2>
           <p className="mb-6">
-            Veuillez créer ou rejoindre une session depuis la page d'accueil du
-            hackathon.
+            Veuillez créer ou rejoindre une session depuis la page d'accueil du hackathon.
           </p>
           <button
             onClick={goBackToLanding}
@@ -206,6 +195,10 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
       </div>
     );
   }
+
+  const bonusAppliedDate = bonusAppliedAt
+    ? new Date(bonusAppliedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })
+    : null;
 
   return (
     <div className="bg-gray-900 min-h-screen text-white p-6">
@@ -227,16 +220,18 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           Escape Excel: Le Dossier Perdu 2.0
         </h1>
 
-        {sessionId ? (
+        {sessionId && (
           <p className="text-md text-gray-400 mb-4">Session ID: {sessionId}</p>
-        ) : null}
+        )}
 
         <div className="flex items-center justify-center mt-4">
           <div
             className={`
             flex items-center bg-gray-800 rounded-lg px-4 py-2 border shadow-lg
             ${
-              isUrgent
+              state.timerStopped
+                ? "border-gray-600 opacity-60"
+                : isUrgent
                 ? "border-red-500 animate-pulse shadow-red-500/30"
                 : isSessionStarted
                 ? "border-green-500 shadow-green-500/30"
@@ -246,7 +241,9 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           >
             <Clock
               className={`mr-2 ${
-                isUrgent
+                state.timerStopped
+                  ? "text-gray-500"
+                  : isUrgent
                   ? "text-red-500"
                   : isSessionStarted
                   ? "text-green-500"
@@ -255,16 +252,106 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
             />
             <span
               className={`text-2xl font-mono ${
-                isUrgent
+                state.timerStopped
+                  ? "text-gray-500"
+                  : isUrgent
                   ? "text-red-500"
                   : isSessionStarted
                   ? "text-green-500"
                   : "text-cyan-400"
               }`}
             >
-              {formatTime(timeLeftSeconds)}
+              {state.timerStopped ? "00:00:00" : formatTime(timeLeftSeconds)}
             </span>
+            {state.timerStopped && (
+              <span className="ml-3 text-xs text-gray-500 font-medium">⏹ Arrêté</span>
+            )}
           </div>
+        </div>
+      </div>
+
+      {/* ══ SECTION ALERTES ══════════════════════════════════════════════════ */}
+      <div className="mb-6 relative z-10">
+        <div
+          className={`rounded-xl border ${
+            alerts.length > 0 ? "border-orange-700/60 bg-orange-950/30" : "border-gray-700 bg-gray-800/40"
+          }`}
+        >
+          {/* En-tête alertes */}
+          <button
+            onClick={() => setAlertsCollapsed((c) => !c)}
+            className="w-full flex items-center justify-between px-4 py-3"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-bold text-white flex items-center gap-2">
+                ⚠️ Alertes
+              </span>
+              {alerts.length > 0 ? (
+                <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {alerts.length}
+                </span>
+              ) : (
+                <span className="bg-gray-700 text-gray-400 text-xs px-2 py-0.5 rounded-full">
+                  0
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Toggle son */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setSoundEnabled(!soundEnabled); }}
+                title={soundEnabled ? "Désactiver le son" : "Activer le son de notification"}
+                className={`p-1 rounded transition-colors ${soundEnabled ? "text-cyan-400 hover:text-cyan-300" : "text-gray-500 hover:text-gray-300"}`}
+              >
+                {soundEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+              </button>
+              {alerts.length > 0 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); dismissAllAlerts(); }}
+                  className="text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  Tout masquer
+                </button>
+              )}
+              {alertsCollapsed ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronUp size={18} className="text-gray-400" />}
+            </div>
+          </button>
+
+          {/* Corps alertes */}
+          {!alertsCollapsed && (
+            <div className="px-4 pb-3">
+              {alerts.length === 0 ? (
+                <p className="text-gray-500 text-sm italic py-1">
+                  Aucune alerte active. Toutes les équipes sont dans les temps. ✅
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {alerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 border ${
+                        alert.type === 'phase_ending'
+                          ? 'bg-red-900/40 border-red-700/60 text-red-200'
+                          : 'bg-orange-900/40 border-orange-700/60 text-orange-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 text-sm">
+                        <span>{alert.type === 'phase_ending' ? '🔴' : '🟠'}</span>
+                        <span>{alert.message}</span>
+                      </div>
+                      <button
+                        onClick={() => dismissAlert(alert.id)}
+                        className="ml-3 text-gray-400 hover:text-white flex-shrink-0 transition-colors"
+                        title="Ignorer cette alerte"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -280,7 +367,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         </button>
       </div>
 
-      {/* Classement simplifié - DÉPLACÉ EN HAUT */}
+      {/* Classement simplifié */}
       <div className="mb-8 bg-gray-800 rounded-xl p-4 relative z-10">
         <div className="flex items-center mb-4">
           <Trophy className="text-bp-red-400 mr-2" size={24} />
@@ -301,11 +388,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
               key={team.id}
               className={`
                 grid grid-cols-12 gap-4 bg-gray-700/40 p-4 rounded-lg mb-2 items-center transition-all duration-500
-                ${
-                  rankChanges[team.id] === "rank-up"
-                    ? "bg-green-700/40 animate-highlight"
-                    : ""
-                }
+                ${rankChanges[team.id] === "rank-up" ? "bg-green-700/40 animate-highlight" : ""}
               `}
             >
               <div className="col-span-1">
@@ -330,9 +413,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
               <div className="col-span-4 font-medium text-white">
                 {team.name}
                 {rankChanges[team.id] === "rank-up" && (
-                  <span className="ml-2 text-green-400 text-sm animate-bounce">
-                    ▲
-                  </span>
+                  <span className="ml-2 text-green-400 text-sm animate-bounce">▲</span>
                 )}
                 {team.studentIds && team.studentIds.length > 0 && (
                   <span className="ml-2 text-blue-300 text-xs">
@@ -357,10 +438,9 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                     <div
                       key={levelIndex}
                       className={`
-                        h-full flex-1 rounded-full 
+                        h-full flex-1 rounded-full
                         ${
-                          team.completedLevels &&
-                          team.completedLevels.includes(levelIndex)
+                          team.completedLevels && team.completedLevels.includes(levelIndex)
                             ? "bg-green-500"
                             : levelIndex === team.currentLevel
                             ? "bg-cyan-500 enhanced-shimmer"
@@ -376,15 +456,12 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           ))
         ) : (
           <div className="text-center p-6 text-gray-400">
-            <p>
-              Aucune équipe disponible. Utilisez le bouton "Rafraîchir les
-              données" ci-dessus.
-            </p>
+            <p>Aucune équipe disponible. Utilisez le bouton "Rafraîchir les données" ci-dessus.</p>
           </div>
         )}
       </div>
 
-      {/* Tableau des scores */}
+      {/* Tableau des scores par équipe */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
         {teams.length > 0 ? (
           teams.map((team) => (
@@ -399,21 +476,16 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                   </div>
                   <h2 className="text-xl font-bold">{team.name}</h2>
                 </div>
-                <div className="text-2xl font-bold text-cyan-400">
-                  {team.score}
-                </div>
+                <div className="text-2xl font-bold text-cyan-400">{team.score}</div>
               </div>
 
-              {/* Progression et erreurs */}
               <div className="p-4">
-                {/* Indicateurs de niveau */}
                 <div className="flex space-x-1 mb-4">
                   {hackathonLevels.map((level, index) => (
                     <div
                       key={index}
                       className={`h-2 flex-1 rounded-full ${
-                        team.completedLevels &&
-                        team.completedLevels.includes(index)
+                        team.completedLevels && team.completedLevels.includes(index)
                           ? "bg-green-500"
                           : index === team.currentLevel
                           ? "bg-cyan-500 enhanced-shimmer"
@@ -424,7 +496,6 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                   ))}
                 </div>
 
-                {/* Nombre d'erreurs de l'équipe */}
                 <div className="bg-gray-700/50 p-3 rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-400">Erreurs :</span>
@@ -433,9 +504,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                     </span>
                   </div>
                   {team.completionTime && (
-                    <span className="text-xs text-green-400 flex items-center gap-1">
-                      ✓ Terminé
-                    </span>
+                    <span className="text-xs text-green-400 flex items-center gap-1">✓ Terminé</span>
                   )}
                 </div>
               </div>
@@ -446,8 +515,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
             <AlertCircle size={48} className="mx-auto mb-4 text-bp-red-400" />
             <h3 className="text-xl font-bold mb-2">Aucune équipe disponible</h3>
             <p className="text-gray-400 mb-4">
-              Utilisez le bouton "Rafraîchir les données" ci-dessus pour mettre
-              à jour l'affichage.
+              Utilisez le bouton "Rafraîchir les données" ci-dessus pour mettre à jour l'affichage.
             </p>
           </div>
         )}
@@ -478,17 +546,32 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           Passer à 5 minutes
         </button>
 
+        {/* Bouton bonus — non réappuyable après application */}
         <button
-          onClick={handlePreviewBonuses}
+          onClick={bonusApplied ? undefined : handlePreviewBonuses}
           disabled={bonusApplied}
           className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
             bonusApplied
-              ? "bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed"
+              ? "bg-green-900/50 border-green-700 text-green-300 cursor-not-allowed"
               : "bg-yellow-700 hover:bg-yellow-600 border-yellow-600 text-white"
           }`}
         >
           <Trophy size={20} />
-          {bonusApplied ? "Bonus appliqués ✓" : "Appliquer les bonus finaux"}
+          {bonusApplied
+            ? `✅ Bonus appliqués le ${bonusAppliedDate}`
+            : "Appliquer les bonus finaux"}
+        </button>
+
+        {/* Bouton classement animé — visible après les bonus */}
+        <button
+          onClick={() => setShowLeaderboard(true)}
+          className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
+            bonusApplied
+              ? "bg-yellow-600 hover:bg-yellow-500 border-yellow-500 text-white"
+              : "bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300"
+          }`}
+        >
+          🏆 Afficher le classement final
         </button>
 
         <button
@@ -496,9 +579,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           disabled={isEndingSession}
           className="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg border border-red-700 transition-colors shadow-lg flex items-center gap-2"
         >
-          {isEndingSession ? (
-            <RefreshCw className="animate-spin" size={20} />
-          ) : null}
+          {isEndingSession ? <RefreshCw className="animate-spin" size={20} /> : null}
           Terminer la session
         </button>
       </div>
@@ -521,78 +602,43 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         </div>
       )}
 
-      {/* CSS pour l'effet de grille en arrière-plan */}
+      {/* CSS */}
       <style>
         {`
         .bg-grid {
-          background-image: 
+          background-image:
             linear-gradient(to right, rgba(25, 25, 35, 0.8) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(25, 25, 35, 0.8) 1px, transparent 1px);
           background-size: 30px 30px;
         }
-        
-        .shimmering-progress {
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .shimmering-progress::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(90deg, 
-                     transparent 0%,
-                     rgba(255, 255, 255, 0.2) 50%,
-                     transparent 100%);
-          animation: shimmer 2s infinite linear;
-        }
-        
         .enhanced-shimmer {
           position: relative;
           overflow: hidden;
         }
-        
         .enhanced-shimmer::after {
           content: '';
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(90deg, 
-                     transparent 0%,
-                     rgba(255, 255, 255, 0.4) 50%,
-                     transparent 100%);
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
           animation: shimmer 1.5s infinite ease-in-out;
           background-size: 200% 100%;
         }
-        
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
-        
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-        
         @keyframes highlight {
-          0% { box-shadow: 0 0 0 rgba(74, 222, 128, 0); transform: scale(1); }
-          50% { box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); transform: scale(1.02); }
-          100% { box-shadow: 0 0 0 rgba(74, 222, 128, 0); transform: scale(1); }
+          0% { box-shadow: 0 0 0 rgba(74,222,128,0); transform: scale(1); }
+          50% { box-shadow: 0 0 15px rgba(74,222,128,0.5); transform: scale(1.02); }
+          100% { box-shadow: 0 0 0 rgba(74,222,128,0); transform: scale(1); }
         }
-        
         .animate-highlight {
           animation: highlight 1s ease-in-out 2;
         }
         `}
       </style>
 
-      {/* Overlay de contrôle de session */}
+      {/* Overlay contrôle de session */}
       {showControlOverlay && (
         <SessionControlOverlay onClose={() => setShowControlOverlay(false)} />
       )}
@@ -603,6 +649,14 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           sessionId={sessionId}
           teams={teams}
           onClose={() => setShowChatPanel(false)}
+        />
+      )}
+
+      {/* Animation classement final */}
+      {showLeaderboard && (
+        <LeaderboardAnimation
+          teams={sortedTeams}
+          onClose={() => setShowLeaderboard(false)}
         />
       )}
 
@@ -673,11 +727,16 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
                 </div>
               </div>
 
-              {/* Barème explicatif */}
+              {/* Barème */}
               <div className="bg-gray-800/50 rounded-lg p-4 text-sm text-gray-400">
                 <p className="font-medium text-gray-300 mb-2">Barème des bonus :</p>
                 <p>Rapidité (1er→{SPEED_BONUS_SCALE[0]}, 2e→{SPEED_BONUS_SCALE[1]}, 3e→{SPEED_BONUS_SCALE[2]}, 4e→{SPEED_BONUS_SCALE[3]}, 5e+→{SPEED_BONUS_SCALE[4]} pts)</p>
                 <p className="mt-1">Précision (1er→{ACCURACY_BONUS_SCALE[0]}, 2e→{ACCURACY_BONUS_SCALE[1]}, 3e→{ACCURACY_BONUS_SCALE[2]}, 4e→{ACCURACY_BONUS_SCALE[3]}, 5e+→{ACCURACY_BONUS_SCALE[4]} pts)</p>
+              </div>
+
+              {/* Avertissement */}
+              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-sm text-yellow-200">
+                ⚠️ Cette action est irréversible. Le timer sera arrêté et les bonus ne pourront plus être réappliqués.
               </div>
 
               <div className="flex gap-3 pt-2">
