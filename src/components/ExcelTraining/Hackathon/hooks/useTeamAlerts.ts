@@ -126,7 +126,7 @@ export const useTeamAlerts = () => {
   const alerts = computeAlerts();
 
   const dismissAlert = (alertId: string) => {
-    setDismissedAlerts((prev) => new Set([...prev, alertId]));
+    setDismissedAlerts((prev) => new Set(Array.from(prev).concat(alertId)));
   };
 
   const dismissAllAlerts = () => {
