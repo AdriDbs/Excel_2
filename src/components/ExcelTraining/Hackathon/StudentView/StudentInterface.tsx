@@ -451,7 +451,7 @@ const StudentInterface: React.FC<StudentInterfaceProps> = ({
           <AlertTriangle size={24} className="text-red-200 shrink-0" />
           <div className="text-center">
             <span className="text-lg font-bold text-white">
-              ❌ Mauvaise réponse ! -10 points
+              ❌ Mauvaise réponse ! -25 points
             </span>
             <span className="ml-3 text-red-200 text-sm">
               ({wrongAnswerBanner.errors} erreur{wrongAnswerBanner.errors > 1 ? "s" : ""} au total)

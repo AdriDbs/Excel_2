@@ -456,8 +456,8 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       const penalty = points || 25;
       newScore = Math.max(0, newScore - penalty);
     } else if (actionType === "wrong") {
-      // Pénalité de -10 pts par mauvaise réponse
-      newScore = Math.max(0, newScore - 10);
+      // Pénalité de -25 pts par mauvaise réponse
+      newScore = Math.max(0, newScore - 25);
       newErrors += 1;
     }
 
@@ -483,7 +483,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       message = `${team.name} a utilisé un indice. -${penalty} points`;
       notifType = "hint";
     } else {
-      message = `Réponse incorrecte. -10 points (${newErrors} erreur${newErrors > 1 ? "s" : ""})`;
+      message = `Réponse incorrecte. -25 points (${newErrors} erreur${newErrors > 1 ? "s" : ""})`;
       notifType = "error";
     }
     setNotification(message, notifType);

@@ -193,16 +193,10 @@ const ExcelTrainingRoutes: React.FC = () => {
         }
       />
 
-      {/* Cas d'usage */}
+      {/* Cas d'usage — accessible uniquement aux visiteurs (non authentifiés) */}
       <Route
         path="/mon_espace/cas-usage"
-        element={
-          !currentUser ? (
-            <Navigate to="/accueil" replace />
-          ) : (
-            <UseCasesSection navigateTo={navigateTo} />
-          )
-        }
+        element={<Navigate to="/mon_espace" replace />}
       />
 
       {/* Hackathon */}
