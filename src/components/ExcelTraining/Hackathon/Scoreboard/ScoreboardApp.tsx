@@ -37,6 +37,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     setNotification,
     formatTime,
     applyFinalBonuses,
+    stopTimer,
   } = useHackathon();
 
   const {
@@ -174,6 +175,17 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     setShowBonusModal(false);
     setNotification("Bonus finaux appliqués avec succès ! Timer arrêté.", "success");
   };
+
+  // Forcer l'arrêt du timer (instructeur uniquement)
+  const handleStopTimer = () => {
+    if (window.confirm("Êtes-vous sûr de vouloir forcer la fin du timer ? Cette action est irréversible.")) {
+      stopTimer();
+      setNotification("Timer arrêté. Le décompte final est maintenant disponible.", "success");
+    }
+  };
+
+  // Le bouton "Appliquer les bonus finaux" est accessible uniquement si le timer est terminé
+  const canApplyBonuses = state.timerStopped || timeLeftSeconds <= 0;
 
   // Si aucune session n'est active
   if (!sessionId) {
@@ -546,21 +558,46 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           Passer à 5 minutes
         </button>
 
-        {/* Bouton bonus — non réappuyable après application */}
-        <button
-          onClick={bonusApplied ? undefined : handlePreviewBonuses}
-          disabled={bonusApplied}
-          className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
-            bonusApplied
-              ? "bg-green-900/50 border-green-700 text-green-300 cursor-not-allowed"
-              : "bg-yellow-700 hover:bg-yellow-600 border-yellow-600 text-white"
-          }`}
-        >
-          <Trophy size={20} />
-          {bonusApplied
-            ? `✅ Bonus appliqués le ${bonusAppliedDate}`
-            : "Appliquer les bonus finaux"}
-        </button>
+        {/* Bouton ⏹ Terminer le timer — distinct du bouton Terminer la session */}
+        {!state.timerStopped && (
+          <button
+            onClick={handleStopTimer}
+            disabled={!isSessionStarted}
+            title={!isSessionStarted ? "La session n'est pas encore démarrée" : "Forcer la fin du timer"}
+            className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
+              !isSessionStarted
+                ? "bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed"
+                : "bg-orange-700 hover:bg-orange-600 border-orange-600 text-white"
+            }`}
+          >
+            ⏹ Terminer le timer
+          </button>
+        )}
+
+        {/* Bouton bonus — non réappuyable après application, désactivé si timer en cours */}
+        <div className="relative group">
+          <button
+            onClick={bonusApplied || !canApplyBonuses ? undefined : handlePreviewBonuses}
+            disabled={bonusApplied || !canApplyBonuses}
+            className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
+              bonusApplied
+                ? "bg-green-900/50 border-green-700 text-green-300 cursor-not-allowed"
+                : !canApplyBonuses
+                ? "bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed"
+                : "bg-yellow-700 hover:bg-yellow-600 border-yellow-600 text-white"
+            }`}
+          >
+            <Trophy size={20} />
+            {bonusApplied
+              ? `✅ Bonus appliqués le ${bonusAppliedDate}`
+              : "Appliquer les bonus finaux"}
+          </button>
+          {!bonusApplied && !canApplyBonuses && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded-lg px-3 py-2 text-center shadow-lg z-50">
+              Le décompte final sera disponible une fois le timer terminé
+            </div>
+          )}
+        </div>
 
         {/* Bouton classement animé — visible après les bonus */}
         <button
