@@ -149,7 +149,7 @@ export const useProgressManager = ({
     const progressArray = Object.values(speedDatingProgress)
       .filter((p) => p && typeof p === "object");
     const completed = progressArray.filter((p) => p.completed).length;
-    const total = 12; // Nombre total de fonctions Excel
+    const total = 13; // Nombre total de fonctions Excel
 
     return {
       completed,

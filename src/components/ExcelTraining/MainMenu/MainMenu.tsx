@@ -3,7 +3,6 @@ import {
   BookOpen,
   CheckSquare,
   Code,
-  FileText,
   Settings,
   User,
   LogOut,
@@ -131,11 +130,31 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
 
   const menuCards = useMemo(() => [
     {
+      key: "bestPractices",
+      icon: <BookOpen size={32} />,
+      title: "Bonnes",
+      highlight: "Pratiques",
+      description: "Maîtrisez l'art de créer des fichiers Excel professionnels",
+      descriptionColor: "text-bp-red-300",
+      content: (
+        <div className="space-y-1 text-sm text-bp-red-300">
+          <p>• Organisation et structure des fichiers</p>
+          <p>• Optimisation des performances</p>
+          <p>• Standards de mise en forme</p>
+          <p>• Techniques de validation</p>
+        </div>
+      ),
+      buttonText: "Découvrir les Bonnes Pratiques",
+      buttonGradient: "bg-gradient-to-r from-bp-red-400 to-bp-red-300",
+      progressGradient: "bg-gradient-to-r from-bp-red-400 to-bp-red-300",
+      section: "bestPractices",
+    },
+    {
       key: "speedDating",
       icon: <Code size={32} />,
       title: "Speed Dating",
       highlight: "Excel",
-      description: "Découvrez 12 fonctions Excel avancées en format rapide et interactif",
+      description: "Découvrez 13 fonctions Excel avancées en format rapide et interactif",
       descriptionColor: "text-bp-red-200",
       content: (
         <div className="flex items-center justify-between text-sm mb-2">
@@ -145,8 +164,8 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       ),
       progress: progressStats ? {
         current: progressStats.speedDatingCompleted,
-        total: 12,
-        label: `${progressStats.speedDatingCompleted}/12 fonctions complétées`,
+        total: 13,
+        label: `${progressStats.speedDatingCompleted}/13 fonctions complétées`,
       } : undefined,
       buttonText: "Commencer le Speed Dating",
       buttonGradient: "bg-gradient-to-r from-bp-red-500 to-bp-red-400",
@@ -175,46 +194,6 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       buttonGradient: "bg-gradient-to-r from-bp-red-600 to-bp-red-500",
       progressGradient: "bg-gradient-to-r from-bp-red-600 to-bp-red-500",
       section: "hackathonLanding",
-    },
-    {
-      key: "useCases",
-      icon: <FileText size={32} />,
-      title: "Cas d'Usage",
-      highlight: "BearingPoint",
-      description: "Explorez 5 cas d'usage métier issus de missions réelles",
-      descriptionColor: "text-bp-gray-200",
-      content: (
-        <div className="space-y-1 text-sm text-bp-gray-200">
-          <p>• Optimisation de portefeuille clients</p>
-          <p>• Allocation stratégique des ressources</p>
-          <p>• Détection d'anomalies financières</p>
-          <p>• Analyse prédictive de churn</p>
-        </div>
-      ),
-      buttonText: "Explorer les Cas d'Usage",
-      buttonGradient: "bg-gradient-to-r from-bp-gray-500 to-bp-gray-400",
-      progressGradient: "bg-gradient-to-r from-bp-gray-500 to-bp-gray-400",
-      section: "useCases",
-    },
-    {
-      key: "bestPractices",
-      icon: <BookOpen size={32} />,
-      title: "Bonnes",
-      highlight: "Pratiques",
-      description: "Maîtrisez l'art de créer des fichiers Excel professionnels",
-      descriptionColor: "text-bp-red-300",
-      content: (
-        <div className="space-y-1 text-sm text-bp-red-300">
-          <p>• Organisation et structure des fichiers</p>
-          <p>• Optimisation des performances</p>
-          <p>• Standards de mise en forme</p>
-          <p>• Techniques de validation</p>
-        </div>
-      ),
-      buttonText: "Découvrir les Bonnes Pratiques",
-      buttonGradient: "bg-gradient-to-r from-bp-red-400 to-bp-red-300",
-      progressGradient: "bg-gradient-to-r from-bp-red-400 to-bp-red-300",
-      section: "bestPractices",
     },
   ], [progressStats]);
 
@@ -309,25 +288,20 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
         </div>
 
         {/* Objectifs de formation */}
-        <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-10">
-          <h2 className="text-2xl font-bold mb-4 text-bp-red-400">
+        <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-8">
+          <h2 className="text-lg font-bold mb-2 text-bp-red-400">
             Objectifs de la formation
           </h2>
-          <p className="text-white mb-4">
-            Cette formation intensive vise à transformer votre maîtrise d'Excel
-            en un véritable avantage concurrentiel. À l'issue de ce parcours,
-            vous serez capable de :
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+          <div className="grid grid-cols-2 gap-2 items-stretch max-h-48 overflow-hidden">
             {[
-              "Exploiter les formules dynamiques pour automatiser vos analyses complexes et réduire votre temps de traitement par 10",
-              "Manipuler des millions de lignes avec fluidité grâce aux nouvelles fonctions de tableaux dynamiques",
-              "Créer des dashboards interactifs impressionnants qui transforment vos données en insights actionnables",
-              "Résoudre des cas d'usage complexes BearingPoint dans un environnement de hackathon stimulant",
+              "Exploiter les formules dynamiques pour automatiser vos analyses complexes",
+              "Manipuler des millions de lignes grâce aux tableaux dynamiques",
+              "Créer des dashboards interactifs qui transforment vos données en insights",
+              "Résoudre des cas d'usage BearingPoint dans un hackathon en équipe",
             ].map((objective, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <div className="text-bp-red-400 mt-1">✓</div>
-                <p>{objective}</p>
+              <div key={index} className="flex items-start gap-2 bg-white/5 rounded-lg p-2">
+                <div className="text-bp-red-400 mt-0.5 shrink-0">✓</div>
+                <p className="text-sm">{objective}</p>
               </div>
             ))}
           </div>
@@ -355,7 +329,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
 
         {/* Footer */}
         <footer className="text-center text-bp-red-200 text-sm">
-          <p>© 2024 BearingPoint - Formation Excel Avancé - Version interactive</p>
+          <p>© 2026 BearingPoint - Formation Excel Avancé - Version interactive</p>
           {currentUser && (
             <p className="mt-2 text-xs">
               Connecté en tant que {currentUser.role === "instructor" ? "Instructeur" : "Étudiant"} •
