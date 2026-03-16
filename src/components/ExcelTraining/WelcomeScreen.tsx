@@ -418,8 +418,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                     <Clock size={16} />
                     Utilisateurs récents
                   </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {recentStudents.slice(0, 4).map((student) => {
+                  <div className={`grid grid-cols-1 md:grid-cols-2 gap-3${recentStudents.length > 5 ? " max-h-64 overflow-y-auto pr-1" : ""}`}>
+                    {recentStudents.map((student) => {
                       const progress = getProgressSummary(student);
                       const online = isOnline(student.lastActivity);
 
@@ -449,7 +449,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                                     <Trophy size={12} className="text-bp-red-400" />
                                     <span>{progress.totalScore} points</span>
                                     <span className="text-bp-gray-400">•</span>
-                                    <span>SD: {progress.speedDatingCompleted}/12</span>
+                                    <span>SD: {progress.speedDatingCompleted}/13</span>
                                   </div>
                                 )}
 
