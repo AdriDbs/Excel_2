@@ -51,7 +51,7 @@ export const hackathonLevels: Level[] = [
       "Vous devez analyser la table de données pour identifier combien de fois un client spécifique apparaît dans les enregistrements.",
     exerciseQuestion:
       "Combien de commandes a passé le client « Client_015 » ?",
-    answerFormat: "Nombre entier (ex: 15)",
+    answerFormat: "Nombre entier",
     hint: "Utilisez : =COUNTIF(Table_Donnees_Propres[Contact]; \"Client_015\")",
     functionRequired: ["COUNTIF"],
     timeAllocation: 10,
@@ -69,7 +69,7 @@ export const hackathonLevels: Level[] = [
       "Parmi toutes les commandes, identifiez celle qui correspond à un produit en rupture critique : stock actuel inférieur à 50 unités et demande prévue supérieure à 100 unités.",
     exerciseQuestion:
       "Quel est l'identifiant de commande (ID_Commande) du produit critique (Stock_Actuel < 50 ET Demande_Prevue > 100) ?",
-    answerFormat: "Code commande (ex: CMD1191)",
+    answerFormat: "Code commande (format CMDxxxx)",
     hint: "Utilisez : =FILTER(Table_Donnees_Propres; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100)) puis notez l'ID_Commande.",
     functionRequired: ["FILTER"],
     timeAllocation: 15,
@@ -87,7 +87,7 @@ export const hackathonLevels: Level[] = [
       "En partant du filtre de l'exercice précédent, vous devez identifier combien de fournisseurs différents sont concernés par les produits critiques.",
     exerciseQuestion:
       "Combien de fournisseurs uniques (ID_Fournisseur) sont liés aux produits critiques (Stock_Actuel < 50 ET Demande_Prevue > 100) ?",
-    answerFormat: "Nombre entier (ex: 3)",
+    answerFormat: "Nombre entier",
     hint: "Utilisez : =ROWS(UNIQUE(FILTER(Table_Donnees_Propres[ID_Fournisseur]; (Table_Donnees_Propres[Stock_Actuel]<50)*(Table_Donnees_Propres[Demande_Prevue]>100))))",
     functionRequired: ["UNIQUE", "FILTER", "ROWS"],
     timeAllocation: 15,
@@ -125,7 +125,7 @@ export const hackathonLevels: Level[] = [
       "Calculez le chiffre d'affaires (Quantite × Prix_Unitaire) de chaque commande, puis additionnez le tout.",
     exerciseQuestion:
       "Quelle est la somme totale du chiffre d'affaires calculé ligne par ligne (Quantite × Prix_Unitaire) ?",
-    answerFormat: "Nombre décimal (ex: 1800838.1)",
+    answerFormat: "Nombre décimal (1 décimale)",
     hint: "Utilisez : =SUM(BYROW(CHOOSECOLS(Table_Donnees_Propres; 4; 5); LAMBDA(row; INDEX(row;1)*INDEX(row;2))))",
     functionRequired: ["BYROW", "LAMBDA", "CHOOSECOLS", "SUM"],
     timeAllocation: 15,
@@ -145,7 +145,7 @@ export const hackathonLevels: Level[] = [
       "Vous devez analyser les tendances récentes en travaillant uniquement sur les 100 dernières commandes de la table.",
     exerciseQuestion:
       "Quelle est la valeur moyenne du Montant_Total des 100 dernières commandes ?",
-    answerFormat: "Nombre décimal (ex: 378.7)",
+    answerFormat: "Nombre décimal (1 décimale)",
     hint: "Utilisez : =AVERAGE(TAKE(Table_Donnees_Propres[Montant_Total]; -100)). TAKE avec un nombre négatif prend les dernières lignes.",
     functionRequired: ["TAKE", "AVERAGE"],
     timeAllocation: 15,
@@ -163,7 +163,7 @@ export const hackathonLevels: Level[] = [
       "Les 30 premières commandes sont des données de test qui doivent être exclues avant toute analyse réelle.",
     exerciseQuestion:
       "Combien de lignes reste-t-il après avoir retiré les 30 premières commandes (données de test) ?",
-    answerFormat: "Nombre entier (ex: 5781)",
+    answerFormat: "Nombre entier",
     hint: "Utilisez : =ROWS(DROP(Table_Donnees_Propres; 30))",
     functionRequired: ["DROP", "ROWS"],
     timeAllocation: 15,
@@ -181,7 +181,7 @@ export const hackathonLevels: Level[] = [
       "Simulez une augmentation tarifaire de 5% sur tous les prix unitaires pour estimer l'impact sur le budget.",
     exerciseQuestion:
       "Quelle est la somme totale des prix unitaires après une augmentation de 5% ?",
-    answerFormat: "Nombre décimal (ex: 179190.6)",
+    answerFormat: "Nombre décimal (1 décimale)",
     hint: "Utilisez : =SUM(MAP(Table_Donnees_Propres[Prix_Unitaire]; LAMBDA(x; x*1,05)))",
     functionRequired: ["MAP", "LAMBDA", "SUM"],
     timeAllocation: 15,
@@ -237,7 +237,7 @@ export const hackathonLevels: Level[] = [
       "Analysez les performances commerciales de chaque fournisseur en calculant leur chiffre d'affaires total.",
     exerciseQuestion:
       "Quelle est la valeur du chiffre d'affaires du fournisseur le plus performant ?",
-    answerFormat: "Nombre décimal (ex: 1049830.11)",
+    answerFormat: "Nombre décimal (2 décimales)",
     hint: "Utilisez : =MAX(GROUPBY(Table_Donnees_Propres[ID_Fournisseur]; Table_Donnees_Propres[Montant_Total]; SUM))",
     functionRequired: ["GROUPBY", "MAX"],
     timeAllocation: 15,
@@ -257,7 +257,7 @@ export const hackathonLevels: Level[] = [
       "Cet exercice expert demande une analyse approfondie pour identifier le client le plus rentable de toute la base de données.",
     exerciseQuestion:
       "Quel est l'identifiant du client (Contact) le plus rentable selon le CA total ?",
-    answerFormat: "Identifiant client (ex: Client_009)",
+    answerFormat: "Identifiant client (format Client_xxx)",
     hint: "Utilisez GROUPBY sur la colonne Contact avec SUM du Montant_Total, puis identifiez le Contact correspondant au MAX.",
     functionRequired: ["GROUPBY", "XLOOKUP", "FILTER", "UNIQUE", "LAMBDA"],
     timeAllocation: 20,
@@ -276,8 +276,8 @@ export const hackathonLevels: Level[] = [
     exerciseDescription:
       "Le tableau de bord commence par un tableau croisé dynamique interactif résumant les ventes.",
     exerciseQuestion:
-      "Créez le TCD puis entrez le 1er mot du message de validation (le message est « Vous avez terminé »).",
-    answerFormat: "Premier mot du message (ex: Vous)",
+      "Créez le TCD puis entrez le 1er mot du message de validation qui s'affiche une fois l'action terminée.",
+    answerFormat: "Premier mot du message de validation",
     hint: "Insérez un TCD depuis Insertion > Tableau croisé dynamique. Le premier mot du message de validation est « Vous ».",
     functionRequired: ["Tableaux croisés dynamiques"],
     timeAllocation: 10,
@@ -294,8 +294,8 @@ export const hackathonLevels: Level[] = [
     exerciseDescription:
       "Ajoutez un graphique dynamique pour rendre le tableau de bord plus visuel et interactif.",
     exerciseQuestion:
-      "Créez le graphique puis entrez le 2ème mot du message de validation (le message est « Vous avez terminé »).",
-    answerFormat: "Deuxième mot du message (ex: avez)",
+      "Créez le graphique puis entrez le 2ème mot du message de validation qui s'affiche une fois l'action terminée.",
+    answerFormat: "Deuxième mot du message de validation",
     hint: "Insérez un graphique croisé dynamique depuis Insertion > Graphique croisé dynamique. Le deuxième mot est « avez ».",
     functionRequired: ["Graphiques croisés dynamiques"],
     timeAllocation: 15,
@@ -312,8 +312,8 @@ export const hackathonLevels: Level[] = [
     exerciseDescription:
       "Finalisez votre tableau de bord avec une mise en forme conditionnelle dynamique et des segments (slicers).",
     exerciseQuestion:
-      "Appliquez la mise en forme puis entrez le 3ème mot du message de validation (le message est « Vous avez terminé »).",
-    answerFormat: "Troisième mot du message (ex: terminé)",
+      "Appliquez la mise en forme puis entrez le 3ème mot du message de validation qui s'affiche une fois l'action terminée.",
+    answerFormat: "Troisième mot du message de validation",
     hint: "Utilisez Accueil > Mise en forme conditionnelle. Le troisième mot est « terminé ».",
     functionRequired: ["Mise en forme conditionnelle", "Segments"],
     timeAllocation: 15,
