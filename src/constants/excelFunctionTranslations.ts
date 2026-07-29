@@ -53,12 +53,12 @@ const FUNCTION_NAMES: Record<string, FunctionTranslation> = {
   MAP: { fr: "MAP", en: "MAP" },
   TOCOL: { fr: "DANSCOL", en: "TOCOL" },
   TOROW: { fr: "DANSLIGNE", en: "TOROW" },
-  // Confirmé sur poste Excel FR réel (2026-07-29) : GROUPBY reste inchangé,
-  // VSTACK/HSTACK utilisent désormais ASSEMB.V/ASSEMB.H.
+  // Confirmé sur poste Excel FR réel (2026-07-29) : GROUPBY et SCAN restent
+  // inchangés, VSTACK/HSTACK utilisent désormais ASSEMB.V/ASSEMB.H.
   GROUPBY: { fr: "GROUPBY", en: "GROUPBY" },
   VSTACK: { fr: "ASSEMB.V", en: "VSTACK" },
   HSTACK: { fr: "ASSEMB.H", en: "HSTACK" },
-  SCAN: { fr: "SCAN", en: "SCAN", confidence: "low" },
+  SCAN: { fr: "SCAN", en: "SCAN" },
 };
 
 // Fonctionnalités Excel (pas des fonctions de formule) mentionnées dans les
