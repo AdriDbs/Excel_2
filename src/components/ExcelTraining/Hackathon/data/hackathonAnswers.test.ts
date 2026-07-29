@@ -187,11 +187,11 @@ describe("validateTextAnswer – insensible à la casse + trim", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("validateAnswer – délégation par exerciceId", () => {
-  test("Phase 0 : 'Table_Donnees_Propres' validé", () => {
-    expect(validateAnswer("data-cleaning", "Table_Donnees_Propres")).toBe(true);
+  test("Phase 0 : 'done' validé", () => {
+    expect(validateAnswer("data-cleaning", "done")).toBe(true);
   });
-  test("Phase 0 : 'table_donnees_propres' validé (casse)", () => {
-    expect(validateAnswer("data-cleaning", "table_donnees_propres")).toBe(true);
+  test("Phase 0 : 'DONE' validé (casse)", () => {
+    expect(validateAnswer("data-cleaning", "DONE")).toBe(true);
   });
 
   test("Phase 1 Ex1 : '15' validé", () => {
