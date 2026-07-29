@@ -53,12 +53,11 @@ const FUNCTION_NAMES: Record<string, FunctionTranslation> = {
   MAP: { fr: "MAP", en: "MAP" },
   TOCOL: { fr: "DANSCOL", en: "TOCOL" },
   TOROW: { fr: "DANSLIGNE", en: "TOROW" },
-  // Fonctions très récentes (2024+) : le nom français a déjà changé une fois
-  // selon les canaux de mise à jour Microsoft 365 — à vérifier avant la
-  // formation sur les postes réels des participants.
-  GROUPBY: { fr: "GROUPER.PAR", en: "GROUPBY", confidence: "medium" },
-  VSTACK: { fr: "ASSEMB.V", en: "VSTACK", confidence: "medium" },
-  HSTACK: { fr: "ASSEMB.H", en: "HSTACK", confidence: "medium" },
+  // Confirmé sur poste Excel FR réel (2026-07-29) : GROUPBY reste inchangé,
+  // VSTACK/HSTACK utilisent désormais ASSEMB.V/ASSEMB.H.
+  GROUPBY: { fr: "GROUPBY", en: "GROUPBY" },
+  VSTACK: { fr: "ASSEMB.V", en: "VSTACK" },
+  HSTACK: { fr: "ASSEMB.H", en: "HSTACK" },
   SCAN: { fr: "SCAN", en: "SCAN", confidence: "low" },
 };
 
