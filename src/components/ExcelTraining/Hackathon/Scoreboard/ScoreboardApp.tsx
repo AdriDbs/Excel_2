@@ -13,8 +13,7 @@ import {
   MessageCircle,
   Bell,
   BellOff,
-  ChevronDown,
-  ChevronUp,
+  BellRing,
 } from "lucide-react";
 import { NavigationProps } from "../../types";
 import { useHackathon, FinalBonuses, SPEED_BONUS_SCALE, ACCURACY_BONUS_SCALE } from "../context/HackathonContext";
@@ -67,7 +66,7 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   const [bonusPreview, setBonusPreview] = useState<FinalBonuses | null>(null);
   const [showChatPanel, setShowChatPanel] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [alertsCollapsed, setAlertsCollapsed] = useState(false);
+  const [showAlertsPanel, setShowAlertsPanel] = useState(false);
 
   // Trier les équipes par score
   const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
@@ -282,91 +281,6 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         </div>
       </div>
 
-      {/* ══ SECTION ALERTES ══════════════════════════════════════════════════ */}
-      <div className="mb-6 relative z-10">
-        <div
-          className={`rounded-xl border ${
-            alerts.length > 0 ? "border-orange-700/60 bg-orange-950/30" : "border-gray-700 bg-gray-800/40"
-          }`}
-        >
-          {/* En-tête alertes */}
-          <button
-            onClick={() => setAlertsCollapsed((c) => !c)}
-            className="w-full flex items-center justify-between px-4 py-3"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-bold text-white flex items-center gap-2">
-                ⚠️ Alertes
-              </span>
-              {alerts.length > 0 ? (
-                <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {alerts.length}
-                </span>
-              ) : (
-                <span className="bg-gray-700 text-gray-400 text-xs px-2 py-0.5 rounded-full">
-                  0
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Toggle son */}
-              <button
-                onClick={(e) => { e.stopPropagation(); setSoundEnabled(!soundEnabled); }}
-                title={soundEnabled ? "Désactiver le son" : "Activer le son de notification"}
-                className={`p-1 rounded transition-colors ${soundEnabled ? "text-cyan-400 hover:text-cyan-300" : "text-gray-500 hover:text-gray-300"}`}
-              >
-                {soundEnabled ? <Bell size={16} /> : <BellOff size={16} />}
-              </button>
-              {alerts.length > 0 && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); dismissAllAlerts(); }}
-                  className="text-xs text-gray-400 hover:text-white transition-colors"
-                >
-                  Tout masquer
-                </button>
-              )}
-              {alertsCollapsed ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronUp size={18} className="text-gray-400" />}
-            </div>
-          </button>
-
-          {/* Corps alertes */}
-          {!alertsCollapsed && (
-            <div className="px-4 pb-3">
-              {alerts.length === 0 ? (
-                <p className="text-gray-500 text-sm italic py-1">
-                  Aucune alerte active. Toutes les équipes sont dans les temps. ✅
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {alerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 border ${
-                        alert.type === 'phase_ending'
-                          ? 'bg-red-900/40 border-red-700/60 text-red-200'
-                          : 'bg-orange-900/40 border-orange-700/60 text-orange-200'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 text-sm">
-                        <span>{alert.type === 'phase_ending' ? '🔴' : '🟠'}</span>
-                        <span>{alert.message}</span>
-                      </div>
-                      <button
-                        onClick={() => dismissAlert(alert.id)}
-                        className="ml-3 text-gray-400 hover:text-white flex-shrink-0 transition-colors"
-                        title="Ignorer cette alerte"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Bouton de rafraîchissement manuel */}
       <div className="flex justify-center mb-4">
         <button
@@ -551,6 +465,24 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           Chat des équipes
         </button>
 
+        {/* Alertes — masquées par défaut, l'instructeur les ouvre volontairement (non projetées) */}
+        <button
+          onClick={() => setShowAlertsPanel(true)}
+          className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
+            alerts.length > 0
+              ? "bg-orange-700 hover:bg-orange-600 border-orange-600 text-white"
+              : "bg-gray-800 hover:bg-gray-700 border-gray-700 text-white"
+          }`}
+        >
+          {alerts.length > 0 ? <BellRing size={20} /> : <Bell size={20} />}
+          Alertes
+          {alerts.length > 0 && (
+            <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              {alerts.length}
+            </span>
+          )}
+        </button>
+
         <button
           onClick={setToFiveMinutes}
           className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg border border-gray-700 transition-colors shadow-lg"
@@ -687,6 +619,89 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           teams={teams}
           onClose={() => setShowChatPanel(false)}
         />
+      )}
+
+      {/* Panel alertes formateur — jamais affiché sur le scoreboard projeté, uniquement sur demande */}
+      {showAlertsPanel && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div
+            className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            style={{ width: "600px", maxWidth: "95vw", maxHeight: "90vh" }}
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-700 bg-gray-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white text-sm flex items-center gap-2">
+                  ⚠️ Alertes
+                </span>
+                {alerts.length > 0 ? (
+                  <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {alerts.length}
+                  </span>
+                ) : (
+                  <span className="bg-gray-700 text-gray-400 text-xs px-2 py-0.5 rounded-full">
+                    0
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  title={soundEnabled ? "Désactiver le son" : "Activer le son de notification"}
+                  className={`p-1 rounded transition-colors ${soundEnabled ? "text-cyan-400 hover:text-cyan-300" : "text-gray-500 hover:text-gray-300"}`}
+                >
+                  {soundEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+                </button>
+                {alerts.length > 0 && (
+                  <button
+                    onClick={dismissAllAlerts}
+                    className="text-xs text-gray-400 hover:text-white transition-colors"
+                  >
+                    Tout masquer
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowAlertsPanel(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={21} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 overflow-y-auto">
+              {alerts.length === 0 ? (
+                <p className="text-gray-500 text-sm italic py-1">
+                  Aucune alerte active. Toutes les équipes sont dans les temps. ✅
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {alerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 border ${
+                        alert.type === 'phase_ending'
+                          ? 'bg-red-900/40 border-red-700/60 text-red-200'
+                          : 'bg-orange-900/40 border-orange-700/60 text-orange-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 text-sm">
+                        <span>{alert.type === 'phase_ending' ? '🔴' : '🟠'}</span>
+                        <span>{alert.message}</span>
+                      </div>
+                      <button
+                        onClick={() => dismissAlert(alert.id)}
+                        className="ml-3 text-gray-400 hover:text-white flex-shrink-0 transition-colors"
+                        title="Ignorer cette alerte"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Animation classement final */}

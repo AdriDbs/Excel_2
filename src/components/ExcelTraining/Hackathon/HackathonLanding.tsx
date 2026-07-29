@@ -393,7 +393,7 @@ const HackathonLanding: React.FC<HackathonLandingProps> = ({
                 <li className="border-t border-white/20 pt-2 mt-2"></li>
                 <li className="flex justify-between text-red-300">
                   <span>Mauvaise réponse</span>
-                  <span>-10 pts</span>
+                  <span>-25 pts</span>
                 </li>
                 <li className="flex justify-between text-red-300">
                   <span>Indice n°1</span>
