@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { UseCase } from "./types";
 import FullscreenUseCaseOverlay from "./FullscreenUseCaseOverlay";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 interface UseCaseCardProps {
   useCase: UseCase;
@@ -20,6 +22,7 @@ interface UseCaseCardProps {
 const UseCaseCard: React.FC<UseCaseCardProps> = ({ useCase }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const { excelLanguage } = useExcelLanguage();
 
   // Function to get icon for category
   const getCategoryIcon = (category: string) => {
@@ -59,7 +62,7 @@ const UseCaseCard: React.FC<UseCaseCardProps> = ({ useCase }) => {
             {useCase.title}
           </h3>
           <p className="text-yellow-200/80 text-sm line-clamp-2">
-            {useCase.description}
+            {translateExcelTerms(useCase.description, excelLanguage)}
           </p>
         </div>
 
@@ -76,7 +79,7 @@ const UseCaseCard: React.FC<UseCaseCardProps> = ({ useCase }) => {
                     key={func.name}
                     className="bg-yellow-900/50 text-yellow-300 px-2 py-1 rounded text-xs"
                   >
-                    {func.name}
+                    {translateExcelTerms(func.name, excelLanguage)}
                   </span>
                 ))}
               </div>
@@ -128,7 +131,7 @@ const UseCaseCard: React.FC<UseCaseCardProps> = ({ useCase }) => {
                     Comment l'implémenter
                   </h4>
                   <p className="text-gray-300 text-sm line-clamp-4">
-                    {useCase.implementation}
+                    {translateExcelTerms(useCase.implementation, excelLanguage)}
                   </p>
                 </div>
 
@@ -144,14 +147,14 @@ const UseCaseCard: React.FC<UseCaseCardProps> = ({ useCase }) => {
                         className="bg-yellow-900/30 p-3 rounded-lg"
                       >
                         <h5 className="font-bold text-white text-sm mb-1">
-                          {func.name}
+                          {translateExcelTerms(func.name, excelLanguage)}
                         </h5>
                         <p className="text-yellow-200/80 text-xs line-clamp-2">
-                          {func.description}
+                          {translateExcelTerms(func.description, excelLanguage)}
                         </p>
                         {func.example && (
                           <div className="mt-2 bg-yellow-900/50 p-2 rounded font-mono text-xs text-yellow-300 overflow-x-auto whitespace-pre-wrap line-clamp-2">
-                            {func.example}
+                            {translateExcelTerms(func.example, excelLanguage)}
                           </div>
                         )}
                       </div>

@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { ExcelFunction } from "../types";
 import { getExpectedAnswer, validateSpeedDatingAnswer } from "./utils";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 interface FunctionCardProps {
   currentFunction: ExcelFunction;
@@ -54,6 +56,9 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
   completedScore,
   goBackToFiche,
 }) => {
+  const { excelLanguage } = useExcelLanguage();
+  const displayName = translateExcelTerms(currentFunction.name, excelLanguage);
+
   const renderAlreadyCompletedPhase = () => (
     <div className="text-center py-8">
       <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
@@ -61,7 +66,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
       </div>
       <h3 className="text-2xl font-bold mb-2 text-green-700">Fonction deja maitrisee !</h3>
       <p className="text-lg text-bp-gray-500 mb-2">
-        Vous avez deja complete la session sur <strong>{currentFunction.name}</strong>
+        Vous avez deja complete la session sur <strong>{displayName}</strong>
       </p>
       {completedScore !== undefined && (
         <div className="inline-flex items-center gap-2 bg-bp-red-50 px-4 py-2 rounded-full mb-6">
@@ -98,7 +103,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
 
   const renderIntroPhase = () => (
     <div className="text-center">
-      <p className="text-xl mb-8">{currentFunction.description}</p>
+      <p className="text-xl mb-8">{translateExcelTerms(currentFunction.description, excelLanguage)}</p>
       <div className="flex flex-col items-center gap-4">
         <p className="font-medium">Pret a decouvrir cette fonction ?</p>
         <button
@@ -140,11 +145,11 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         <div className="flex items-center gap-3 mb-4">
           <BookOpen size={24} className="text-bp-red-400" />
           <h4 className="text-lg font-bold text-bp-red-600">
-            Fiche fonction : {currentFunction.name}
+            Fiche fonction : {displayName}
           </h4>
         </div>
         <div className="text-gray-700 leading-relaxed whitespace-pre-line text-sm">
-          {currentFunction.presentation}
+          {translateExcelTerms(currentFunction.presentation, excelLanguage)}
         </div>
       </div>
     </div>
@@ -180,7 +185,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
       <div className="bg-white border-2 border-bp-red-100 rounded-lg p-6">
         <div className="mb-6">
           <div className="bg-bp-red-50 p-4 rounded-lg border border-bp-red-100 mb-4">
-            <p className="text-lg font-medium">{currentFunction.exercise}</p>
+            <p className="text-lg font-medium">{translateExcelTerms(currentFunction.exercise, excelLanguage)}</p>
           </div>
           <div className="text-sm text-bp-gray-400 mb-2">
             Completez les exercices dans Excel puis entrez vos reponses ci-dessous:
@@ -277,11 +282,11 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
         <div className="flex items-center gap-3 mb-4">
           <BookOpen size={24} className="text-bp-red-400" />
           <h4 className="text-lg font-bold text-bp-red-600">
-            Fiche fonction : {currentFunction.name}
+            Fiche fonction : {displayName}
           </h4>
         </div>
         <div className="text-gray-700 leading-relaxed whitespace-pre-line text-sm">
-          {currentFunction.presentation}
+          {translateExcelTerms(currentFunction.presentation, excelLanguage)}
         </div>
       </div>
 
@@ -322,7 +327,7 @@ const FunctionCard: React.FC<FunctionCardProps> = memo(({
       <div className="text-6xl mb-4">🎉</div>
       <h3 className="text-2xl font-bold mb-2">Felicitations!</h3>
       <p className="text-lg mb-6">
-        Vous avez termine la session sur <strong>{currentFunction.name}</strong>
+        Vous avez termine la session sur <strong>{displayName}</strong>
       </p>
 
       <div className="flex gap-4 justify-center">

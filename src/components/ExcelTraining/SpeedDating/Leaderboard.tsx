@@ -3,6 +3,8 @@ import { X, Trophy, RefreshCw, Clock, Monitor, Smartphone, Tablet } from "lucide
 import { ExcelFunction, LeaderboardParticipant } from "../types";
 import { firebaseDataService } from "../../../services/firebaseDataService";
 import { Student, DeviceInfo } from "../../../types/database";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 interface LeaderboardProps {
   leaderboardData: LeaderboardParticipant[];
@@ -24,6 +26,7 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
   excelFunctions = [],
   userName = "",
 }) => {
+  const { excelLanguage } = useExcelLanguage();
   const [enhancedData, setEnhancedData] = useState<EnhancedParticipant[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -336,7 +339,9 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({
                     <div key={func.name} className="flex items-center gap-2 bg-white/50 p-2 rounded-lg">
                       <div className="text-xl">{func.avatar}</div>
                       <div className="flex-1 text-sm">
-                        <div className="font-medium text-bp-red-700">{func.name}</div>
+                        <div className="font-medium text-bp-red-700">
+                          {translateExcelTerms(func.name, excelLanguage)}
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex gap-0.5">
                             {completedBy.slice(0, 5).map((participant) => (

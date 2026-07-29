@@ -10,6 +10,8 @@ import { Level, Team } from "../types";
 import { useHackathon } from "../context/HackathonContext";
 import { validateAnswer } from "../data/hackathonAnswers";
 import { updateStudentAnswerInFirebase } from "../../../../config/firebase";
+import { useExcelLanguage } from "../../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../../constants/excelFunctionTranslations";
 
 interface StudentExerciseProps {
   teamData: Team;
@@ -53,6 +55,7 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     updateLevelProgress,
     setNotification,
   } = useHackathon();
+  const { excelLanguage } = useExcelLanguage();
 
   const [currentLevel, setCurrentLevel] = useState(teamData.currentLevel || 0);
   const [answer, setAnswer] = useState("");
@@ -351,7 +354,11 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
                 <div className="bg-yellow-900/20 border border-yellow-800/50 rounded-lg p-3 mb-3">
                   <p className="text-yellow-200 text-sm">
                     Fonctions utiles pour cet exercice :{" "}
-                    <strong>{currentLevelData.functionRequired.join(", ")}</strong>.{" "}
+                    <strong>
+                      {currentLevelData.functionRequired
+                        .map((fn) => translateExcelTerms(fn, excelLanguage))
+                        .join(", ")}
+                    </strong>.{" "}
                     Relisez la consigne et vérifiez l'ordre des arguments.
                   </p>
                 </div>
@@ -360,7 +367,9 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
               {/* Contenu Indice 2 */}
               {hint2Shown && (
                 <div className="bg-orange-900/20 border border-orange-800/50 rounded-lg p-3">
-                  <p className="text-orange-200 text-sm">{currentLevelData.hint}</p>
+                  <p className="text-orange-200 text-sm">
+                    {translateExcelTerms(currentLevelData.hint, excelLanguage)}
+                  </p>
                 </div>
               )}
             </div>

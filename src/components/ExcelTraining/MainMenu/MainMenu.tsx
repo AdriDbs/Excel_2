@@ -9,12 +9,15 @@ import {
   Trophy,
   Target,
   Download,
+  Languages,
 } from "lucide-react";
 import { NavigationProps } from "../types";
 import { Student, Instructor } from "../../../types/database";
 import InstructorDashboard from "../InstructorDashboard";
 import DownloadFilesOverlay from "../Hackathon/StudentView/DownloadFilesOverlay";
 import { BRAND } from "../../../constants/brand";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 interface MainMenuProps extends NavigationProps {
   currentUser?: Student | Instructor;
@@ -90,6 +93,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
 const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }) => {
   const [showInstructorDashboard, setShowInstructorDashboard] = useState(false);
   const [showDownloadOverlay, setShowDownloadOverlay] = useState(false);
+  const { excelLanguage, toggleExcelLanguage } = useExcelLanguage();
 
   const welcomeMessage = useMemo(() => {
     if (!currentUser) return "Bienvenue dans la formation Excel BearingPoint";
@@ -158,7 +162,11 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       descriptionColor: "text-bp-red-200",
       content: (
         <div className="flex items-center justify-between text-sm mb-2">
-          <span>XLOOKUP • FILTER • UNIQUE • SEQUENCE • SORT • LET</span>
+          <span>
+            {["XLOOKUP", "FILTER", "UNIQUE", "SEQUENCE", "SORT", "LET"]
+              .map((fn) => translateExcelTerms(fn, excelLanguage))
+              .join(" • ")}
+          </span>
           <span className="text-bp-red-200">⚡ 3 min / fonction</span>
         </div>
       ),
@@ -195,7 +203,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
       progressGradient: "bg-gradient-to-r from-bp-red-600 to-bp-red-500",
       section: "hackathonLanding",
     },
-  ], [progressStats]);
+  ], [progressStats, excelLanguage]);
 
   return (
     <div className="min-h-screen bg-bp-gradient text-white p-4">
@@ -244,6 +252,16 @@ const MainMenu: React.FC<MainMenuProps> = ({ navigateTo, currentUser, onLogout }
           {/* Zone utilisateur */}
           {currentUser && (
             <div className="flex items-center gap-4">
+              {/* Choix de langue des noms de fonctions Excel (FR/EN) — pour tous les profils */}
+              <button
+                onClick={toggleExcelLanguage}
+                title="Changer la langue des noms de fonctions Excel"
+                className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-bp border border-white/20"
+              >
+                <Languages size={20} />
+                Fonctions Excel : {excelLanguage === "fr" ? "Français" : "English"}
+              </button>
+
               {currentUser.role === "instructor" && (
                 <button
                   onClick={() => setShowInstructorDashboard(true)}
