@@ -10,6 +10,8 @@ import {
   Copy,
 } from "lucide-react";
 import { UseCase } from "./types";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 interface FullscreenUseCaseOverlayProps {
   useCase: UseCase;
@@ -44,6 +46,7 @@ const FullscreenUseCaseOverlay: React.FC<FullscreenUseCaseOverlayProps> = ({
   useCase,
   onClose,
 }) => {
+  const { excelLanguage } = useExcelLanguage();
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 overflow-auto">
       <div className="bg-gray-800 rounded-xl max-w-6xl w-full max-h-screen overflow-auto shadow-2xl border border-yellow-700">
@@ -75,7 +78,7 @@ const FullscreenUseCaseOverlay: React.FC<FullscreenUseCaseOverlayProps> = ({
                   Description
                 </h3>
                 <p className="text-gray-200 text-lg leading-relaxed mb-6">
-                  {useCase.description}
+                  {translateExcelTerms(useCase.description, excelLanguage)}
                 </p>
 
                 <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 mt-6">
@@ -95,7 +98,7 @@ const FullscreenUseCaseOverlay: React.FC<FullscreenUseCaseOverlayProps> = ({
                   Comment l'implémenter
                 </h3>
                 <p className="text-gray-200 leading-relaxed">
-                  {useCase.implementation}
+                  {translateExcelTerms(useCase.implementation, excelLanguage)}
                 </p>
               </div>
 
@@ -131,10 +134,14 @@ const FullscreenUseCaseOverlay: React.FC<FullscreenUseCaseOverlayProps> = ({
                       className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4"
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-bold text-white">{func.name}</h4>
+                        <h4 className="font-bold text-white">
+                          {translateExcelTerms(func.name, excelLanguage)}
+                        </h4>
                         {func.example && (
                           <button
-                            onClick={() => copyToClipboard(func.example || "")}
+                            onClick={() =>
+                              copyToClipboard(translateExcelTerms(func.example || "", excelLanguage))
+                            }
                             className="text-yellow-300 hover:text-yellow-200 p-1"
                             title="Copier le code"
                           >
@@ -143,11 +150,11 @@ const FullscreenUseCaseOverlay: React.FC<FullscreenUseCaseOverlayProps> = ({
                         )}
                       </div>
                       <p className="text-yellow-200 text-sm mb-3">
-                        {func.description}
+                        {translateExcelTerms(func.description, excelLanguage)}
                       </p>
                       {func.example && (
                         <div className="bg-yellow-900/50 p-3 rounded font-mono text-xs text-yellow-300 overflow-x-auto">
-                          {func.example}
+                          {translateExcelTerms(func.example, excelLanguage)}
                         </div>
                       )}
                     </div>

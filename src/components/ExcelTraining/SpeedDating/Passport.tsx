@@ -1,6 +1,8 @@
 import React, { memo, useMemo } from "react";
 import { CheckSquare, X } from "lucide-react";
 import { ExcelFunction } from "../types";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 interface PassportProps {
   excelFunctions: ExcelFunction[];
@@ -15,6 +17,7 @@ const Passport: React.FC<PassportProps> = memo(({
   onClose,
   userName,
 }) => {
+  const { excelLanguage } = useExcelLanguage();
   const progressPercentage = useMemo(
     () => (completedFunctions.length / excelFunctions.length) * 100,
     [completedFunctions.length, excelFunctions.length]
@@ -55,7 +58,9 @@ const Passport: React.FC<PassportProps> = memo(({
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{func.avatar}</span>
                     <div>
-                      <h3 className="font-bold text-bp-red-700">{func.name}</h3>
+                      <h3 className="font-bold text-bp-red-700">
+                        {translateExcelTerms(func.name, excelLanguage)}
+                      </h3>
                       <p className="text-sm text-bp-gray-400">{func.superpower}</p>
                     </div>
                   </div>

@@ -32,6 +32,8 @@ import {
   getSpeedDatingSessionStartTime,
 } from "../../../config/firebase";
 import { LeaderboardParticipant } from "../types";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 type Phase = "intro" | "video" | "exercise" | "expired" | "complete";
 
@@ -40,6 +42,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
   currentUser,
   onProgressUpdate,
 }) => {
+  const { excelLanguage } = useExcelLanguage();
   const [currentFunctionIndex, setCurrentFunctionIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("intro");
   const [timeLeft, setTimeLeft] = useState(420);
@@ -389,7 +392,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
     if (success) {
       setCompletedFunctions((prev) => Array.from(new Set([...prev, currentFunctionIndex])));
 
-      addNotification(`Fonction ${currentFunction.name} maitrisee ! +${score} points`, "achievement");
+      addNotification(`Fonction ${translateExcelTerms(currentFunction.name, excelLanguage)} maitrisee ! +${score} points`, "achievement");
 
       onProgressUpdate?.("speedDating", {
         [functionId + 1]: {
@@ -422,7 +425,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         addNotification("Felicitations ! Toutes les fonctions maitrisees !", "milestone");
       }
     }
-  }, [isStudent, progressManagerInstance, currentFunctionIndex, currentFunction.name, addNotification, onProgressUpdate, buildLeaderboardData]);
+  }, [isStudent, progressManagerInstance, currentFunctionIndex, currentFunction.name, excelLanguage, addNotification, onProgressUpdate, buildLeaderboardData]);
 
   const toggleTimer = useCallback(() => setTimerRunning((prev) => !prev), []);
 
@@ -719,7 +722,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
                       ? "bg-bp-red-500"
                       : "bg-bp-gray-200"
                   }`}
-                  title={`Fonction ${index + 1}: ${excelFunctions[index].name} ${
+                  title={`Fonction ${index + 1}: ${translateExcelTerms(excelFunctions[index].name, excelLanguage)} ${
                     completedFunctions.includes(index) ? "✓" : ""
                   }`}
                 />
@@ -746,7 +749,7 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
               <div className="flex items-center gap-4 mb-4 md:mb-0">
                 <div className="text-6xl">{currentFunction.avatar}</div>
                 <div>
-                  <h2 className="text-3xl font-bold">{currentFunction.name}</h2>
+                  <h2 className="text-3xl font-bold">{translateExcelTerms(currentFunction.name, excelLanguage)}</h2>
                   <p className="text-xl text-bp-red-400 font-medium">
                     {currentFunction.superpower}
                   </p>
