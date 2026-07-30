@@ -203,6 +203,28 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     }
   };
 
+  // Navigation par question — indépendante de la phase, permet d'accéder à
+  // chaque exercice d'une phase (ex 2/3, 3/3...) sans passer uniquement par
+  // le premier exercice de chaque phase. Vue locale uniquement : ne modifie
+  // jamais la progression de l'équipe (currentLevel côté Firebase).
+  const goToPreviousQuestion = () => {
+    if (safeCurrentLevel > 0) {
+      setCurrentLevel(safeCurrentLevel - 1);
+      setAnswer("");
+      setHint1Shown(false);
+      setHint2Shown(false);
+    }
+  };
+
+  const goToNextQuestion = () => {
+    if (safeCurrentLevel < hackathonLevels.length - 1) {
+      setCurrentLevel(safeCurrentLevel + 1);
+      setAnswer("");
+      setHint1Shown(false);
+      setHint2Shown(false);
+    }
+  };
+
   // Exercice courant dans la phase (ex: "Ex 2/3")
   const exerciseInPhase =
     safeCurrentLevel - currentPhaseInfo.firstLevel + 1;
@@ -213,13 +235,39 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
     <>
       {/* ── Indicateur compact de phase ─────────────────────────────────── */}
       <div className="mb-4 flex items-center justify-between bg-gray-800/70 rounded-lg px-4 py-2 border border-gray-700">
-        <div className="text-sm font-semibold text-cyan-300">
-          Phase {currentPhaseInfo.id}/6 — {currentPhaseInfo.name}
-          {totalInPhase > 1 && (
-            <span className="ml-2 text-gray-400 font-normal">
-              (Ex {exerciseInPhase}/{totalInPhase})
-            </span>
-          )}
+        <div className="flex items-center gap-2 text-sm font-semibold text-cyan-300">
+          <button
+            onClick={goToPreviousQuestion}
+            disabled={safeCurrentLevel === 0}
+            title="Question précédente"
+            className={`p-1 rounded transition-colors ${
+              safeCurrentLevel === 0
+                ? "text-gray-600 cursor-not-allowed"
+                : "text-cyan-300 hover:bg-gray-700"
+            }`}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span>
+            Phase {currentPhaseInfo.id}/6 — {currentPhaseInfo.name}
+            {totalInPhase > 1 && (
+              <span className="ml-2 text-gray-400 font-normal">
+                (Ex {exerciseInPhase}/{totalInPhase})
+              </span>
+            )}
+          </span>
+          <button
+            onClick={goToNextQuestion}
+            disabled={safeCurrentLevel === hackathonLevels.length - 1}
+            title="Question suivante"
+            className={`p-1 rounded transition-colors ${
+              safeCurrentLevel === hackathonLevels.length - 1
+                ? "text-gray-600 cursor-not-allowed"
+                : "text-cyan-300 hover:bg-gray-700"
+            }`}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-400">
           <span>⏱️ {currentLevelData.timeAllocation} min</span>
@@ -377,8 +425,37 @@ const StudentExercise: React.FC<StudentExerciseProps> = ({
         </div>
       </div>
 
-      {/* ── Navigation entre phases ──────────────────────────────────────── */}
+      {/* ── Navigation entre questions (au sein d'une phase ou entre phases) ── */}
       <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-700">
+        <button
+          onClick={goToPreviousQuestion}
+          disabled={safeCurrentLevel === 0}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+            safeCurrentLevel === 0
+              ? "bg-gray-700 text-gray-500 cursor-not-allowed opacity-50"
+              : "bg-gray-700 hover:bg-gray-600 text-white"
+          }`}
+        >
+          <ChevronLeft size={16} />
+          Question précédente
+        </button>
+
+        <button
+          onClick={goToNextQuestion}
+          disabled={safeCurrentLevel === hackathonLevels.length - 1}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+            safeCurrentLevel === hackathonLevels.length - 1
+              ? "bg-gray-700 text-gray-500 cursor-not-allowed opacity-50"
+              : "bg-cyan-700 hover:bg-cyan-600 text-white"
+          }`}
+        >
+          Question suivante
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
+      {/* ── Navigation entre phases ──────────────────────────────────────── */}
+      <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-700/50">
         <button
           onClick={goToPreviousPhase}
           disabled={currentPhaseInfo.id === 0}
