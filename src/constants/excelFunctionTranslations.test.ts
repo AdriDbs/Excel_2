@@ -17,6 +17,17 @@ describe("translateFunctionLabel", () => {
     expect(translateFunctionLabel("Tableaux croisés dynamiques", "en")).toBe("PivotTables");
     expect(translateFunctionLabel("Tableaux croisés dynamiques", "fr")).toBe("Tableaux croisés dynamiques");
   });
+
+  test("traduit les fonctions utilisées dans la page Formules Avancées", () => {
+    expect(translateFunctionLabel("ISNUMBER", "fr")).toBe("ESTNUM");
+    expect(translateFunctionLabel("SEARCH", "fr")).toBe("CHERCHE");
+    expect(translateFunctionLabel("FIND", "fr")).toBe("TROUVE");
+    expect(translateFunctionLabel("SUMPRODUCT", "fr")).toBe("SOMMEPROD");
+    expect(translateFunctionLabel("SUMIFS", "fr")).toBe("SOMME.SI.ENS");
+    expect(translateFunctionLabel("COUNTIFS", "fr")).toBe("NB.SI.ENS");
+    expect(translateFunctionLabel("AND", "fr")).toBe("ET");
+    expect(translateFunctionLabel("OR", "fr")).toBe("OU");
+  });
 });
 
 describe("translateExcelTerms", () => {
@@ -50,6 +61,17 @@ describe("translateExcelTerms", () => {
     const input = "MAXIMUM et MAXIFS ne sont pas MAX.";
     const result = translateExcelTerms(input, "fr");
     expect(result).toBe("MAXIMUM et MAXIFS ne sont pas MAX.");
+  });
+
+  test("distingue SUMIFS de SUMIF (le plus long doit matcher en priorité)", () => {
+    expect(translateExcelTerms("=SUMIFS(a;b;c)", "fr")).toBe("=SOMME.SI.ENS(a;b;c)");
+    expect(translateExcelTerms("=SUMIF(a;b)", "fr")).toBe("=SOMME.SI(a;b)");
+  });
+
+  test("traduit la formule ISNUMBER(SEARCH(...)) sans casser les guillemets ni les points-virgules", () => {
+    const input = '=SUM(ISNUMBER(SEARCH("XXX";A1:A100))*(B1:B100<>"Non"))';
+    const result = translateExcelTerms(input, "fr");
+    expect(result).toBe('=SOMME(ESTNUM(CHERCHE("XXX";A1:A100))*(B1:B100<>"Non"))');
   });
 
   test("gère un texte vide ou undefined sans erreur", () => {

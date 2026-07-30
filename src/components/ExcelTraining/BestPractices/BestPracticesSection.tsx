@@ -1,15 +1,21 @@
 import React, { useState } from "react";
-import { ArrowLeft, Check, AlertTriangle, Info, Lightbulb, PanelLeft, BarChart, Zap } from "lucide-react";
+import { ArrowLeft, Check, AlertTriangle, Info, Lightbulb, PanelLeft, BarChart, Zap, Sparkles, Hash } from "lucide-react";
 import { NavigationProps } from "../types";
+import { useExcelLanguage } from "../../../contexts/ExcelLanguageContext";
+import { translateExcelTerms } from "../../../constants/excelFunctionTranslations";
 
 const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
   const [activeTab, setActiveTab] = useState("organization");
+  const { excelLanguage } = useExcelLanguage();
+  const t = (text: string) => translateExcelTerms(text, excelLanguage);
 
   const tabs = [
     { id: "organization", label: "Organisation", icon: <PanelLeft size={18} /> },
     { id: "performance", label: "Performance", icon: <Lightbulb size={18} /> },
     { id: "formatting", label: "Mise en forme", icon: <BarChart size={18} /> },
     { id: "dynamic", label: "Fonctions Dynamiques", icon: <Zap size={18} /> },
+    { id: "advanced-formulas", label: "Formules Avancées", icon: <Hash size={18} /> },
+    { id: "copilot", label: "Copilot Excel", icon: <Sparkles size={18} /> },
   ];
 
   return (
@@ -879,6 +885,282 @@ const BestPracticesSection: React.FC<NavigationProps> = ({ navigateTo }) => {
                 <p className="text-sm text-gray-600">
                   <span className="font-bold">Résultat :</span> Top 5 des régions par chiffre d'affaires total, trié du plus grand au plus petit — dynamique, sans TCD, sans colonne d'aide.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "advanced-formulas" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-2 text-bp-red-600">
+                Formules Avancées
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Deux techniques qui changent la vie une fois maîtrisées : référencer automatiquement le résultat complet d'une formule dynamique avec l'opérateur <code className="bg-gray-100 px-1 rounded">#</code>, et construire des conditions sophistiquées avec de simples opérateurs <code className="bg-gray-100 px-1 rounded">*</code> et <code className="bg-gray-100 px-1 rounded">+</code>.
+              </p>
+
+              {/* Section A : Champs nommés et opérateur # */}
+              <div className="mb-10">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Hash className="text-bp-red-500" size={20} />
+                  Champs nommés et l'opérateur # (déversement)
+                </h3>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-4">
+                  <h4 className="font-bold text-blue-800 mb-2">Nommer une plage ou une cellule</h4>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Sélectionnez une plage, tapez un nom dans la <strong>zone de nom</strong> (à gauche de la barre de formule) et validez avec Entrée — ou passez par <strong>Formules {'>'} Gestionnaire de noms</strong> (<code className="bg-white px-1 rounded text-xs">Ctrl+F3</code>). Vous pouvez ensuite écrire <code className="bg-white px-1 rounded text-xs">{t("=SUM(Ventes)")}</code> plutôt que <code className="bg-white px-1 rounded text-xs">{t("=SUM(B2:B500)")}</code> — bien plus lisible et moins sujet aux erreurs de plage.
+                  </p>
+                </div>
+
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-5 mb-4">
+                  <h4 className="font-bold text-purple-800 mb-2">L'opérateur # : récupérer tout un résultat déversé</h4>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Quand une formule dynamique (voir l'onglet précédent) se <strong>déverse</strong> sur plusieurs cellules, taper le nom — ou l'adresse — de la <strong>cellule d'origine</strong> suivi de <code className="bg-white px-1 rounded text-xs">#</code> référence <strong>automatiquement toute la plage déversée</strong>, quelle que soit sa taille. Si le nombre de résultats change (données sources modifiées), la référence <code className="bg-white px-1 rounded text-xs">#</code> s'ajuste toute seule.
+                  </p>
+                  <div className="font-mono text-xs bg-white p-3 rounded border border-purple-100 mb-2">
+                    B2: {t("=FILTER(A2:D500, C2:C500=\"Paris\")")} <span className="text-gray-400">→ se déverse sur B2:E47</span><br />
+                    Ailleurs : <span className="font-bold">=SUM(B2#)</span> <span className="text-gray-400">→ prend toute la plage déversée, même si elle passe à B2:E52 le lendemain</span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    Combiné à un <strong>champ nommé</strong>, c'est encore plus lisible : nommez la cellule d'origine (ex: <code className="bg-white px-1 rounded text-xs">Resultat_Filtre</code>), puis écrivez <code className="bg-white px-1 rounded text-xs">Resultat_Filtre#</code> partout ailleurs — la formule s'adapte, et le nom explique ce qu'elle contient.
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
+                  <div className="flex items-start gap-2">
+                    <Info className="text-yellow-600 mt-1 flex-shrink-0" size={20} />
+                    <p className="text-sm">
+                      <span className="font-bold">Lien avec le Speed Dating :</span> toutes les fonctions vues en Speed Dating ({t("XLOOKUP")}, {t("FILTER")}, {t("UNIQUE")}, {t("SEQUENCE")}, {t("SORT")}, {t("VSTACK")}, {t("HSTACK")}, {t("GROUPBY")}...) sont des fonctions dynamiques : dès qu'elles se déversent, <code className="bg-white px-1 rounded text-xs">#</code> permet de récupérer <strong>tout leur résultat</strong> ailleurs dans le classeur, sans jamais avoir à retaper ni recalculer la plage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section B : Conditions avec * et + */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Zap className="text-bp-red-500" size={20} />
+                  Conditions sophistiquées avec * et +
+                </h3>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-4">
+                  <p className="text-sm text-gray-700 mb-3">
+                    Un test comme <code className="bg-white px-1 rounded text-xs">(A1:A100="1")</code> renvoie un tableau de <strong>VRAI/FAUX</strong> — une valeur par cellule de la plage. En arithmétique, Excel traite <code className="bg-white px-1 rounded text-xs">VRAI</code> comme <strong>1</strong> et <code className="bg-white px-1 rounded text-xs">FAUX</code> comme <strong>0</strong>. Cela permet de combiner plusieurs conditions avec de simples opérateurs :
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <h4 className="font-bold text-gray-700 mb-1 flex items-center gap-2">
+                        <span className="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">*</span>
+                        ET logique
+                      </h4>
+                      <p className="text-xs text-gray-600 mb-2">Le produit ne vaut 1 que si <strong>toutes</strong> les conditions sont vraies (1×1=1, sinon 0).</p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        (A1:A100="1")*(B1:B100&lt;&gt;"Non")
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <h4 className="font-bold text-gray-700 mb-1 flex items-center gap-2">
+                        <span className="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">+</span>
+                        OU logique
+                      </h4>
+                      <p className="text-xs text-gray-600 mb-2">La somme vaut au moins 1 dès qu'<strong>une</strong> des conditions est vraie (1+0=1, 1+1=2 — toujours non-nul donc "vrai").</p>
+                      <div className="font-mono text-xs bg-gray-100 p-2 rounded">
+                        (B1:B100="Paris")+(B1:B100="Lyon")
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-5 mb-4">
+                  <h4 className="font-bold text-bp-red-600 mb-2">Compter ou sommer selon plusieurs conditions</h4>
+                  <p className="text-sm text-gray-700 mb-3">
+                    En enveloppant le produit des conditions dans {t("SUM")}, on compte directement le nombre de lignes qui vérifient <strong>toutes</strong> les conditions à la fois :
+                  </p>
+                  <div className="font-mono text-xs bg-white p-3 rounded border border-green-100 mb-2">
+                    {t("=SUM((A1:A100=\"1\")*(B1:B100<>\"Non\"))")}
+                  </div>
+                  <p className="text-xs text-gray-500">→ Nombre de lignes où la colonne A vaut "1" ET où la colonne B ne vaut pas "Non".</p>
+                </div>
+
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-5">
+                  <h4 className="font-bold text-purple-800 mb-2">Condition sur le contenu d'une cellule : {t("ISNUMBER")}({t("SEARCH")}(...))</h4>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Ni {t("COUNTIF")} ni un simple <code className="bg-white px-1 rounded text-xs">=</code> ne permettent de tester si une cellule <strong>contient</strong> un mot au milieu d'un texte plus long. La combinaison {t("SEARCH")} (renvoie une position si le texte est trouvé, une erreur sinon) + {t("ISNUMBER")} (transforme ce résultat en VRAI/FAUX) répond exactement à ce besoin — et se combine avec {'*'} comme n'importe quelle autre condition :
+                  </p>
+                  <div className="font-mono text-xs bg-white p-3 rounded border border-purple-100 mb-2">
+                    {t("=SUM(ISNUMBER(SEARCH(\"XXX\";A1:A100))*(B1:B100<>\"Non\"))")}
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">→ Combien de cellules de A1:A100 contiennent "XXX" ET n'ont pas "Non" en colonne B.</p>
+                  <p className="text-xs text-gray-600">
+                    Astuce : {t("SEARCH")} ignore la casse (majuscules/minuscules) ; pour une recherche sensible à la casse, utilisez {t("FIND")} à la place (même principe, syntaxe identique).
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="text-yellow-600 mt-1 flex-shrink-0" size={20} />
+                  <p className="text-sm">
+                    <span className="font-bold">Alternative "propre" :</span> pour des cas simples, {t("SUMIFS")}/{t("COUNTIFS")} restent plus lisibles et souvent plus rapides. La technique {'*'}/{'+'} devient indispensable dès que la condition ne peut pas s'exprimer avec les fonctions <code className="bg-white px-1 rounded text-xs">.SI.ENS</code> classiques — recherche partielle de texte, conditions calculées, combinaisons complexes de ET/OU imbriqués.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "copilot" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-2 text-bp-red-600">
+                Copilot dans Excel
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Copilot est l'assistant IA intégré à Excel (Microsoft 365 Copilot). Il comprend le contexte de votre feuille et peut générer des formules, résumer des données, créer des visualisations ou expliquer une formule existante — en langage naturel.
+              </p>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-8">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="text-yellow-600 mt-1 flex-shrink-0" size={20} />
+                  <p className="text-sm">
+                    <span className="font-bold">Prérequis :</span> licence <strong>Microsoft 365 Copilot</strong> active, et des données organisées en <strong>Tableau Excel structuré</strong> (<code className="bg-white px-1 rounded text-xs">Ctrl+T</code>) — Copilot s'appuie sur les tableaux nommés, pas sur des plages de cellules brutes.
+                  </p>
+                </div>
+              </div>
+
+              {/* Ce que Copilot sait bien faire */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Sparkles className="text-bp-red-500" size={20} />
+                  Ce que Copilot sait bien faire
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="text-2xl mb-2">🧮</div>
+                    <h4 className="font-bold text-blue-800 mb-1">Générer des formules</h4>
+                    <p className="text-sm text-gray-600">Décrivez le calcul voulu en langage naturel ; Copilot propose une formule (à toujours vérifier).</p>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="text-2xl mb-2">📊</div>
+                    <h4 className="font-bold text-green-800 mb-1">Résumer et analyser</h4>
+                    <p className="text-sm text-gray-600">Identifier tendances, valeurs aberrantes ou grandes lignes d'un tableau sans construire de TCD manuellement.</p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div className="text-2xl mb-2">📈</div>
+                    <h4 className="font-bold text-purple-800 mb-1">Créer des visualisations</h4>
+                    <p className="text-sm text-gray-600">Générer un graphique ou une mise en forme conditionnelle adaptée sur simple demande.</p>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="text-2xl mb-2">💡</div>
+                    <h4 className="font-bold text-orange-800 mb-1">Expliquer une formule</h4>
+                    <p className="text-sm text-gray-600">"Explique-moi cette formule" décompose une formule complexe existante étape par étape.</p>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="text-2xl mb-2">🔍</div>
+                    <h4 className="font-bold text-red-800 mb-1">Détecter des anomalies</h4>
+                    <p className="text-sm text-gray-600">Repérer doublons, valeurs manquantes ou incohérences dans un tableau volumineux.</p>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="text-2xl mb-2">✍️</div>
+                    <h4 className="font-bold text-gray-700 mb-1">Démarrer plus vite</h4>
+                    <p className="text-sm text-gray-600">Dégrossir une analyse ou un premier jet de mise en forme, à affiner ensuite manuellement.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bonnes pratiques */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Check className="text-bp-red-500" size={20} />
+                  Bonnes pratiques d'utilisation
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-bold text-green-800 mb-2">À faire</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Convertir vos données en <strong>Tableau Excel</strong> avant de solliciter Copilot</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Nommer précisément les colonnes dans votre demande (elles doivent correspondre aux en-têtes réels)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm"><strong>Toujours vérifier</strong> la formule ou le résultat généré sur un cas connu avant de l'utiliser</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Décomposer une demande complexe en plusieurs prompts successifs plutôt qu'un seul prompt géant</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check size={16} className="text-green-600 mt-1 flex-shrink-0" />
+                        <span className="text-sm">Utiliser Copilot pour démarrer, puis affiner avec les fonctions dynamiques maîtrisées manuellement</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 className="font-bold text-red-800 mb-2">À éviter</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">Faire confiance aveuglément à une formule générée sans la tester</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">Soumettre des données confidentielles ou client sans vérifier la politique de confidentialité de l'organisation</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">Interroger Copilot sur des plages non structurées, cellules fusionnées ou en-têtes irréguliers — il perd le contexte</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-500 font-bold mt-1 flex-shrink-0">✗</span>
+                        <span className="text-sm">L'utiliser comme substitut à la compréhension des fonctions de base : il faut savoir relire et corriger ce qu'il génère</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Prompts efficaces vs vagues */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-3 text-bp-red-500 flex items-center gap-2">
+                  <Check className="text-bp-red-500" size={20} />
+                  Formuler une bonne demande
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-red-100">
+                        <th className="border border-red-200 p-3 text-left">Prompt vague</th>
+                        <th className="border border-red-200 p-3 text-left">Prompt efficace</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border border-gray-200 p-3 text-sm text-gray-500 italic">"Analyse mes données"</td>
+                        <td className="border border-gray-200 p-3 text-sm">"Résume les 3 principales tendances de CA par région dans le tableau Ventes2026, et signale les régions en baisse"</td>
+                      </tr>
+                      <tr className="bg-gray-50">
+                        <td className="border border-gray-200 p-3 text-sm text-gray-500 italic">"Fais-moi une formule"</td>
+                        <td className="border border-gray-200 p-3 text-sm">"Dans la colonne Statut du tableau Commandes, ajoute une formule qui affiche 'Retard' si DateLivraison {'>'} DateLimite, sinon 'OK'"</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-gray-200 p-3 text-sm text-gray-500 italic">"Fais un graphique"</td>
+                        <td className="border border-gray-200 p-3 text-sm">"Crée un graphique en barres du CA total par trimestre à partir du tableau Ventes2026, trié par ordre chronologique"</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <div className="flex items-start gap-2">
+                  <Info className="text-blue-600 mt-1 flex-shrink-0" size={20} />
+                  <p className="text-sm">
+                    <span className="font-bold">Limites actuelles :</span> Copilot ne voit que les données chargées dans le classeur ouvert (pas de connexion à des sources externes non importées), reste peu fiable pour générer des macros VBA complexes, et ses réponses doivent systématiquement être vérifiées avant diffusion — comme pour toute IA générative.
+                  </p>
+                </div>
               </div>
             </div>
           )}
