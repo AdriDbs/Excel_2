@@ -64,6 +64,8 @@ export interface HackathonState {
   bonusApplied: boolean;
   bonusAppliedAt: number | null;
   timerStopped: boolean;
+  /** Timestamp (ms) de démarrage de session, utilisé pour ajuster le temps restant */
+  startTime: number | null;
 }
 
 export interface HackathonSession {
@@ -75,6 +77,13 @@ export interface HackathonSession {
   isActive: boolean;
 }
 
+export interface ChatFileAttachment {
+  name: string;
+  url: string;
+  size: number;
+  contentType: string;
+}
+
 export interface ChatMessage {
   id?: string;
   senderId: string;
@@ -83,4 +92,5 @@ export interface ChatMessage {
   timestamp: number;
   type: "user" | "broadcast" | "system";
   teamId?: number;
+  file?: ChatFileAttachment;
 }

@@ -30,13 +30,13 @@ interface ScoreboardProps extends NavigationProps {
 const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   const {
     state,
-    setTimeLeftSeconds,
     setIsGlobalView,
     endCurrentSession,
     setNotification,
     formatTime,
     applyFinalBonuses,
     stopTimer,
+    adjustTimer,
   } = useHackathon();
 
   const {
@@ -67,6 +67,8 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
   const [showChatPanel, setShowChatPanel] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAlertsPanel, setShowAlertsPanel] = useState(false);
+  const [showTimerModal, setShowTimerModal] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState("");
 
   // Trier les équipes par score
   const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
@@ -111,9 +113,21 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
     }
   }, [sessionActive, sessionId, goBackToLanding]);
 
-  // Fonction pour passer à 5 minutes
-  const setToFiveMinutes = () => {
-    setTimeLeftSeconds(5 * 60);
+  // Ajouter (ou retirer) un bloc de minutes au temps restant
+  const handleAddMinutes = (minutes: number) => {
+    adjustTimer({ type: "add", seconds: minutes * 60 });
+  };
+
+  // Définir le temps restant exact (en minutes) saisi par l'instructeur
+  const handleSetCustomMinutes = () => {
+    const minutes = parseFloat(customMinutes.replace(",", "."));
+    if (isNaN(minutes) || minutes < 0) {
+      setNotification("Veuillez saisir un nombre de minutes valide", "error");
+      return;
+    }
+    adjustTimer({ type: "set", seconds: Math.round(minutes * 60) });
+    setCustomMinutes("");
+    setShowTimerModal(false);
   };
 
   // Fonction pour rafraîchir manuellement les données
@@ -484,10 +498,17 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
         </button>
 
         <button
-          onClick={setToFiveMinutes}
-          className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg border border-gray-700 transition-colors shadow-lg"
+          onClick={() => setShowTimerModal(true)}
+          disabled={!isSessionStarted}
+          title={!isSessionStarted ? "La session n'est pas encore démarrée" : "Ajouter du temps ou définir le temps restant"}
+          className={`font-bold py-2 px-6 rounded-lg border transition-colors shadow-lg flex items-center gap-2 ${
+            !isSessionStarted
+              ? "bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed"
+              : "bg-gray-800 hover:bg-gray-700 border-gray-700 text-white"
+          }`}
         >
-          Passer à 5 minutes
+          <Clock size={18} />
+          Gérer le temps
         </button>
 
         {/* Bouton ⏹ Terminer le timer — distinct du bouton Terminer la session */}
@@ -710,6 +731,84 @@ const ScoreboardApp = ({ goBackToLanding, navigateTo }: ScoreboardProps) => {
           teams={sortedTeams}
           onClose={() => setShowLeaderboard(false)}
         />
+      )}
+
+      {/* Modal de gestion du temps */}
+      {showTimerModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-700 bg-gray-800 rounded-t-2xl">
+              <span className="font-semibold text-white text-sm flex items-center gap-2">
+                <Clock size={16} className="text-cyan-400" />
+                Gérer le temps
+              </span>
+              <button
+                onClick={() => setShowTimerModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={21} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              <div className="text-center bg-gray-800 rounded-lg py-3">
+                <span className="text-3xl font-mono font-bold text-cyan-400">
+                  {formatTime(timeLeftSeconds)}
+                </span>
+                <p className="text-xs text-gray-400 mt-1">Temps restant actuel</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-300 mb-2">Ajouter du temps</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[5, 10, 15].map((minutes) => (
+                    <button
+                      key={minutes}
+                      onClick={() => handleAddMinutes(minutes)}
+                      className="bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors"
+                    >
+                      +{minutes} min
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {[5, 10, 15].map((minutes) => (
+                    <button
+                      key={`retirer-${minutes}`}
+                      onClick={() => handleAddMinutes(-minutes)}
+                      className="bg-red-900/60 hover:bg-red-800 text-red-100 font-bold py-2 rounded-lg transition-colors text-sm"
+                    >
+                      -{minutes} min
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-300 mb-2">Définir le temps restant exact</p>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={customMinutes}
+                    onChange={(e) => setCustomMinutes(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSetCustomMinutes()}
+                    placeholder="Minutes (ex: 45)"
+                    className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
+                  <button
+                    onClick={handleSetCustomMinutes}
+                    disabled={!customMinutes.trim()}
+                    className="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors font-medium text-sm"
+                  >
+                    Définir
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal des bonus finaux */}

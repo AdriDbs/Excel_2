@@ -1,7 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, Auth, User as FirebaseUser } from "firebase/auth";
 import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, serverTimestamp, Database, push, query, limitToLast } from "firebase/database";
-import type { ChatMessage } from "../components/ExcelTraining/Hackathon/types";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, FirebaseStorage } from "firebase/storage";
+import type { ChatMessage, ChatFileAttachment } from "../components/ExcelTraining/Hackathon/types";
 
 // Configuration Firebase fournie
 const firebaseConfig = {
@@ -21,6 +22,39 @@ const app = initializeApp(firebaseConfig);
 // Services Firebase
 export const auth: Auth = getAuth(app);
 export const database: Database = getDatabase(app);
+export const storage: FirebaseStorage = getStorage(app);
+
+// Taille maximale acceptée pour une pièce jointe de chat (10 Mo)
+export const MAX_CHAT_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+// Téléverse un fichier partagé dans le chat (instructeur <-> équipes) et renvoie ses métadonnées
+export const uploadChatFile = async (
+  sessionId: string,
+  scope: string,
+  file: File
+): Promise<ChatFileAttachment | null> => {
+  if (file.size > MAX_CHAT_FILE_SIZE_BYTES) {
+    console.error("[Firebase] Fichier trop volumineux pour le chat:", file.name, file.size);
+    return null;
+  }
+
+  try {
+    const safeName = file.name.replace(/[^\w.-]+/g, "_");
+    const path = `hackathonChatFiles/${sessionId}/${scope}/${Date.now()}_${safeName}`;
+    const fileRef = storageRef(storage, path);
+    await uploadBytes(fileRef, file, { contentType: file.type || "application/octet-stream" });
+    const url = await getDownloadURL(fileRef);
+    return {
+      name: file.name,
+      url,
+      size: file.size,
+      contentType: file.type || "application/octet-stream",
+    };
+  } catch (error) {
+    console.error("[Firebase] Erreur lors du téléversement du fichier chat:", error);
+    return null;
+  }
+};
 
 // Fonction pour l'authentification anonyme
 export const signInAnonymouslyToFirebase = async (): Promise<FirebaseUser | null> => {
@@ -450,15 +484,17 @@ const getTeamChatRef = (sessionId: string, teamId: number) =>
 const getBroadcastChatRef = (sessionId: string) =>
   ref(database, `hackathonSessions/${sessionId}/chat/broadcast/messages`);
 
-// Envoyer un message dans le chat d'équipe
+// Envoyer un message dans le chat d'équipe (texte et/ou fichier joint)
 export const sendTeamChatMessage = async (
   sessionId: string,
   teamId: number,
-  message: { senderId: string; senderName: string; text: string }
+  message: { senderId: string; senderName: string; text: string; file?: ChatFileAttachment }
 ): Promise<boolean> => {
   try {
+    const { file, ...rest } = message;
     await push(getTeamChatRef(sessionId, teamId), {
-      ...message,
+      ...rest,
+      ...(file ? { file } : {}),
       timestamp: Date.now(),
       type: "user",
     });
@@ -469,14 +505,16 @@ export const sendTeamChatMessage = async (
   }
 };
 
-// Envoyer un message broadcast (formateur → toutes les équipes)
+// Envoyer un message broadcast (formateur → toutes les équipes), texte et/ou fichier joint
 export const sendBroadcastMessage = async (
   sessionId: string,
-  message: { senderName: string; text: string }
+  message: { senderName: string; text: string; file?: ChatFileAttachment }
 ): Promise<boolean> => {
   try {
+    const { file, ...rest } = message;
     await push(getBroadcastChatRef(sessionId), {
-      ...message,
+      ...rest,
+      ...(file ? { file } : {}),
       senderId: "instructor",
       timestamp: Date.now(),
       type: "broadcast",

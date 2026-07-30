@@ -1,12 +1,34 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Send, Megaphone, MessageCircle, Users } from "lucide-react";
+import { X, Send, Megaphone, MessageCircle, Users, Paperclip, FileText, Loader2 } from "lucide-react";
 import { ChatMessage, Team } from "../types";
 import {
   sendTeamChatMessage,
   sendBroadcastMessage,
   subscribeToTeamChat,
   subscribeToBroadcastChat,
+  uploadChatFile,
+  MAX_CHAT_FILE_SIZE_BYTES,
 } from "../../../../config/firebase";
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+};
+
+const FileAttachmentBubble: React.FC<{ file: NonNullable<ChatMessage["file"]> }> = ({ file }) => (
+  <a
+    href={file.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    download={file.name}
+    className="flex items-center gap-2 bg-black/20 hover:bg-black/30 rounded-lg px-2 py-1.5 mt-1 transition-colors"
+  >
+    <FileText size={16} className="shrink-0" />
+    <span className="text-xs truncate flex-1">{file.name}</span>
+    <span className="text-xs opacity-70 shrink-0">{formatFileSize(file.size)}</span>
+  </a>
+);
 
 interface InstructorChatPanelProps {
   sessionId: string;
@@ -24,7 +46,9 @@ const InstructorChatPanel: React.FC<InstructorChatPanelProps> = ({
   const [broadcastMessages, setBroadcastMessages] = useState<ChatMessage[]>([]);
   const [unread, setUnread] = useState<Record<string | number, number>>({});
   const [inputText, setInputText] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastSeenRef = useRef<Record<string | number, number>>({});
   const isSendingRef = useRef(false);
   const teamIdsKey = teams.map((t) => t.id).join(",");
@@ -91,6 +115,36 @@ const InstructorChatPanel: React.FC<InstructorChatPanelProps> = ({
       });
     }
     isSendingRef.current = false;
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_CHAT_FILE_SIZE_BYTES) {
+      alert("Fichier trop volumineux (10 Mo maximum).");
+      return;
+    }
+
+    setIsUploading(true);
+    const scope = selectedId === "broadcast" ? "broadcast" : `team-${selectedId}`;
+    const uploaded = await uploadChatFile(sessionId, scope, file);
+    if (uploaded) {
+      if (selectedId === "broadcast") {
+        await sendBroadcastMessage(sessionId, { senderName: "Formateur", text: "", file: uploaded });
+      } else {
+        await sendTeamChatMessage(sessionId, selectedId as number, {
+          senderId: "instructor",
+          senderName: "Formateur",
+          text: "",
+          file: uploaded,
+        });
+      }
+    } else {
+      alert("Erreur lors de l'envoi du fichier. Réessayez.");
+    }
+    setIsUploading(false);
   };
 
   const formatTime = (ts: number) =>
@@ -226,7 +280,8 @@ const InstructorChatPanel: React.FC<InstructorChatPanelProps> = ({
                             {formatTime(msg.timestamp)}
                           </span>
                         </div>
-                        <p className="text-sm text-yellow-100">{msg.text}</p>
+                        {msg.text && <p className="text-sm text-yellow-100">{msg.text}</p>}
+                        {msg.file && <FileAttachmentBubble file={msg.file} />}
                       </div>
                     </div>
                   );
@@ -245,15 +300,18 @@ const InstructorChatPanel: React.FC<InstructorChatPanelProps> = ({
                       <span className="text-xs text-gray-400 mb-0.5 mx-1">
                         {msg.senderName}
                       </span>
-                      <div
-                        className={`px-3 py-2 rounded-2xl text-sm ${
-                          isInstructor
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-700 text-gray-100"
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
+                      {(msg.text || msg.file) && (
+                        <div
+                          className={`px-3 py-2 rounded-2xl text-sm ${
+                            isInstructor
+                              ? "bg-indigo-600 text-white"
+                              : "bg-gray-700 text-gray-100"
+                          }`}
+                        >
+                          {msg.text}
+                          {msg.file && <FileAttachmentBubble file={msg.file} />}
+                        </div>
+                      )}
                       <span className="text-xs text-gray-500 mt-0.5 mx-1">
                         {formatTime(msg.timestamp)}
                       </span>
@@ -268,6 +326,24 @@ const InstructorChatPanel: React.FC<InstructorChatPanelProps> = ({
           {/* Champ d'envoi */}
           <div className="p-4 border-t border-gray-700 shrink-0">
             <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                title={
+                  selectedId === "broadcast"
+                    ? "Joindre un fichier à toutes les équipes"
+                    : `Joindre un fichier à ${selectedTeamName}`
+                }
+                className="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 rounded-lg transition-colors border border-gray-600"
+              >
+                {isUploading ? <Loader2 size={15} className="animate-spin" /> : <Paperclip size={15} />}
+              </button>
               <input
                 type="text"
                 value={inputText}
