@@ -302,6 +302,12 @@ const ExcelSpeedDating: React.FC<ExtendedNavigationProps> = ({
         if (firstUncompleted !== -1) {
           setCurrentFunctionIndex(firstUncompleted);
           setPhase("intro");
+          // Repartir sur des champs vierges : sans ce reset, les réponses
+          // validées de la fonction précédente (ex: XLOOKUP) restaient dans
+          // l'état et bloquaient (désactivaient) les champs de la fonction
+          // suivante (ex: FILTER), même avec une bonne réponse.
+          setAnswers({ answer1: "", answer2: "" });
+          setValidated({ answer1: false, answer2: false });
         } else {
           // Toutes les fonctions sont completees, rester sur la premiere
           setPhase("complete");
