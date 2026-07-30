@@ -1,11 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send, Users, Megaphone } from "lucide-react";
+import { MessageCircle, X, Send, Users, Megaphone, Paperclip, FileText, Loader2 } from "lucide-react";
 import { ChatMessage } from "./types";
 import {
   sendTeamChatMessage,
   subscribeToTeamChat,
   subscribeToBroadcastChat,
+  uploadChatFile,
+  MAX_CHAT_FILE_SIZE_BYTES,
 } from "../../../config/firebase";
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+};
+
+const FileAttachmentBubble: React.FC<{ file: NonNullable<ChatMessage["file"]> }> = ({ file }) => (
+  <a
+    href={file.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    download={file.name}
+    className="flex items-center gap-2 bg-black/20 hover:bg-black/30 rounded-lg px-2 py-1.5 mt-1 transition-colors"
+  >
+    <FileText size={16} className="shrink-0" />
+    <span className="text-xs truncate flex-1">{file.name}</span>
+    <span className="text-xs opacity-70 shrink-0">{formatFileSize(file.size)}</span>
+  </a>
+);
 
 interface TeamChatProps {
   sessionId: string;
@@ -26,7 +48,9 @@ const TeamChat: React.FC<TeamChatProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastSeenTimestampRef = useRef<number>(Date.now());
   const isSendingRef = useRef(false);
 
@@ -97,6 +121,31 @@ const TeamChat: React.FC<TeamChatProps> = ({
     isSendingRef.current = false;
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_CHAT_FILE_SIZE_BYTES) {
+      alert("Fichier trop volumineux (10 Mo maximum).");
+      return;
+    }
+
+    setIsUploading(true);
+    const uploaded = await uploadChatFile(sessionId, `team-${teamId}`, file);
+    if (uploaded) {
+      await sendTeamChatMessage(sessionId, teamId, {
+        senderId: userId,
+        senderName: userName,
+        text: "",
+        file: uploaded,
+      });
+    } else {
+      alert("Erreur lors de l'envoi du fichier. Réessayez.");
+    }
+    setIsUploading(false);
+  };
+
   const formatTime = (ts: number) =>
     new Date(ts).toLocaleTimeString("fr-FR", {
       hour: "2-digit",
@@ -151,7 +200,8 @@ const TeamChat: React.FC<TeamChatProps> = ({
                           {formatTime(msg.timestamp)}
                         </span>
                       </div>
-                      <p className="text-sm text-yellow-100">{msg.text}</p>
+                      {msg.text && <p className="text-sm text-yellow-100">{msg.text}</p>}
+                      {msg.file && <FileAttachmentBubble file={msg.file} />}
                     </div>
                   );
                 }
@@ -171,15 +221,18 @@ const TeamChat: React.FC<TeamChatProps> = ({
                           {msg.senderName}
                         </span>
                       )}
-                      <div
-                        className={`px-3 py-1.5 rounded-2xl text-sm ${
-                          isMine
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-700 text-gray-100"
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
+                      {(msg.text || msg.file) && (
+                        <div
+                          className={`px-3 py-1.5 rounded-2xl text-sm ${
+                            isMine
+                              ? "bg-indigo-600 text-white"
+                              : "bg-gray-700 text-gray-100"
+                          }`}
+                        >
+                          {msg.text}
+                          {msg.file && <FileAttachmentBubble file={msg.file} />}
+                        </div>
+                      )}
                       <span className="text-xs text-gray-500 mt-0.5 mx-1">
                         {formatTime(msg.timestamp)}
                       </span>
@@ -194,6 +247,20 @@ const TeamChat: React.FC<TeamChatProps> = ({
           {/* Champ d'envoi */}
           <div className="p-3 border-t border-gray-700">
             <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                title="Joindre un fichier"
+                className="p-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 rounded-lg transition-colors border border-gray-600"
+              >
+                {isUploading ? <Loader2 size={15} className="animate-spin" /> : <Paperclip size={15} />}
+              </button>
               <input
                 type="text"
                 value={inputText}

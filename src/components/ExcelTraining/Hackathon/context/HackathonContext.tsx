@@ -8,6 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { Student, HackathonState } from "../types";
+import { computeAdjustedTimer } from "../utils/timerMath";
 import {
   syncTeamsData,
   fetchInitialState,
@@ -70,6 +71,7 @@ const defaultState: HackathonState = {
   bonusApplied: false,
   bonusAppliedAt: null,
   timerStopped: false,
+  startTime: null,
 };
 
 // Barèmes de bonus finaux
@@ -126,6 +128,13 @@ interface HackathonContextType {
   loadStudentFromFirebase: (sessionId: string, userId: string) => Promise<Student | null>;
   applyFinalBonuses: () => FinalBonuses;
   stopTimer: () => void;
+  /**
+   * Ajuste le temps restant de la session en cours :
+   * - { type: "add", seconds }: ajoute (ou retire si négatif) des secondes au temps restant
+   * - { type: "set", seconds }: définit le temps restant exact
+   * Synchronisé pour tous les clients via Firebase (déplace le startTime de référence).
+   */
+  adjustTimer: (params: { type: "add" | "set"; seconds: number }) => void;
 }
 
 // Création du contexte
@@ -178,6 +187,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
               ? initialState.sessionActive
               : true,
           isSessionStarted: initialState.isSessionStarted || false,
+          startTime: initialState.startTime ?? null,
         }));
       } catch (error) {
         console.error("Failed to fetch initial state:", error);
@@ -286,6 +296,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
           timerStopped,
           bonusApplied,
           bonusAppliedAt,
+          startTime: data.startTime !== undefined ? data.startTime : prevState.startTime,
         };
       });
 
@@ -378,6 +389,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
           timerStopped,
           bonusApplied: activeSession.bonusApplied ?? false,
           bonusAppliedAt: activeSession.bonusAppliedAt ?? null,
+          startTime: activeSession.startTime ?? null,
         };
       });
 
@@ -637,6 +649,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
                 ? initialState.sessionActive
                 : true,
             isSessionStarted: initialState.isSessionStarted || false,
+            startTime: initialState.startTime ?? null,
           }));
         }
       } catch (error) {
@@ -676,6 +689,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
       ...prevState,
       isSessionStarted: true,
       timeLeftSeconds: TOTAL_DURATION_SECONDS,
+      startTime,
       teams: prevState.teams.map((t) => ({
         ...t,
         phaseStartTimestamps: { ...(t.phaseStartTimestamps || {}), 0: startTime },
@@ -778,6 +792,44 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // ── Ajustement manuel du temps restant (ajout de minutes ou temps exact) ──
+  // Le temps restant se recalcule en permanence à partir de startTime
+  // (TOTAL_DURATION_SECONDS - temps écoulé depuis startTime). Pour changer le
+  // temps restant de façon durable et synchronisée pour tous les clients, on
+  // déplace donc startTime plutôt que timeLeftSeconds (qui serait écrasé au
+  // prochain recalcul déclenché par une mise à jour Firebase quelconque).
+  const adjustTimer = (params: { type: "add" | "set"; seconds: number }) => {
+    if (!state.sessionId || !state.startTime) return;
+
+    const { newStartTime, newTimeLeftSeconds } = computeAdjustedTimer(
+      state.startTime,
+      TOTAL_DURATION_SECONDS,
+      params,
+      Date.now()
+    );
+
+    setState((prevState) => ({
+      ...prevState,
+      startTime: newStartTime,
+      timeLeftSeconds: newTimeLeftSeconds,
+      timerStopped: false,
+    }));
+
+    updateHackathonSession(state.sessionId, {
+      startTime: newStartTime,
+      timerStopped: false,
+      timeLeft: Math.floor(newTimeLeftSeconds / 60),
+      seconds: newTimeLeftSeconds % 60,
+    });
+
+    setNotification(
+      params.type === "add"
+        ? `Temps ${params.seconds >= 0 ? "ajouté" : "retiré"} : ${formatTime(Math.abs(params.seconds))}`
+        : `Temps restant défini à ${formatTime(params.seconds)}`,
+      "success"
+    );
+  };
+
   // ── Calcul et application des bonus finaux ────────────────────────────────
   const applyFinalBonuses = (): FinalBonuses => {
     const totalLevels = TOTAL_LEVELS;
@@ -878,6 +930,7 @@ export const HackathonProvider: React.FC<{ children: ReactNode }> = ({
         loadStudentFromFirebase,
         applyFinalBonuses,
         stopTimer,
+        adjustTimer,
       }}
     >
       {children}
