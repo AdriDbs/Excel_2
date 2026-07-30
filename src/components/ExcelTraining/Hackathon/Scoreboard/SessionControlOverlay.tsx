@@ -7,6 +7,7 @@ import {
   Settings,
   RefreshCw,
   AlertTriangle,
+  Trophy,
 } from "lucide-react";
 import { Team } from "../types";
 import { useHackathon } from "../context/HackathonContext";
@@ -25,6 +26,7 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
     setSessionActive,
     startSessionTimer,
     formatTime,
+    updateTeamScore,
   } = useHackathon();
 
   const { teams, sessionId, timeLeftSeconds, isSessionStarted } = state;
@@ -33,6 +35,19 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamName, setTeamName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [bonusInputs, setBonusInputs] = useState<Record<number, string>>({});
+
+  // Appliquer un bonus (positif ou négatif) manuel à une équipe
+  const applyBonus = (team: Team) => {
+    const raw = bonusInputs[team.id]?.trim();
+    const points = parseInt(raw || "", 10);
+    if (!raw || isNaN(points) || points === 0) {
+      setNotification("Veuillez saisir un nombre de points différent de 0", "error");
+      return;
+    }
+    updateTeamScore(team.id, "bonus", points);
+    setBonusInputs((prev) => ({ ...prev, [team.id]: "" }));
+  };
 
   // Gérer le démarrage de la session
   const handleStartSession = async () => {
@@ -287,6 +302,32 @@ const SessionControlOverlay: React.FC<SessionControlOverlayProps> = ({
                       Aucun participant
                     </div>
                   )}
+                </div>
+
+                {/* Bonus manuel de points (positif ou négatif) */}
+                <div className="mt-3 pt-3 border-t border-gray-600">
+                  <h5 className="text-gray-400 text-xs uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <Trophy size={12} />
+                    Bonus manuel
+                  </h5>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      value={bonusInputs[team.id] ?? ""}
+                      onChange={(e) =>
+                        setBonusInputs((prev) => ({ ...prev, [team.id]: e.target.value }))
+                      }
+                      onKeyDown={(e) => e.key === "Enter" && applyBonus(team)}
+                      placeholder="ex: 50 ou -20"
+                      className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      onClick={() => applyBonus(team)}
+                      className="bg-bp-red-500 hover:bg-bp-red-600 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Appliquer
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
